@@ -96,8 +96,3 @@ export function parseToken(token: string): {
 	hash: string
 }
 export async function authenticated(req: Express.Request): Promise<boolean>;
-export async function authenticate(
-	req: import("express").Request,
-	res: import("express").Response,
-	next: import("express").NextFunction
-): void;
