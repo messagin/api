@@ -1,7 +1,7 @@
 const { randomBytes } = require("node:crypto");
 const { Types, InternalActions } = require("../utils/types");
 const cluster = require("node:cluster");
-const log = require("log");
+const { log } = require("../utils/log");
 
 // Class responsible for generating and managing unique IDs
 class IdManager {
@@ -57,7 +57,7 @@ class Cluster {
 	handleInternalMessage(msg, worker, worker_id, resolve) {
 		if (msg.action == InternalActions.Start) {
 			this.workers?.set(worker_id, worker);
-			log.info("Worker #%i started", worker_id);
+			log("blue")(`Worker #${worker_id} started`);
 			resolve(worker);
 		}
 		if (msg.action == InternalActions.MemUsage)
@@ -69,13 +69,14 @@ class Cluster {
 		if (data == "\x03") return await this.exit();
 		// reload workers when ^R is pressed
 		if (data == "\x12") {
-			log.info("Restarting workers...");
-			for (let i = 0; i < CPUs; i++) await this.reload(i).catch(log("red"));
+			log.title("yellow", "Restarting workers...");
+			for (let i = 0; i < this.CPUs; i++) await this.reload(i).catch(log("red"));
+			log.end();
 			return;
 		}
 		// log worker count when ^S is pressed
 		if (data == "\x13")
-			log.info("%i workers up", this.workers.size);
+			log("green")("${this.workers.size} workers up");
 	}
 
 	// fixme catch errors
@@ -84,7 +85,7 @@ class Cluster {
 		if (!worker) throw new Error(`Worker with id ${id} not found`); // Throw an error if the worker doesn't exist
 		return new Promise(resolve => {
 			worker.on('exit', () => {
-				log.info("Worker #%i stopped", id); // Log a message indicating that the worker with the given ID has stopped
+				log("red")(`Worker #${id} stopped`); // Log a message indicating that the worker with the given ID has stopped
 				this.deadWorkers.push(id); // Add the ID to the deadWorkers array for reuse
 				this.workers.delete(id); // Delete the worker with the given ID from the workers map
 				resolve(); // Resolve the promise to indicate that the destruction is complete
@@ -96,34 +97,57 @@ class Cluster {
 		});
 	}
 
+	/**
+	 * Forks a new worker with the specified id.
+	 * @param {number} id - The id of the worker.
+	 * @returns {Promise} A promise that resolves when the worker is forked.
+	 */
 	fork(id = this.getNextWorkerId()) {
 		return new Promise(resolve => {
 			const worker = cluster.fork({ THREAD_ID: id, MACHINE_ID: 0 });
 
-			// free worker id on exit
+			// Free worker id on exit
 			worker.on('exit', code => {
 				if (code == 1) {
-					log.error("Fatal Error, exiting...");
+					log.title("brightRed", "Fatal Error, exiting...");
 					this.exit();
-				} else this.handleExit(id);
-			});
-			worker.on('message', msg => {
-				if (msg.type == Types.Internal)
-					return this.handleInternalMessage(msg, worker, id, resolve);
-				if (msg.type == Types.Stdio) return this.handleInput(msg.data);
-				if (msg.type == Types.Route) return this.handleRouteMessage(msg, worker);
-				if (msg.type == Types.Event)
-					workers?.forEach(w => w.send(msg));
+				} else {
+					this.handleExit(id);
+				}
 			});
 
+			worker.on('message', msg => {
+				if (msg.type == Types.Internal) {
+					return this.handleInternalMessage(msg, worker, id, resolve);
+				}
+				if (msg.type == Types.Stdio) {
+					return this.handleInput(msg.data);
+				}
+				if (msg.type == Types.Route) {
+					return this.handleRouteMessage(msg, worker);
+				}
+				if (msg.type == Types.Event) {
+					workers?.forEach(w => w.send(msg));
+				}
+			});
 		});
 	}
 
+	/**
+	 * Exits the cluster and destroys all workers.
+	 * @returns {Promise} A promise that resolves when all workers are destroyed.
+	 */
 	async exit() {
-		for (const [index] of this.workers) await this.destroy(index);
+		for (const [index] of this.workers) {
+			await this.destroy(index);
+		}
 		process.exit();
 	}
 
+	/**
+	 * Sets up the primary cluster settings.
+	 * @param {any} settings - The cluster settings.
+	 */
 	setup(settings) {
 		cluster.setupPrimary(settings);
 	}

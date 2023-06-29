@@ -1,12 +1,10 @@
 const { Cluster } = require("./cluster");
-const log = require("log");
+const { log } = require("../utils/log");
 const CPUs = require("node:os").cpus().length;
-
-require("log-node")();
 
 async function main() {
 
-	log.info("Primary is running");
+	log("cyan")("Primary is running");
 
 	const cluster = new Cluster(CPUs);
 
