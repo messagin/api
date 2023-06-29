@@ -9,7 +9,7 @@
 	},
 	"scripts": {
 		"test": "jest",
-		"start": "node -r dotenv/config index.js"
+		"start": "node -r dotenv/config src/index.js"
 	},
 	"keywords": [],
 	"author": {
@@ -24,6 +24,8 @@
 		"typescript": "^5.1.6"
 	},
 	"dependencies": {
-		"dotenv": "^16.3.1"
+		"dotenv": "^16.3.1",
+		"log": "^6.3.1",
+		"log-node": "^8.0.3"
 	}
 }
