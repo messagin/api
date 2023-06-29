@@ -1,5 +1,5 @@
 <p align="center">
-    <a href="https://github.com/webd3vs/messagin-backend/build"><img src="https://img.shields.io/github/actions/workflow/status/webd3vs/messagin-backend/c-cpp.yml?colorA=333&colorB=afa&style=for-the-badge"></a>
+    <a href="https://github.com/webd3vs/messagin-backend/build"><img src="https://img.shields.io/github/actions/workflow/status/webd3vs/messagin-backend/node.js.yml?colorA=333&style=for-the-badge"></a>
     <a href="https://github.com/webd3vs/messagin-backend/stargazers"><img src="https://img.shields.io/github/stars/webd3vs/messagin-backend?colorA=333&colorB=ffa&style=for-the-badge"></a>
     <a href="https://github.com/webd3vs/messagin-backend/issues"><img src="https://img.shields.io/github/issues/webd3vs/messagin-backend?colorA=333&colorB=faa&style=for-the-badge"></a>
     <a href="https://github.com/webd3vs/messagin-backend/contributors"><img src="https://img.shields.io/github/contributors/webd3vs/messagin-backend?colorA=333&colorB=aaf&style=for-the-badge"></a>
