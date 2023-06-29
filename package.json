@@ -1,0 +1,29 @@
+{
+	"name": "messagin-backend",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"type": "commonjs",
+	"engines": {
+		"node": "20.x"
+	},
+	"scripts": {
+		"test": "jest",
+		"start": "node -r dotenv/config index.js"
+	},
+	"keywords": [],
+	"author": {
+		"name": "M.S",
+		"email": "ms@webd3vs.xyz"
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"@types/node": "20.3.1",
+		"jest": "^29.5.0",
+		"ts-node-dev": "^2.0.0",
+		"typescript": "^5.1.6"
+	},
+	"dependencies": {
+		"dotenv": "^16.3.1"
+	}
+}

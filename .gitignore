@@ -1,0 +1,4 @@
+node_modules/
+messagin.db
+pnpm-lock.yaml
+.env
