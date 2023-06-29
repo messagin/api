@@ -5,7 +5,7 @@ describe("User Model", () => {
 		let user_id = "0000000000000000";
 		let username = "John Doe";
 
-		const user = new User(user_id, username);
+		const user = new User({ id: user_id, username });
 
 		expect(user.id).toBe(user_id);
 		expect(user.username).toBe(username);
