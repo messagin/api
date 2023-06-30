@@ -5,21 +5,13 @@ const db = require("knex").default({
 	}, useNullAsDefault: true
 });
 
-async function init() {
-	let signupExists = await db.schema.hasTable("signup");
-	let usersExists = await db.schema.hasTable("users");
-	let chatsExists = await db.schema.hasTable("chats");
-	let membersExists = await db.schema.hasTable("members");
-	let messagesExists = await db.schema.hasTable("messages");
 
-	if (!signupExists) await db.schema.createTable("signup", table => {
-		table.specificType("token", "char(64)").notNullable();
-		table.specificType("code", "char(6)").notNullable();
-		table.text("username").notNullable();
-		table.text("email").unique().notNullable();
-		table.specificType("password", "char(128)").notNullable();
-		table.integer("timestamp").notNullable();
-	});
+async function initDatabase() {
+	const usersExists    = await db.schema.hasTable("users");
+	const signupExists   = await db.schema.hasTable("signup")
+	const chatsExists    = await db.schema.hasTable("chats");
+	const membersExists  = await db.schema.hasTable("members");
+	const messagesExists = await db.schema.hasTable("messages");
 
 	if (!usersExists) await db.schema.createTable("users", table => {
 		table.specificType("id", "char(16)").unique().primary();
@@ -30,6 +22,15 @@ async function init() {
 		table.specificType("token", "char(128)");
 		table.specificType("mfa", "char(96)");
 		table.integer("last_login");
+	});
+
+	if (!signupExists) await db.schema.createTable("signup", table => {
+		table.specificType("token", "char(64)").notNullable();
+		table.specificType("code", "char(6)").notNullable();
+		table.text("username").notNullable();
+		table.text("email").unique().notNullable();
+		table.specificType("password", "char(128)").notNullable();
+		table.integer("timestamp").notNullable();
 	});
 
 	if (!chatsExists) await db.schema.createTable("chats", table => {
@@ -55,6 +56,8 @@ async function init() {
 		table.foreign("user_id").references("id").inTable("users");
 		table.integer("flags").notNullable().defaultTo(0);
 	});
+
+	return;
 }
 
-module.exports = { db, init };
+module.exports = { db, initDatabase };

@@ -1,7 +1,11 @@
+const { db, initDatabase } = require("../utils/database");
 const { User } = require("../models/user");
-const { db } = require("../utils/database");
 
 describe("User Model", () => {
+
+	beforeAll(async () => {
+		await initDatabase();
+	});
 
 	test("should create a user object", () => {
 		let user_id = "0000000000000000";

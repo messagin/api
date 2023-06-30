@@ -1,10 +1,13 @@
 const { Cluster } = require("./cluster");
 const { log } = require("../utils/log");
+const { initDatabase } = require("../utils/database");
 const CPUs = require("node:os").cpus().length;
 
 async function main() {
 
 	log("cyan")("Primary is running");
+
+	await initDatabase();
 
 	const cluster = new Cluster(CPUs);
 

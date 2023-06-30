@@ -1,4 +1,4 @@
-const { db } = require("../utils/database");
+const { db, init } = require("../utils/database");
 
 class User {
 	constructor({ id, flags, username, email, password, token, mfa, last_login }) {
