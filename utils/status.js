@@ -17,8 +17,12 @@ const StatusCodes = {
 	404: {
 		NotFound: 40400
 	},
+	429: {
+		RateLimited: 42900
+	},
 	500: {
-		InternalError: 50000
+		InternalError: 50000,
+		MissingIp: 50001
 	}
 }
 
@@ -41,8 +45,12 @@ const StatusMessages = {
 	//#region 404
 	40400: "The requested resource was not found",
 	//#endregion
+	//#region 429
+	42900: "You are being rate limited",
+	//#endregion
 	//#region 500
-	50000: "An internal error occurred. Please try again later."
+	50000: "An internal error occurred. Please try again later",
+	50001: "Client IP address is missing or undefined"
 	//#endregion
 }
 

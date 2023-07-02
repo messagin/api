@@ -9,7 +9,7 @@ const { UserFlags } = require("../utils/flags");
  * @param {import("express").Response} res
  * @param {import("express").NextFunction} next
  */
-let authenticate = async (req, res, next) => {
+async function authenticate(req, res, next) {
 
 	let [type, token] = req.headers.authorization?.split(" ") ?? [null, null];
 
