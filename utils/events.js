@@ -1,6 +1,5 @@
 const { EventEmitter } = require("events");
-const { log } = require("./log");
-const { Types } = require("./actions");
+const { Types } = require("./types");
 
 let events = {
 	userCreate: {

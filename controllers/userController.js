@@ -12,13 +12,13 @@ async function create(req, res) {
 }
 
 /**
- * @param {Request} req
+ * @param {Request} _req
  * @param {Response} res
  */
-async function getCurrentUser(req, res) {
+async function getCurrent(_req, res) {
 	let user;
 	try {
-		user = await User.getById(s.locals.user_id);
+		user = await User.getById(res.locals.user_id);
 	} catch (err) {
 		console.log(err);
 		return respond(res, 500, StatusCodes[500].InternalError);
@@ -40,15 +40,20 @@ async function getById(req, res) {
 		return respond(res, 500, StatusCodes[500].InternalError);
 	}
 
-	return respond(res, 200, StatusCodes[200])
+	return respond(res, 200, StatusCodes[200], {
+		id: user.id,
+		username: user.username,
+		flags: user.flags
+	});
 }
 
-async function mfaValidate(req, res) {
+async function validateMfa(req, res) {
 
 }
 
 module.exports = {
+	getCurrent,
+	getById,
 	create,
-	getCurrentUser,
-	mfaValidate
+	validateMfa
 }

@@ -3,12 +3,16 @@ const StatusCodes = {
 		Ok: 20000
 	},
 	400: {
-		MalformedId: 40000
+		MalformedId: 40000,
+		UnknownTokenType: 40001
 	},
 	401: {
 		MissingToken: 40100,
 		InvalidToken: 40101,
 		MalformedToken: 40102
+	},
+	403: {
+		WrongTokenType: 40300
 	},
 	404: {
 		NotFound: 40400
@@ -20,21 +24,25 @@ const StatusCodes = {
 
 const StatusMessages = {
 	//#region 200
-	20000: "OK",
+	20000: "Success",
 	//#endregion
 	//#region 400
-	40000: "You provided a malformed ID",
+	40000: "The provided ID is malformed",
+	40001: "The provided token type is unknown",
 	//#endregion
 	//#region 401
-	40100: "Missing authentication token",
-	40101: "Invalid authentication token",
-	40102: "Malformed authentication token",
+	40100: "Authentication token is missing",
+	40101: "Authentication token is invalid",
+	40102: "Authentication token is malformed",
+	//#endregion
+	//#region 403
+	40300: "Incorrect token type provided",
 	//#endregion
 	//#region 404
-	40400: "Requested resource not found",
+	40400: "The requested resource was not found",
 	//#endregion
 	//#region 500
-	50000: "An internal error occurred. Please try again later"
+	50000: "An internal error occurred. Please try again later."
 	//#endregion
 }
 

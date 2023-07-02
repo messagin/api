@@ -4,8 +4,12 @@ const { User } = require("../models/user");
 const { validateID } = require("../utils/validate");
 const router = require("express").Router();
 
-router.post("/users/me/mfa/validate", authenticate);
-router.get("/users/me", authenticate, userController.getCurrentUser);
-router.get("/users/:id", authenticate, validateID);
+//#region users
+router.get("/users/me", authenticate, userController.getCurrent);
+router.get("/users/:id", authenticate, validateID, userController.getById);
+
+router.post("/users", userController.create)
+router.post("/users/me/mfa/validate", authenticate, userController.validateMfa);
+//#endregion
 
 module.exports = router;
