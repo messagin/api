@@ -1,4 +1,5 @@
 const { db } = require("../utils/database");
+const { log } = require("../utils/log");
 
 class User {
 	constructor({ id, flags, username, email, password, token, mfa, last_login }) {
@@ -12,22 +13,39 @@ class User {
 		this.last_login = last_login;
 	}
 
-	static validate(user) {
-		let errors = [];
-		if (!user) {
-			errors.push();
-		}
+	async set(field, value) {
+		await db("users").update({ [field]: value }).where({ id: this.id });
 	}
 
-	static validatePartial(user) {
-
-	}
-
-	static async getById(id) {
-		let raw_user = await db("users").where({ id }).first();
+	static async getById(id, ...fields) {
+		let raw_user = await db("users").select(...fields).where({ id }).first();
 		if (!raw_user) return null;
 		let user = new User(raw_user);
 		return user;
+	}
+
+	static async getByEmail(email, ...fields) {
+		let raw_user = await db("users").select(...fields).where({ email }).first();
+		if (!raw_user) return null;
+		let user = new User(raw_user);
+		return user;
+	}
+
+	static async create(id, username, email, password, token) {
+		let r = await db("users").insert({
+			id,
+			flags: 0,
+			username,
+			email,
+			password,
+			token
+		}).catch(log("red"));
+		return r;
+	}
+
+	async setToken(token) {
+		let r = await db("users").update({ token }).where({ id: this.id });
+		return r;
 	}
 }
 

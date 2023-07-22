@@ -22,6 +22,6 @@ describe("User Model", () => {
 
 	afterAll(() => {
 		db.destroy();
-	})
+	});
 
 });

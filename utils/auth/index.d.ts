@@ -22,12 +22,12 @@ export function generateToken(id: string): {
 };
 
 /**
- * Creates a Hmac object using the sha512 algorithm and returns a hex representation (128 chars)
+ * Creates a Hmac object using the sha512 algorithm and returns a base64 representation (86 chars)
  */
 export function generateHmac(data: string, salt: string): string;
 
 /**
- * Creates a Hash object using the sha512 algorithm and returns a hex representation (128 chars)
+ * Creates a Hash object using the sha512 algorithm and returns a base64 representation (86 chars)
  */
 export function generateHash(data: string): string;
 

@@ -7,11 +7,11 @@ const db = require("knex").default({
 
 
 async function initDatabase() {
-	const usersExists      = await db.schema.hasTable("users");
-	const signupExists     = await db.schema.hasTable("signup")
-	const chatsExists      = await db.schema.hasTable("chats");
-	const membersExists    = await db.schema.hasTable("members");
-	const messagesExists   = await db.schema.hasTable("messages");
+	const usersExists = await db.schema.hasTable("users");
+	const signupExists = await db.schema.hasTable("signup");
+	const chatsExists = await db.schema.hasTable("chats");
+	const membersExists = await db.schema.hasTable("members");
+	const messagesExists = await db.schema.hasTable("messages");
 	const ratelimitsExists = await db.schema.hasTable("ratelimits");
 
 	if (!usersExists) await db.schema.createTable("users", table => {
@@ -19,8 +19,8 @@ async function initDatabase() {
 		table.integer("flags").notNullable().defaultTo(0);
 		table.text("username").notNullable();
 		table.text("email").unique();
-		table.specificType("password", "char(128)").notNullable();
-		table.specificType("token", "char(128)");
+		table.specificType("password", "char(86)").notNullable();
+		table.specificType("token", "char(86)");
 		table.specificType("mfa", "char(96)");
 		table.integer("last_login");
 	});
@@ -30,7 +30,7 @@ async function initDatabase() {
 		table.specificType("code", "char(6)").notNullable();
 		table.text("username").notNullable();
 		table.text("email").unique().notNullable();
-		table.specificType("password", "char(128)").notNullable();
+		table.specificType("password", "char(86)").notNullable();
 		table.integer("timestamp").notNullable();
 	});
 
@@ -60,6 +60,7 @@ async function initDatabase() {
 
 	if (!ratelimitsExists) await db.schema.createTable("ratelimits", table => {
 		table.specificType("id", "char(16)");
+		table.string("type", 2); // ip | id
 		table.string("ip", 39);
 		table.integer("count").defaultTo(0);
 		table.integer("timestamp").notNullable();

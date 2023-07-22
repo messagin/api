@@ -7,16 +7,15 @@ const { StatusCodes } = require("./status");
 // x-ratelimit-reset: 1688320872
 // x-ratelimit-used: 1
 
-const WINDOW_SIZE = 10 * 60 * 1000; // 10 minutes
-const MAX_REQUESTS = 10; // Max requests per window size
+const WINDOW_SIZE = 24 * 60 * 60; // 1 day
+const MAX_REQUESTS = 1000; // Max invalid requests per window size
 
 /**
  * @param {import("express").Request} req
  * @param {import("express").Response} res
  * @param {import("express").NextFunction} next
  */
-async function ratelimit(req, res, next) {
-
+async function rateLimitByIp(req, res, next) {
 	const ip = req.ip;
 
 	if (!ip) {
@@ -24,31 +23,36 @@ async function ratelimit(req, res, next) {
 		return respond(res, 500, StatusCodes[500].MissingIp);
 	}
 
-	const now = Date.now();
+	const now = Math.floor(Date.now() / 1000);
 	const start = now - WINDOW_SIZE;
 
 	try {
-		await db("ratelimits").where("timestamp", "<", start).del();
+		await db("ratelimits").where("timestamp", "<", start).andWhere("type", "ip").del();
 
-		const data = await db('ratelimits').where({ ip }).first();
+		let data = await db('ratelimits').where({ ip }).first();
 
 		if (!data) {
-			await db("ratelimits").insert({ ip, timestamp: now, count: 1 });
-			res.header("x-ratelimit-limit", WINDOW_SIZE);
-			return next();
+			await db("ratelimits").insert({ ip, timestamp: now, count: 0, type: "ip" });
+			data = { count: 0, timestamp: now };
 		}
+
+		res.locals.rateLimit = {
+			limit: MAX_REQUESTS,
+			remaining: MAX_REQUESTS - data.count,
+			reset: data.timestamp + WINDOW_SIZE,
+			type: "ip"
+		};
 
 		if (data.count >= MAX_REQUESTS) {
-			return respond(res, 429, StatusCodes[429].RateLimited);
+			return await respond(res, 429, StatusCodes[429].RateLimited);
 		}
-
-		await db("ratelimits").increment("count").where({ ip });
 
 		next();
 	} catch (err) {
 		console.log(err);
-		return respond(res, 500, StatusCodes[500].InternalError);
+		return await respond(res, 500, StatusCodes[500].InternalError);
 	}
 }
 
-module.exports = { ratelimit }
+
+module.exports = { rateLimitByIp };

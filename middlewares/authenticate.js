@@ -22,7 +22,6 @@ async function authenticate(req, res, next) {
 	}
 
 	if (token.length != 96) {
-		console.log(token);
 		return respond(res, 401, StatusCodes[401].MalformedToken);
 	}
 
