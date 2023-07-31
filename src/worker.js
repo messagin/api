@@ -1,5 +1,6 @@
 const express = require("express");
 const helmet = require("helmet");
+const csrf = require("csurf")
 const cookieParser = require("cookie-parser");
 const expressWs = require("express-ws");
 const cors = require("cors");
@@ -19,6 +20,14 @@ async function main() {
 		type: Types.Internal,
 		action: InternalActions.Start
 	}));
+
+	app.use(helmet.hidePoweredBy());
+	app.use(helmet.xXssProtection());
+	app.use(helmet.xFrameOptions());
+	app.use(helmet.xContentTypeOptions());
+	app.use(helmet.contentSecurityPolicy());
+	app.use(helmet.xFrameOptions());
+	app.use(csrf({ cookie: true }));
 
 	app.use(cors());
 	app.use(cookieParser());
