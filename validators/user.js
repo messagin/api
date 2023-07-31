@@ -35,7 +35,7 @@ function create(req, res, next) {
 	let errors = {};
 	if (!req.body.username) {
 		errors.username = "missing";
-	} else if (req.body.username.length < 2) {
+	} else if (typeof req.body.username != "string" || req.body.username.length < 2) {
 		errors.username = "invalid";
 	}
 	if (!req.body.email) {
@@ -45,7 +45,7 @@ function create(req, res, next) {
 	}
 	if (!req.body.password) {
 		errors.password = "missing";
-	} else if (req.body.password.length < 8) {
+	} else if (typeof req.body.username != "string" || req.body.password.length < 8) {
 		errors.password = "invalid";
 	}
 	if (Object.keys(errors).length) {
