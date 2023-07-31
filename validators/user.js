@@ -45,7 +45,7 @@ function create(req, res, next) {
 	}
 	if (!req.body.password) {
 		errors.password = "missing";
-	} else if (typeof req.body.username != "string" || req.body.password.length < 8) {
+	} else if (typeof req.body.password != "string" || req.body.password.length < 8) {
 		errors.password = "invalid";
 	}
 	if (Object.keys(errors).length) {
