@@ -1,6 +1,6 @@
 const express = require("express");
 const helmet = require("helmet");
-const csrf = require("csurf")
+const csrf = require("csurf");
 const cookieParser = require("cookie-parser");
 const expressWs = require("express-ws");
 const cors = require("cors");

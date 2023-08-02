@@ -3,6 +3,10 @@ const { log } = require("../utils/log");
 const { initDatabase } = require("../utils/database");
 const CPUs = require("node:os").cpus().length;
 
+async function beforeExit() {
+	log("red")("exiting...");
+}
+
 async function main() {
 
 	log("cyan")("Primary is running");
@@ -25,6 +29,12 @@ async function main() {
 	process.stdin.setRawMode(true);
 	process.stdin.on("data", data => cluster.handleInput(data));
 
+	process.on("beforeExit", () => beforeExit());
+
 }
+
+process.on("unhandledRejection", () => {
+	console.log("Some error happened");
+})
 
 main();

@@ -17,7 +17,7 @@ async function create(req, res) {
 	const id = generateIDv2();
 	try {
 		await db("chats").insert({ id, name: req.body.name });
-		await db("members").insert({ chat_id: id, user_id: res.locals.user_id, permissions: 1 })
+		await db("members").insert({ chat_id: id, user_id: res.locals.user_id, permissions: 1 });
 		return respond(res, 201, StatusCodes[201].ChatCreated, { id, name: req.body.name });
 	} catch (err) {
 		console.log(err);
@@ -27,4 +27,4 @@ async function create(req, res) {
 
 module.exports = {
 	create
-}
+};
