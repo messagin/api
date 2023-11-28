@@ -17,8 +17,8 @@ To run Messagin', you need to have [Node.js v20](https://nodejs.org/download/rel
 
 
 ```sh
-git clone https://github.com/webd3vs/messagin-backend.git
-cd messagin-backend
+git clone https://github.com/messagin/api.git
+cd api
 npm install
 npm start
 ```
