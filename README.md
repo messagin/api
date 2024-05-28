@@ -1,8 +1,8 @@
 <p align="center">
-    <a href="https://github.com/webd3vs/messagin-backend/build"><img src="https://img.shields.io/github/actions/workflow/status/webd3vs/messagin-backend/node.js.yml?colorA=333&colorB=afa&style=for-the-badge"></a>
-    <a href="https://github.com/webd3vs/messagin-backend/stargazers"><img src="https://img.shields.io/github/stars/webd3vs/messagin-backend?colorA=333&colorB=ffa&style=for-the-badge"></a>
-    <a href="https://github.com/webd3vs/messagin-backend/issues"><img src="https://img.shields.io/github/issues/webd3vs/messagin-backend?colorA=333&colorB=faa&style=for-the-badge"></a>
-    <a href="https://github.com/webd3vs/messagin-backend/contributors"><img src="https://img.shields.io/github/contributors/webd3vs/messagin-backend?colorA=333&colorB=aaf&style=for-the-badge"></a>
+    <a href="https://github.com/messagin/api/build"><img src="https://img.shields.io/github/actions/workflow/status/messagin/api/node.js.yml?colorA=333&colorB=afa&style=for-the-badge"></a>
+    <a href="https://github.com/messagin/api/stargazers"><img src="https://img.shields.io/github/stars/messagin/api?colorA=333&colorB=ffa&style=for-the-badge"></a>
+    <a href="https://github.com/messagin/api/issues"><img src="https://img.shields.io/github/issues/messagin/api?colorA=333&colorB=faa&style=for-the-badge"></a>
+    <a href="https://github.com/messagin/api/contributors"><img src="https://img.shields.io/github/contributors/messagin/api?colorA=333&colorB=aaf&style=for-the-badge"></a>
 </p>
 <h1 align="center">Messagin'</h1>
 
