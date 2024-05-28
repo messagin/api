@@ -17,7 +17,7 @@
     "better-sqlite3": "^9.4.3",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.4.5",
-    "express": "^4.18.3",
+    "express": "^4.19.2",
     "express-ws": "^5.0.2",
     "helmet": "^7.1.0",
     "knex": "^3.1.0",
