@@ -1,0 +1,37 @@
+import { Response } from "express";
+import db from "./database";
+import { ExtendedStatusCodes, StatusCode, StatusCodeMessage, StatusCodes, StatusMessages } from "./status";
+
+export async function respond<T extends StatusCode>(res: Response, status: T, code: StatusCodeMessage<T>, data?: unknown) {
+  const c = StatusCodes[status][code] as ExtendedStatusCodes;
+
+	const response = {
+		code: c,
+		message: StatusMessages[c],
+		url: `${process.env.DOCS_URL}#${c}`,
+		data
+	};
+
+  // todo: rate limit all requests
+
+	if (status === 401 || status === 403) {
+		// rate limit unauthorized requests (by IP)
+		await db.ratelimits.where({ ip: res.req.ip }).increment("count");
+		res.locals.rateLimit.remaining--;
+	}
+	if (res.locals.user_id && status === 429) {
+		// rate limit the application (by ID)
+		// if too many 429 requests, reset the application token
+	}
+	// if (stat)
+
+	if (res.locals.rateLimit) {
+		const { limit, remaining, reset, type } = res.locals.rateLimit;
+		res.set("X-RateLimit-Limit", limit);
+		res.set("X-RateLimit-Remaining", remaining);
+		res.set("X-RateLimit-Reset", reset);
+		res.set("X-RateLimit-Type", type);
+	}
+
+	res.status(status).json(response);
+}
