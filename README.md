@@ -33,4 +33,4 @@ Before submitting a pull request, make sure to read our contribution guidelines 
 
 ## License
 
-Messagin' released under the MIT License. See the [LICENSE](LICENSE) file for more details.
+Messagin' is released under the [MIT License](LICENSE).
