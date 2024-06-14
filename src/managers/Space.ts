@@ -1,4 +1,4 @@
-import { Space } from "../models/Space";
+import { Space } from "../schemas/Space";
 import db from "../utils/database";
 
 export class SpaceManager {
@@ -8,18 +8,19 @@ export class SpaceManager {
     this.user_id = user_id;
   }
 
-  create(name: string) {
-    return new Space().setName(name).create();
+  init(name: string) {
+    return new Space().setName(name).setOwner(this.user_id);
   }
 
   async list() {
-    const raw_spaces = await db.members.select("space_id").where({ user_id: this.user_id });
-    const spaces: (Space | null)[] = [];
+    const spaces = await db.spaces
+      .join("members", "spaces.id", "=", "members.space_id")
+      .select("spaces.*")
+      .where("members.user_id", this.user_id);
 
-    for (const { space_id } of raw_spaces) {
-      spaces.push(await Space.getById(space_id));
-    }
-
-    return spaces.filter(Boolean) as Space[];
+    return spaces.map(space => new Space(space.id, space.created_at)
+      .setName(space.name)
+      .setOwner(space.owner_id)
+    );
   }
 }

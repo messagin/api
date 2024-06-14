@@ -1,5 +1,5 @@
 import { generateHash } from "../utils/auth.node";
-import { Session } from "../models/Session";
+import { Session } from "../schemas/Session";
 import { log } from "../utils/log";
 
 export async function authenticateWebSocket(authorization?: string): Promise<Session | null> {
@@ -38,7 +38,7 @@ export async function authenticateWebSocket(authorization?: string): Promise<Ses
     return null;
   }
 
-  if ((session.Flags.Bot && type === "Bot") || (!session.Flags.Bot && type === "User")) {
+  if ((session.hasFlag("Bot") && type === "Bot") || (!session.hasFlag("Bot") && type === "User")) {
     return session;
   }
 

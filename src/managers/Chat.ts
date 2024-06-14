@@ -1,4 +1,4 @@
-import { Chat } from "../models/Chat";
+import { Chat } from "../schemas/Chat";
 import db from "../utils/database";
 
 export class ChatManager {
@@ -8,7 +8,7 @@ export class ChatManager {
     this.space_id = space_id;
   }
 
-  create(name: string) {
+  init(name: string) {
     return new Chat().setSpace(this.space_id).setName(name);
   }
 

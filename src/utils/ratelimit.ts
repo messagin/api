@@ -11,45 +11,40 @@ import { log } from "./log";
 const WINDOW_SIZE = 24 * 60 * 60; // 1 day
 const MAX_REQUESTS = 1000; // Max invalid requests per window size
 
-export async function rateLimitByIp(req: Request, res: Response, next: NextFunction) {
-	const ip = req.ip;
+export async function rateLimitByIp(_req: Request, res: Response, next: NextFunction) {
+  const ip = res.locals.ip as string;
 
-	if (!ip) {
-    log("red")("Error: IP address is undefined");
-		return respond(res, 500, "MissingIp");
-	}
+  const now = Math.floor(Date.now() / 1000);
+  const start = now - WINDOW_SIZE;
 
-	const now = Math.floor(Date.now() / 1000);
-	const start = now - WINDOW_SIZE;
+  try {
+    await db.ratelimits.where("created_at", "<", start).andWhere("type", "ip").del();
 
-	try {
-		await db.ratelimits.where("timestamp", "<", start).andWhere("type", "ip").del();
+    let data = await db.ratelimits.where({ ip }).first();
 
-		let data = await db.ratelimits.where({ ip }).first();
+    if (!data) {
+      await db.ratelimits.insert({ ip, created_at: now, count: 0, type: "ip" });
+      data = { count: 0, created_at: now, ip, type: "ip", id: null };
+    }
 
-		if (!data) {
-			await db.ratelimits.insert({ ip, timestamp: now, count: 0, type: "ip" });
-			data = { count: 0, timestamp: now, ip, type: "ip", id: null };
-		}
+    res.locals.rateLimit = {
+      limit: MAX_REQUESTS,
+      remaining: MAX_REQUESTS - data.count,
+      reset: data.created_at + WINDOW_SIZE,
+      type: "ip"
+    };
 
-		res.locals.rateLimit = {
-			limit: MAX_REQUESTS,
-			remaining: MAX_REQUESTS - data.count,
-			reset: data.timestamp + WINDOW_SIZE,
-			type: "ip"
-		};
-
-		if (data.count >= MAX_REQUESTS) {
-			await respond(res, 429, "RateLimited");
+    if (data.count >= MAX_REQUESTS) {
+      await respond(res, 429, "RateLimited");
       return;
-		}
+    }
 
-		next();
+    next();
     return;
-	}
+  }
   catch (err) {
     log("red")((err as Error).message)
-		await respond(res, 500, "InternalError");
+    await respond(res, 500, "InternalError");
     return;
-	}
+  }
 }

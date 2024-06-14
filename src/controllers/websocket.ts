@@ -2,13 +2,13 @@ import expressWs, { Application, Router } from "express-ws";
 import { authenticateWebSocket } from "../middlewares/authenticateWs";
 // import db from "../utils/database";
 // import { Session } from "../models/Session";
-import { User } from "../models/User";
+import { User } from "../schemas/User";
 import { Emitter, EventName, Events } from "../utils/events";
 import { WebSocket, RawData } from "ws";
 import { log } from "../utils/log";
-import { Space } from "../models/Space";
-import { Chat } from "../models/Chat";
-import { Session } from "../models/Session";
+import { Space } from "../schemas/Space";
+import { Chat } from "../schemas/Chat";
+import { Session } from "../schemas/Session";
 // import { log } from "../utils/log";
 
 const events = Emitter.getInstance();
@@ -20,7 +20,7 @@ enum OpCodes {
 }
 
 type WsDispatchEvent<K extends EventName> = { op: OpCodes.Dispatch; t: K; d: Events[K][0] };
-type WsLifeCycleEvent = { op: OpCodes.LifeCycle; d: { interval: number } };
+type WsLifeCycleEvent = { op: OpCodes.LifeCycle; d?: { interval: number } };
 type WsAuthEvent = { op: OpCodes.Authenticate; d?: { auth: string } };
 
 function dispatch(ws: WebSocket, data: Partial<WsDispatchEvent<EventName>>) {
@@ -31,7 +31,7 @@ function dispatch(ws: WebSocket, data: Partial<WsDispatchEvent<EventName>>) {
   }
 }
 
-function initLifeCycle(ws: WebSocket) {
+async function initLifeCycle(ws: WebSocket) {
   // todo manage PING / PONG
   // ! disconnect client on timeout
 
@@ -44,11 +44,15 @@ function initLifeCycle(ws: WebSocket) {
     } as WsLifeCycleEvent),
   );
 
+
+  ws.on("close", () => { })
+
   ws.on("message", (message) => {
     const event: WsLifeCycleEvent = JSON.parse(message.toString());
-    if (event.op === OpCodes.LifeCycle) {
-      console.log(event);
-    }
+    if (event.op !== OpCodes.LifeCycle) return;
+
+    // we received a ping
+    // reply with pong and update tracking
   });
 }
 
@@ -98,21 +102,21 @@ export function configure(router: Router) {
 
     dispatch(ws, { t: "Ready", d: state });
 
-    events.on("SessionCreate", (session_) => {
+    events.on("SessionCreate", session_ => {
       if (session_.id !== user.id) {
         return;
       }
       dispatch(ws, { t: "SessionCreate", d: session_ });
     }, listeners);
 
-    events.on("SessionUpdate", (session_) => {
+    events.on("SessionUpdate", session_ => {
       if (session_.id !== user.id) {
         return;
       }
       dispatch(ws, { t: "SessionUpdate", d: session_ });
     }, listeners);
 
-    events.on("SessionDelete", (session_) => {
+    events.on("SessionDelete", session_ => {
       if (session_.user_id !== user.id) {
         return;
       }
@@ -122,14 +126,14 @@ export function configure(router: Router) {
       }
     }, listeners);
 
-    events.on("SpaceCreate", (space) => {
+    events.on("SpaceCreate", space => {
       if (space.owner_id !== user.id) {
         return;
       }
       dispatch(ws, { t: "SpaceCreate", d: space });
     }, listeners);
 
-    events.on("SpaceUpdate", async (space) => {
+    events.on("SpaceUpdate", async space => {
       const is_member = await new Space(space.id).members.has(user.id);
       if (!is_member) {
         return;
@@ -137,7 +141,7 @@ export function configure(router: Router) {
       dispatch(ws, { t: "SpaceUpdate", d: space });
     }, listeners);
 
-    events.on("SpaceDelete", async (space) => {
+    events.on("SpaceDelete", async space => {
       const is_member = await new Space(space.id).members.has(user.id);
       if (!is_member) {
         return;
@@ -146,7 +150,7 @@ export function configure(router: Router) {
     }, listeners);
 
     // todo perform permission checks on chats
-    events.on("ChatCreate", async (chat) => {
+    events.on("ChatCreate", async chat => {
       const is_member = await new Space(chat.space_id).members.has(user.id);
       if (!is_member) {
         return;
@@ -154,7 +158,7 @@ export function configure(router: Router) {
       dispatch(ws, { t: "ChatCreate", d: chat });
     }, listeners);
 
-    events.on("ChatUpdate", async (chat) => {
+    events.on("ChatUpdate", async chat => {
       const is_member = await new Space(chat.space_id).members.has(user.id);
       if (!is_member) {
         return;
@@ -162,102 +166,101 @@ export function configure(router: Router) {
       dispatch(ws, { t: "ChatUpdate", d: chat });
     }, listeners);
 
-    events.on(
-      "ChatDelete",
-      async (chat) => {
-        const is_member = await new Space(chat.space_id).members.has(user.id);
-        if (!is_member) {
-          return;
-        }
-        dispatch(ws, { t: "ChatDelete", d: chat });
-      },
-      listeners,
-    );
+    events.on("ChatDelete", async chat => {
+      const is_member = await new Space(chat.space_id).members.has(user.id);
+      if (!is_member) {
+        return;
+      }
+      dispatch(ws, { t: "ChatDelete", d: chat });
+    }, listeners);
 
     // todo perform checks on messages
-    events.on(
-      "MessageCreate",
-      async (message) => {
-        const chat = await Chat.getById(message.chat_id);
-        if (!chat) {
-          return;
-        }
-        const is_member = await new Space(chat.space_id).members.has(user.id);
-        if (!is_member) {
-          return;
-        }
-        dispatch(ws, { t: "MessageCreate", d: message });
-      },
-      listeners,
-    );
+    events.on("MessageCreate", async message => {
+      const chat = await Chat.getById(message.chat_id);
+      if (!chat) {
+        return;
+      }
+      const is_member = await new Space(chat.space_id).members.has(user.id);
+      if (!is_member) {
+        return;
+      }
+      dispatch(ws, { t: "MessageCreate", d: message });
+    }, listeners);
 
-    events.on(
-      "MessageUpdate",
-      async (message) => {
-        const chat = await Chat.getById(message.chat_id);
-        if (!chat) {
-          return;
-        }
-        const is_member = await new Space(chat.space_id).members.has(user.id);
-        if (!is_member) {
-          return;
-        }
-        dispatch(ws, { t: "MessageUpdate", d: message });
-      },
-      listeners,
-    );
+    events.on("MessageUpdate", async message => {
+      const chat = await Chat.getById(message.chat_id);
+      if (!chat) {
+        return;
+      }
+      const is_member = await new Space(chat.space_id).members.has(user.id);
+      if (!is_member) {
+        return;
+      }
+      dispatch(ws, { t: "MessageUpdate", d: message });
+    }, listeners);
 
-    events.on(
-      "MessageDelete",
-      async (message) => {
-        const chat = await Chat.getById(message.chat_id);
-        if (!chat) {
-          return;
-        }
-        const is_member = await new Space(chat.space_id).members.has(user.id);
-        if (!is_member) {
-          return;
-        }
-        dispatch(ws, { t: "MessageDelete", d: message });
-      },
-      listeners,
-    );
+    events.on("MessageDelete", async message => {
+      const chat = await Chat.getById(message.chat_id);
+      if (!chat) {
+        return;
+      }
+      const is_member = await new Space(chat.space_id).members.has(user.id);
+      if (!is_member) {
+        return;
+      }
+      dispatch(ws, { t: "MessageDelete", d: message });
+    }, listeners);
 
-    events.on(
-      "RoleCreate",
-      async (role) => {
-        const is_member = await new Space(role.space_id).members.has(user.id);
-        if (!is_member) {
-          return;
-        }
-        dispatch(ws, { t: "RoleCreate", d: role });
-      },
-      listeners,
-    );
+    events.on("RoleCreate", async role => {
+      const is_member = await new Space(role.space_id).members.has(user.id);
+      if (!is_member) {
+        return;
+      }
+      dispatch(ws, { t: "RoleCreate", d: role });
+    }, listeners);
 
-    events.on(
-      "RoleUpdate",
-      async (role) => {
-        const is_member = await new Space(role.space_id).members.has(user.id);
-        if (!is_member) {
-          return;
-        }
-        dispatch(ws, { t: "RoleUpdate", d: role });
-      },
-      listeners,
-    );
+    events.on("RoleUpdate", async role => {
+      const is_member = await new Space(role.space_id).members.has(user.id);
+      if (!is_member) {
+        return;
+      }
+      dispatch(ws, { t: "RoleUpdate", d: role });
+    }, listeners);
 
-    events.on(
-      "RoleDelete",
-      async (role) => {
-        const is_member = await new Space(role.space_id).members.has(user.id);
-        if (!is_member) {
-          return;
-        }
-        dispatch(ws, { t: "RoleDelete", d: role });
-      },
-      listeners,
-    );
+    events.on("RoleDelete", async role => {
+      const is_member = await new Space(role.space_id).members.has(user.id);
+      if (!is_member) {
+        return;
+      }
+      dispatch(ws, { t: "RoleDelete", d: role });
+    }, listeners);
+
+    events.on("MemberCreate", async member => {
+      const is_self = member.user_id === user.id;
+      const is_member = await new Space(member.space_id).members.has(user.id);
+      if (!(is_self || is_member)) {
+        return;
+      }
+      dispatch(ws, { t: "MemberCreate", d: member });
+    }, listeners);
+
+    events.on("MemberDelete", async member => {
+      const is_self = member.user_id === user.id;
+      const is_member = await new Space(member.space_id).members.has(user.id);
+      if (!(is_self || is_member)) {
+        return;
+      }
+      dispatch(ws, { t: "MemberDelete", d: member });
+    }, listeners);
+
+    events.on("MemberUpdate", async member => {
+      const is_self = member.user_id === user.id;
+      const is_member = await new Space(member.space_id).members.has(user.id);
+      if (!(is_self || is_member)) {
+        return;
+      }
+      dispatch(ws, { t: "MemberUpdate", d: member });
+    }, listeners);
 
     ws.on("close", () => {
       ws.removeAllListeners();

@@ -1,33 +1,38 @@
-import { Member } from "../models/Member";
+import { Member } from "../schemas/Member";
 import db from "../utils/database";
 
-export class MemberManager  {
+export class MemberManager {
   private space_id: string;
 
   constructor(space_id: string) {
     this.space_id = space_id;
   }
 
-  create(user_id: string) {
+  init(user_id: string) {
     return new Member()
       .setSpace(this.space_id)
-      .setUser(user_id)
-      .create();
+      .setUser(user_id);
+  }
+
+  async get(user_id: string) {
+    const member = await db.members.where({ space_id: this.space_id, user_id: user_id }).first();
+    if (!member) return null;
+    return new Member(member.created_at)
+      .setColor(member.color)
+      .setPermissions(member.permissions)
+      .setSpace(member.space_id)
+      .setUser(member.user_id);
   }
 
   async list() {
-    const raw_members = await db.members.select().where({ space_id: this.space_id });
-    const members: (Member | null)[] = [];
+    const members = await db.members.where({ space_id: this.space_id });
 
-    for (const raw_member of raw_members) {
-      const member = new Member()
-        .setSpace(raw_member.space_id)
-        .setUser(raw_member.user_id)
-        .setRawPermissions(raw_member.permissions)
-        .setColor(raw_member.color);
-      members.push(member);
-    }
-    return members.filter(Boolean) as Member[];
+    return members.map(member => new Member()
+      .setSpace(member.space_id)
+      .setUser(member.user_id)
+      .setPermissions(member.permissions)
+      .setColor(member.color)
+    );
   }
 
   async has(user_id: string) {

@@ -5,15 +5,15 @@ type ValueError = "missing" | "invalid";
 
 export function getById(req: Request, res: Response, next: NextFunction) {
   if (!/^[0-9A-HJKMNP-TV-Z]{16}$/.test(req.params.space_id)) {
-		return respond(res, 400, "MalformedId");
-	}
+    return respond(res, 400, "MalformedId");
+  }
   return next();
 }
 
 export function destroy(req: Request, res: Response, next: NextFunction) {
   if (!/^[0-9A-HJKMNP-TV-Z]{16}$/.test(req.params.space_id)) {
-		return respond(res, 400, "MalformedId");
-	}
+    return respond(res, 400, "MalformedId");
+  }
   return next();
 }
 

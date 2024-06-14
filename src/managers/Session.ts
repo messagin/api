@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { Session } from "../models/Session";
+import { Session } from "../schemas/Session";
 import db from "../utils/database";
 
 export class SessionManager {

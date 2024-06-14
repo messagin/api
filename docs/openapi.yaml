@@ -1,0 +1,554 @@
+openapi: 3.0.0
+
+# User MDY3VzM1RFM0UjAwMDAwMQee40zmGt5hpbpw2qsPyWt1K78A9-6DsbBmsPJAGe3zr9WY13U8Fx2kYetVh37uLRVdhPlXTh4d
+
+info:
+  title: Messagin' API
+  version: 1.0.0
+  description: "Messagin' API is a simple API for messaging and chatting. It allows users to create spaces, invite members, and chat with each other."
+  contact:
+    email: contact@webd3vs.xyz
+    name: webd3vs
+    url: https://webd3vs.xyz
+externalDocs:
+  url: https://docs.webd3vs.xyz
+servers:
+  - url: http://localhost:4000
+    description: Local server
+tags:
+  - name: users
+  - name: spaces
+security:
+  - BearerAuth: []
+
+paths:
+  /users/self:
+    get:
+      description: "temp description"
+      tags:
+        - users
+      summary: Get current user
+      operationId: getCurrentUser
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                id: 067YH1EPTW000000
+                flags: 0
+                username: webd3vs
+                name: webd3vs
+                email: contact@webd3vs.xyz
+                phone: "+1234567890"
+                created_at: 1704067200
+        "401":
+          $ref: "#/components/responses/401"
+        "429":
+          $ref: "#/components/responses/429"
+        "500":
+          $ref: "#/components/responses/500"
+    put:
+      tags:
+        - users
+      summary: Update user
+      operationId: updateUser
+      requestBody:
+        $ref: "#/components/requestBodies/UpdataUserPassword"
+      responses:
+        "204":
+          description: Successful response
+          content:
+            null: {}
+        "400":
+          description: Bad request
+        "401":
+          $ref: "#/components/responses/401"
+        "500":
+          $ref: "#/components/responses/500"
+    delete:
+      tags:
+        - users
+      summary: Delete user
+      operationId: deleteUser
+      responses:
+        "200":
+          description: Successful response
+  /users/self/password:
+    put:
+      tags:
+        - users
+      summary: Update user password
+      operationId: updatePassword
+      responses:
+        "200":
+          description: Successful response
+  /users/self/mfa/validate:
+    post:
+      tags:
+        - users
+      summary: Validate MFA
+      operationId: validateMfa
+      responses:
+        "200":
+          description: Successful response
+  /users/try:
+    post:
+      tags:
+        - users
+      summary: Create trial user
+      operationId: createTrialUser
+      responses:
+        "200":
+          description: Successful response
+  /users/signup:
+    post:
+      tags:
+        - users
+      summary: Sign up user
+      operationId: signUpUser
+      responses:
+        "200":
+          description: Successful response
+  /users/authenticate:
+    post:
+      tags:
+        - users
+      summary: Authenticate user
+      operationId: authenticateUser
+      responses:
+        "200":
+          description: Successful response
+  /users/{user_id}:
+    get:
+      tags:
+        - users
+      summary: Get user by ID
+      operationId: getUserById
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ID"
+      responses:
+        "200":
+          description: Successful response
+  /spaces:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - spaces
+      summary: List user spaces
+      operationId: listUserSpaces
+      responses:
+        "200":
+          description: Successful response
+    post:
+      security:
+        - BearerAuth: []
+      tags:
+        - spaces
+      summary: Create new space
+      operationId: createSpace
+      responses:
+        "200":
+          description: Successful response
+  /spaces/{space_id}:
+    get:
+      summary: Get space
+      operationId: getSpace
+      parameters:
+        - name: space_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ID"
+      responses:
+        "200":
+          description: Successful response
+    delete:
+      summary: Delete space
+      operationId: deleteSpace
+      parameters:
+        - name: space_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ID"
+      responses:
+        "200":
+          description: Successful response
+  /spaces/{space_id}/invites:
+    get:
+      summary: Get invites
+      operationId: getInvites
+      parameters:
+        - name: space_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+    post:
+      summary: Create invite
+      operationId: createInvite
+      parameters:
+        - name: space_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+  /invites/{invite_id}:
+    post:
+      summary: Accept invite
+      operationId: acceptInvite
+      parameters:
+        - name: invite_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+    get:
+      summary: Get invite
+      operationId: getInvite
+      parameters:
+        - name: invite_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+    delete:
+      summary: Delete invite
+      operationId: deleteInvite
+      parameters:
+        - name: invite_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+  /spaces/{space_id}/members:
+    get:
+      summary: List members
+      operationId: listMembers
+      parameters:
+        - name: space_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+  /spaces/{space_id}/members/{member_id}:
+    get:
+      summary: Get member
+      operationId: getMember
+      parameters:
+        - name: space_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: member_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+  /spaces/{space_id}/chats:
+    get:
+      summary: List chats
+      operationId: listChats
+      parameters:
+        - name: space_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+    post:
+      summary: Create chat
+      operationId: createChat
+      parameters:
+        - name: space_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+  /chats/{chat_id}:
+    get:
+      summary: Get chat
+      operationId: getChat
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+    patch:
+      summary: Update chat
+      operationId: updateChat
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+    delete:
+      summary: Delete chat
+      operationId: deleteChat
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+  /chats/{chat_id}/messages:
+    get:
+      summary: List messages
+      operationId: listMessages
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+    post:
+      summary: Create message
+      operationId: createMessage
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+  /chats/{chat_id}/messages/search:
+    get:
+      summary: Search for messages
+      operationId: searchMessages
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+  /chats/{chat_id}/messages/{message_id}:
+    get:
+      summary: Get message
+      operationId: getMessage
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ID"
+        - name: message_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ID"
+      responses:
+        "200":
+          description: Successful response
+    patch:
+      summary: Update message
+      operationId: updateMessage
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: message_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+    delete:
+      summary: Delete message
+      operationId: deleteMessage
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: message_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+  /users/self/relations:
+    get:
+      summary: List relations
+      operationId: listRelations
+      responses:
+        "200":
+          description: Successful response
+    post:
+      summary: Add friend
+      operationId: addFriend
+      responses:
+        "200":
+          description: Successful response
+
+  /users/self/relations/{user_id}:
+    get:
+      summary: Get friend
+      operationId: getFriend
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ID"
+      responses:
+        "200":
+          description: Successful response
+    delete:
+      summary: Remove friend
+      operationId: removeFriend
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+components:
+  responses:
+    "401":
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: Authentication token is invalid
+
+    "429":
+      description: Rate Limit Exceeded
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: You are being rate limited
+
+    "500":
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: An internal error occurred
+
+  securitySchemes:
+    BearerAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+
+  requestBodies:
+    UpdataUserPassword:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              old_password:
+                type: string
+                format: password
+              new_password:
+                type: string
+                format: password
+            required:
+              - old_password
+              - new_password
+  schemas:
+    ID:
+      type: string
+      pattern: "^[0-9A-HJKMNP-TV-Z]{16}$"
+
+    User:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/ID"
+        flags:
+          type: number
+        username:
+          type: string
+          format: username
+          minLength: 2
+          maxLength: 32
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        created_at:
+          type: number

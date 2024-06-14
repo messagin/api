@@ -21,7 +21,11 @@ interface BaseUser {
   email: string | null;
   phone: string | null;
   mfa: string | null;
+  created_at: number;
 }
+
+type CleanUser = Omit<BaseUser, "password" | "mfa">;
+type PublicUser = Omit<CleanUser, "phone" | "email">;
 
 export class User implements BaseUser {
   id: string;
@@ -32,10 +36,11 @@ export class User implements BaseUser {
   email: string | null;
   phone: string | null;
   mfa: string | null;
+  created_at: number;
 
   private updatedEntries?: (keyof BaseUser)[];
 
-  constructor(id?: string) {
+  constructor(id?: string, time?: number) {
     this.id = id ?? generateIDv2();
     this.flags = 0;
     this.username = "";
@@ -44,6 +49,7 @@ export class User implements BaseUser {
     this.email = null;
     this.phone = null;
     this.mfa = null;
+    this.created_at = time ?? Date.now();
 
     this.updatedEntries = [];
   }
@@ -58,6 +64,7 @@ export class User implements BaseUser {
       email: this.email,
       phone: this.phone,
       mfa: this.mfa,
+      created_at: this.created_at
     });
     return this;
   }
@@ -74,6 +81,11 @@ export class User implements BaseUser {
   }
 
   async delete() {
+    // todo update user deletion to give them time to think twice
+    await db.sessions.delete().where({
+      user_id: this.id
+    });
+    await this.setEmail("", "").update()
     return this;
   }
 
@@ -121,29 +133,26 @@ export class User implements BaseUser {
     return this;
   }
 
-  setFlags(...flags: UserFlag[]) {
-    let result = 0;
-    for (const flag of flags) {
-      result |= UserFlags[flag];
-    }
-    this.flags = result;
+  setFlag(flag: UserFlag) {
+    this.flags |= UserFlags[flag];
     this.updatedEntries?.push("flags");
     return this;
   }
 
-  setRawFlags(flags: number) {
+  clearFlag(flag: UserFlag) {
+    this.flags &= ~UserFlags[flag];
+    this.updatedEntries?.push("flags");
+    return this;
+  }
+
+  hasFlag(flag: UserFlag) {
+    return (this.flags & UserFlags[flag]) !== 0;
+  }
+
+  setFlags(flags: number) {
     this.flags = flags;
     this.updatedEntries?.push("flags");
     return this;
-  }
-
-  get Flags() {
-    const result: { [K in UserFlag]: boolean } = (Object.keys(UserFlags) as UserFlag[])
-      .reduce((acc, flag) => {
-        acc[flag] = !!(UserFlags[flag] & this.flags);
-        return acc;
-      }, {} as { [K in UserFlag]: boolean });
-    return result;
   }
 
   setMFA(mfa: string | null) {
@@ -152,44 +161,72 @@ export class User implements BaseUser {
     return this;
   }
 
-  clean(): Partial<BaseUser> {
-    const { updatedEntries, password, mfa, ...cleanUser } = this;
-    updatedEntries; password; mfa;
-    return cleanUser;
+  setCreatedAt(time: number) {
+    this.created_at = time;
+    return this;
   }
 
-  public(): Partial<BaseUser> {
-    const { updatedEntries, password, mfa, email, phone, ...cleanUser } = this;
-    updatedEntries; password; mfa; email; phone;
-    return cleanUser;
+  clean(): CleanUser {
+    return {
+      id: this.id,
+      flags: this.flags,
+      username: this.username,
+      name: this.name,
+      email: this.email,
+      phone: this.phone,
+      created_at: this.created_at
+    };
+  }
+
+  public(): PublicUser {
+    return {
+      id: this.id,
+      flags: this.flags,
+      username: this.username,
+      name: this.name,
+      created_at: this.created_at
+    };
   }
 
   static async getById(id: string) {
     const user = await db.users.where({ id }).first();
     if (!user) return null;
-    const user_ = new User(user.id)
-      .setRawFlags(user.flags)
+    return new User(user.id, user.created_at)
+      .setFlags(user.flags)
       .setUsername(user.username)
       .setRawPassword(user.password)
       .setName(user.name)
       .setEmail(user.email)
       .setPhone(user.phone)
       .setMFA(user.mfa);
-    return user_;
+  }
+
+  static async id_exists(id: string) {
+    const count = await db.users.where({ id }).count().first() as { "count(*)": number };
+    return count["count(*)"] > 0;
+  }
+
+  static async email_exists(email: string) {
+    const count = await db.users.where({ email }).count().first() as { "count(*)": number };
+    return count["count(*)"] > 0;
+  }
+
+  static async username_exists(username: string) {
+    const count = await db.users.where({ username }).count().first() as { "count(*)": number };
+    return count["count(*)"] > 0;
   }
 
   static async getByEmail(email: string, ...fields: string[]) {
     const user = await db.users.select(...fields).where({ email }).first();
     if (!user) return null;
-    const user_ = new User(user.id)
-      .setRawFlags(user.flags)
+    return new User(user.id, user.created_at)
+      .setFlags(user.flags)
       .setUsername(user.username)
       .setRawPassword(user.password)
       .setName(user.name)
       .setEmail(user.email)
       .setPhone(user.phone)
       .setMFA(user.mfa);
-    return user_;
   }
 
   get sessions() {
@@ -199,4 +236,8 @@ export class User implements BaseUser {
   get spaces() {
     return new SpaceManager(this.id);
   }
+
+  // get relations() {
+  //   return new RelationManager(this.id);
+  // }
 }

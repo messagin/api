@@ -5,7 +5,7 @@ import { UAParser } from "ua-parser-js";
 
 const SessionFlags = {
   Bot: 1 << 0,
-}
+};
 
 type SessionFlag = keyof typeof SessionFlags;
 
@@ -18,8 +18,11 @@ interface BaseSession {
   ip: string | null;
   ua: string | null;
   browser: string | null;
-  timestamp: number;
-}
+  updated_at: number;
+  created_at: number;
+};
+
+type CleanSession = Omit<BaseSession, "token" | "user_id">;
 
 export class Session implements BaseSession {
   id: string;
@@ -30,9 +33,10 @@ export class Session implements BaseSession {
   ip: string | null;
   ua: string | null;
   browser: string | null;
-  timestamp: number;
+  updated_at: number;
+  created_at: number;
 
-  constructor(user_id: string, id?: string) {
+  constructor(user_id: string, id?: string, updated_at?: number, created_at?: number) {
     this.id = id ?? generateIDv2();
     this.user_id = user_id;
     this.flags = 0;
@@ -41,7 +45,8 @@ export class Session implements BaseSession {
     this.ip = null;
     this.ua = null;
     this.browser = null;
-    this.timestamp = Date.now();
+    this.updated_at = updated_at ?? Date.now();
+    this.created_at = created_at ?? Date.now();
   }
 
   setBrowser(browser: string | null) {
@@ -64,35 +69,46 @@ export class Session implements BaseSession {
     return this;
   }
 
-  setFlags(...flags: SessionFlag[]) {
-    let bitfield = 0;
-    for (const flag of flags) {
-      bitfield |= SessionFlags[flag];
-    }
-    this.flags = bitfield;
+  setFlag(flag: SessionFlag) {
+    this.flags |= SessionFlags[flag];
     return this;
   }
 
-  setRawFlags(flags: number) {
+  clearFlag(flag: SessionFlag) {
+    this.flags &= ~SessionFlags[flag];
+    return this;
+  }
+
+  hasFlag(flag: SessionFlag) {
+    return (this.flags & SessionFlags[flag]) !== 0;
+  }
+
+  private setFlags(flags: number) {
     this.flags = flags;
     return this;
   }
 
-  setRawToken(token: string) {
+  private setToken(token: string) {
     this.token.hash = token;
     return this;
   }
 
-  setTimestamp(timestamp?: number) {
-    this.timestamp = timestamp ?? Date.now();
+  setCreatedAt(time?: number) {
+    this.created_at = time ?? Date.now();
     return this;
   }
 
-  clean() {
+  setUpdatedAt(time?: number) {
+    this.updated_at = time ?? Date.now();
+    return this;
+  }
+
+  clean(): CleanSession {
     return {
       id: this.id,
       flags: this.flags,
-      timestamp: this.timestamp,
+      created_at: this.created_at,
+      updated_at: this.updated_at,
       ip: this.ip,
       ua: this.ua,
       browser: this.browser,
@@ -100,21 +116,12 @@ export class Session implements BaseSession {
     };
   }
 
-  get Flags() {
-    const result: { [K in SessionFlag]: boolean } = (Object.keys(SessionFlags) as SessionFlag[])
-      .reduce((acc, flag) => {
-        acc[flag] = !!(SessionFlags[flag] & this.flags);
-        return acc;
-      }, {} as { [K in SessionFlag]: boolean });
-    return result;
-  }
-
   async create(req: Request) {
     const result = new UAParser(req.headers["user-agent"]).getResult();
     this.setBrowser(result.browser.name ?? null)
       .setOS(result.os.name ?? null)
       .setUA(result.ua)
-      .setRawFlags(0)
+      .setFlags(0)
       .setIP(req.ip ?? null);
 
     this.token = generateToken(this.id);
@@ -128,14 +135,15 @@ export class Session implements BaseSession {
       os: this.os,
       ua: this.ua,
       browser: this.browser,
-      timestamp: this.timestamp,
+      created_at: this.created_at,
+      updated_at: this.updated_at,
     });
     return this;
   }
 
   async update() {
     await db.sessions.update({
-      timestamp: this.timestamp
+      updated_at: this.updated_at
     }).where({ id: this.id });
     return this;
   }
@@ -143,19 +151,29 @@ export class Session implements BaseSession {
   static async getById(id: string) {
     const session = await db.sessions.where({ id }).first();
     if (!session) return null;
-    return new Session(session.user_id, session.id)
+    return new Session
+      (
+        session.user_id,
+        session.id,
+        session.updated_at,
+        session.created_at,
+      )
       .setBrowser(session.browser)
-      .setRawFlags(session.flags)
-      .setRawToken(session.token)
+      .setFlags(session.flags)
+      .setToken(session.token)
       .setOS(session.os)
       .setUA(session.ua)
-      .setIP(session.ip)
-      .setTimestamp(session.timestamp);
+      .setIP(session.ip);
   }
 
+  // todo check if Session.exists(id) is required
+  // static async exists(id: string) {
+  //   const count = await db.sessions.where({ id }).count().first() as { "count(*)": number };
+  //   return count["count(*)"] > 0;
+  // }
+
   async delete() {
-    // no await, perform delete in the background
-    db.sessions.delete().where({ id: this.id });
+    await db.sessions.delete().where({ id: this.id });
     return this;
   }
 }

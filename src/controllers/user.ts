@@ -1,34 +1,38 @@
 import { Request, Response } from "express";
-import { User } from "../models/User";
+import { User } from "../schemas/User";
 import { respond } from "../utils/respond";
-import { generateHash, generateHmac, generateIDv2, generateToken } from "../utils/auth";
+import { generateHash, generateHmac } from "../utils/auth";
 import { log } from "../utils/log";
-import { Session } from "../models/Session";
+import { Session } from "../schemas/Session";
 
 export async function create(req: Request, res: Response) {
-  const emailExists = await User.getByEmail(req.body.email);
+  const emailExists = await User.email_exists(req.body.email);
   if (emailExists) {
     return respond(res, 409, "EmailExists");
   }
 
+  const usernameExists = await User.username_exists(req.body.username);
+  if (usernameExists) {
+    return respond(res, 409, "UsernameExists");
+  }
+
   const user = new User()
     .setUsername(req.body.username)
+    .setName(req.body.name ?? null)
     .setEmail(req.body.email, req.body.password);
 
   try {
     await user.create();
     const session = await user.sessions.create(req);
 
-    respond(res, 201, "UserCreated", {
+    return respond(res, 201, "UserCreated", {
       token: session.token.string
     });
   }
   catch (err) {
     log("red")((err as Error).message);
-    respond(res, 500, "InternalError");
-    return;
+    return respond(res, 500, "InternalError");
   }
-
 }
 
 export async function destroy(_req: Request, res: Response) {
@@ -62,7 +66,7 @@ export async function login(req: Request, res: Response) {
 
     return respond(res, 200, "Ok", {
       token: xtoken,
-      type: session.Flags.Bot ? "Bot" : "User"
+      type: session.hasFlag("Bot") ? "Bot" : "User"
     });
   }
 
@@ -75,18 +79,15 @@ export async function login(req: Request, res: Response) {
     user = await User.getByEmail(req.body.email);
   }
   catch (err) {
-    respond(res, 500, "InternalError");
-    return;
+    return respond(res, 500, "InternalError");
   }
 
   if (!user) {
-    respond(res, 401, "InvalidCredentials");
-    return;
+    return respond(res, 401, "InvalidCredentials");
   }
 
   if (user.password !== generateHmac(req.body.password, req.body.email)) {
-    respond(res, 401, "InvalidCredentials");
-    return;
+    return respond(res, 401, "InvalidCredentials");
   }
 
   const session = await user.sessions.create(req);
@@ -100,33 +101,35 @@ export async function login(req: Request, res: Response) {
 export async function createTrial(req: Request, res: Response) {
 
   // generate an ID for the user
-  const id = generateIDv2();
 
   // create a token from that ID
-  const token = generateToken(id);
 
-  const user = new User(id)
+  const user = new User()
     .setUsername(req.body.username)
+    .setFlag("UnverifiedEmail")
     .setEmail("", "");
 
   try {
     await user.create();
+    const session = await user.sessions.create(req);
 
     return respond(res, 201, "UserCreated", {
-      token: token.string
+      token: session.token.string
     });
   }
   catch (err) {
-    // if some error happened during INSERT, that's an Internal Server Error (500)
+    log("red")((err as Error).message);
     return respond(res, 500, "InternalError");
   }
 }
 
-export async function getCurrent(_req: Request, res: Response<Record<string, never>, { user_id: string }>) {
+export async function getSelf(_req: Request, res: Response<Record<string, never>, { user_id: string }>) {
   try {
+    console.log(res.locals);
     const user = await User.getById(res.locals.user_id);
-    return respond(res, 200, "Ok", user?.clean());
-  } catch (err) {
+    return respond(res, 200, "Ok", user!.clean());
+  }
+  catch (err) {
     log("red")((err as Error).message);
     return respond(res, 500, "InternalError");
   }
@@ -151,31 +154,32 @@ export async function getById(req: Request, res: Response) {
 }
 
 export async function validateMfa(req: Request, res: Response) {
+  // todo funish implementing
   req; res;
   return null;
 }
 
 export async function updatePassword(req: Request, res: Response) {
-  req; res;
-  // // validate
+  const { old_password, new_password } = req.body;
 
-  // let { currentPassword, newPassword } = req.body;
+  try {
+    const user = await User.getById(res.locals.user_id);
+    if (!user) {
+      return respond(res, 500, "InternalError");
+    }
 
-  // try {
-  // 	let user = await User.getById(res.locals.user_id);
-
-  //   if (!user.email) {
-  // 		// cannot update password for a temporary user
-  // 		return respond(res, 400, StatusCodes[400].TempUser);
-  // 	}
-  // 	if (generateHmac(currentPassword, user.email) !== user.password) {
-  // 		return respond(res, 400, StatusCodes[400].WrongPassword);
-  // 	}
-  // 	await user.set("password", generateHmac(newPassword, user.email));
-  // 	return respond(res, 204, StatusCodes[204]);
-  // } catch (e) {
-  // 	console.log(e);
-  // 	return respond(res, 500, StatusCodes[500].InternalError);
-  // }
+    if (!user.email) {
+      // cannot update password for a temporary user
+      return respond(res, 400, "TempUser");
+    }
+    if (generateHmac(old_password, user.email) !== user.password) {
+      return respond(res, 400, "WrongPassword");
+    }
+    await user.setPassword(new_password).update();
+    return respond(res, 204, "Updated");
+  } catch (err) {
+    log("red")((err as Error).message);
+    return respond(res, 500, "InternalError");
+  }
 
 }
