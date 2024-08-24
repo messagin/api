@@ -20,7 +20,7 @@ const server = createServer(app);
 expressWs(app, server);
 
 // listen on *:4000
-server.listen(4000, () => process.send?.({
+server.listen(process.env.PORT || 4000, () => process.send?.({
   type: Types.Internal,
   action: InternalActions.Start
 }));
