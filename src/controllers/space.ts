@@ -10,7 +10,7 @@ export async function getById(req: Request, res: Response) {
     const id = req.params.space_id;
     const space = await Space.getById(id);
 
-    if (!space) {
+    if (!space || space.hasFlag("Deleted")) {
       return respond(res, 404, "NotFound");
     }
 
@@ -29,13 +29,17 @@ export async function get(_req: Request, res: Response) {
     return respond(res, 500, "InternalError");
   }
   const spaces = await user.spaces.list();
-  return respond(res, 200, "Ok", spaces);
+  const filtered = spaces.filter(space => !space.hasFlag("Deleted"));
+
+  console.log(filtered);
+
+  return respond(res, 200, "Ok", filtered);
 }
 
 export async function destroy(req: Request, res: Response) {
   try {
     const space = await Space.getById(req.params.space_id);
-    if (!space) {
+    if (!space || space.hasFlag("Deleted")) {
       return respond(res, 404, "NotFound");
     }
     if (space.owner_id !== res.locals.user_id) {

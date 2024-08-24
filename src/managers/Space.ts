@@ -19,8 +19,9 @@ export class SpaceManager {
       .where("members.user_id", this.user_id);
 
     return spaces.map(space => new Space(space.id, space.created_at)
+      .setFlags(space.flags)
       .setName(space.name)
       .setOwner(space.owner_id)
-    );
+    ).filter(space => !space.hasFlag("Deleted"));
   }
 }

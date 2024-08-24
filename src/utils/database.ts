@@ -34,6 +34,7 @@ interface Signup {
 interface Space {
   id: string;
   name: string;
+  flags: number;
   owner_id: string;
   created_at: number;
 }
@@ -167,6 +168,7 @@ export async function initDatabase() {
   if (!spacesExists) await db_.schema.createTable("spaces", table => {
     table.text("name");
     table.specificType("id", "char(16)").unique().primary();
+    table.integer("flags").notNullable().defaultTo(0);
     table.specificType("owner_id", "char(16)").references("id").inTable("users");
     table.integer("created_at").notNullable();
   });

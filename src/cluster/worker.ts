@@ -8,6 +8,7 @@ import { createServer } from "http";
 import expressWs from "express-ws";
 import router from "../routes/index";
 import { respond } from "../utils/respond";
+import cors from "cors"; 
 
 // import public_router from "./routes/public";
 
@@ -23,6 +24,8 @@ server.listen(4000, () => process.send?.({
   type: Types.Internal,
   action: InternalActions.Start
 }));
+
+app.use(cors());
 
 app.use(helmet({
   hidePoweredBy: true
