@@ -34,7 +34,7 @@
     "lint": "eslint",
     "compile": "tsc",
     "build": "for i in ./dist/**/*.js; do uglifyjs $i -o $i --compress --mangle; done; for i in ./dist/*.js; do uglifyjs $i -o $i --compress --mangle; done",
-    "prestart": "clear && yarn run lint && yarn run compile",
+    "prestart": "yarn run lint && yarn run compile",
     "start": "node -r dotenv/config dist/index.js"
   },
   "devDependencies": {

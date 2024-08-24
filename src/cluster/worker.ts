@@ -8,7 +8,7 @@ import { createServer } from "http";
 import expressWs from "express-ws";
 import router from "../routes/index";
 import { respond } from "../utils/respond";
-import cors from "cors"; 
+import cors from "cors";
 
 // import public_router from "./routes/public";
 
@@ -74,19 +74,24 @@ process.on("uncaughtException", (err) => {
   log("red", "\x1b[91;1mGLOBAL\x1b[0m")(err.stack ?? "");
 });
 
-// listen for keypresses and send them to primary process
-process.stdin.resume();
-process.stdin.setEncoding("utf8");
-process.stdin.setRawMode(true);
-process.stdin.on("data", (data) => {
-  process.send?.({ type: Types.Stdio, data });
-});
+if (process.stdin.isTTY) {
+  // listen for keypresses and send them to primary process
+  process.stdin.resume();
+  process.stdin.setEncoding("utf8");
+  process.stdin.setRawMode(true);
+  process.stdin.on("data", (data) => {
+    process.send?.({ type: Types.Stdio, data });
+  });
 
-process.on("message", (msg: IPCMessage) => {
-  if (msg.type === Types.Internal) {
-    if (msg.action === InternalActions.Exit) {
-      process.disconnect();
-      process.exit();
+  process.on("message", (msg: IPCMessage) => {
+    if (msg.type === Types.Internal) {
+      if (msg.action === InternalActions.Exit) {
+        process.disconnect();
+        process.exit();
+      }
     }
-  }
-});
+  });
+}
+else {
+  log("white")("Running in a non-interactive environment, skipping raw mode setup.");
+}

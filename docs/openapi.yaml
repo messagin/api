@@ -1,7 +1,5 @@
 openapi: 3.0.0
 
-# User MDY3VzM1RFM0UjAwMDAwMQee40zmGt5hpbpw2qsPyWt1K78A9-6DsbBmsPJAGe3zr9WY13U8Fx2kYetVh37uLRVdhPlXTh4d
-
 info:
   title: Messagin' API
   version: 1.0.0
