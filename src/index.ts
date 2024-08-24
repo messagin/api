@@ -21,13 +21,15 @@ async function main() {
   // create a worker for each CPU core
   for (let i = 0; i < CPUs; i++) await cluster.fork();
 
-  // Start reading input from the console and listen to key events
-  process.stdin.resume();
-  process.stdin.setEncoding("utf8");
-  process.stdin.setRawMode(true);
-  process.stdin.on("data", (data: string) => {
-    cluster.handleInput(data);
-  });
+  if (process.stdin.isTTY) {
+    // Start reading input from the console and listen to key events
+    process.stdin.resume();
+    process.stdin.setEncoding("utf8");
+    process.stdin.setRawMode(true);
+    process.stdin.on("data", (data: string) => {
+      cluster.handleInput(data);
+    });
+  }
 }
 
 process.on("unhandledRejection", err => {
