@@ -2,7 +2,7 @@ import { generateHmac, generateIDv2 } from "../utils/auth";
 import { SessionManager } from "../managers/Session";
 import { SpaceManager } from "../managers/Space";
 import db from "../utils/database";
-import { ChatManager } from "../managers/Chat";
+import { GlobalChatManager } from "../managers/GlobalChat";
 
 const UserFlags = {
   Admin: 1 << 0,
@@ -239,10 +239,7 @@ export class User implements BaseUser {
   }
 
   get chats() {
-    // todo implement global chat manager (for DMs, etc)
-    // return new GlobalChatManager();
-    throw Error("feature not implemented");
-    return null;
+    return new GlobalChatManager(this.id);
   }
 
   // get relations() {

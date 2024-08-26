@@ -6,6 +6,7 @@ import * as inviteController from "../controllers/invite";
 import * as messageController from "../controllers/message";
 import * as relationController from "../controllers/relation";
 import * as websocketController from "../controllers/websocket";
+import * as globalChatController from "../controllers/globalchat";
 
 import * as userValidator from "../validators/user";
 import * as chatValidator from "../validators/chat";
@@ -54,6 +55,13 @@ router.post("/users/signup", userValidator.create, userController.create);
 router.post("/users/authenticate", userValidator.login, userController.login);
 router.get("/users/:user_id", authenticate, userValidator.getById, userController.getById);
 // router.get("/users/:user_id/profile", authenticate, userValidator.getProfile, userController.getProfile); // todo implement getProfile
+//#endregion
+
+//#region chats
+router.get("/chats", globalChatController.get);
+router.post("/chats", globalChatController.create);
+// todo add validation
+router.get("/chats/:id", globalChatController.getById);
 //#endregion
 
 //#region spaces

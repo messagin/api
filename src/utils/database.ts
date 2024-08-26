@@ -72,9 +72,17 @@ interface EmailValidation {
 interface Chat {
   id: string;
   name: string;
+  flags: number;
   space_id: string;
   created_at: number;
 };
+
+interface ChatMember {
+  flags: number;
+  chat_id: string;
+  user_id: string;
+  created_at: number;
+}
 
 interface Member {
   space_id: string;
@@ -139,6 +147,7 @@ export async function initDatabase() {
   const relationsExists = await db_.schema.hasTable("relations");
   const ratelimitsExists = await db_.schema.hasTable("ratelimits");
   const memberRolesExists = await db_.schema.hasTable("member-roles");
+  const chatMembersExists = await db_.schema.hasTable("chat-members");
   const passwordResetExists = await db_.schema.hasTable("password-reset");
   const emailValidationExists = await db_.schema.hasTable("email-validation");
 
@@ -175,7 +184,7 @@ export async function initDatabase() {
 
   if (!chatsExists) await db_.schema.createTable("chats", table => {
     table.specificType("id", "char(16)").unique().primary();
-    table.specificType("space_id", "char(16)").references("id").inTable("spaces");
+    table.specificType("space_id", "char(16)").references("id").inTable("spaces").nullable();
     table.text("name").notNullable();
     table.integer("created_at").notNullable();
   });
@@ -259,8 +268,14 @@ export async function initDatabase() {
     table.specificType("space_id", "char(16)").references("id").inTable("spaces");
     table.specificType("user_id", "char(16)").references("id").inTable("users");
     table.specificType("role_id", "char(16)").references("id").inTable("roles");
-  })
+  });
 
+  if (!chatMembersExists) await db_.schema.createTable("chat-members", table => {
+    table.integer("flags").defaultTo(0).notNullable();
+    table.specificType("chat_id", "char(16)").references("id").inTable("chats");
+    table.specificType("user_id", "char(16)").references("id").inTable("users");
+    table.integer("created_at").notNullable();
+  });
 }
 
 export default class Database {
@@ -299,6 +314,9 @@ export default class Database {
   }
   static get memberRoles() {
     return db_<MemberRole>("member-roles");
+  }
+  static get chatMembers() {
+    return db_<ChatMember>("chat-members");
   }
   static get passwordReset() {
     return db_<PasswordReset>("password-reset");

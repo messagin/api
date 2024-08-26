@@ -2,9 +2,16 @@ import { MessageManager } from "../managers/Message";
 import { generateIDv2 } from "../utils/auth.node";
 import db from "../utils/database";
 
+const ChatFlags = {
+  Deleted: 1 << 0,
+};
+
+type ChatFlag = keyof typeof ChatFlags;
+
 interface BaseChat {
   id: string;
   name: string;
+  flags: number;
   space_id: string;
   created_at: number;
 };
@@ -12,12 +19,14 @@ interface BaseChat {
 export class Chat implements BaseChat {
   id: string;
   name: string;
+  flags: number;
   space_id: string;
   created_at: number;
 
   constructor(id?: string, time?: number) {
     this.id = id ?? generateIDv2();
     this.name = "";
+    this.flags = 0;
     this.space_id = "";
     this.created_at = time ?? Date.now();
   }
@@ -29,6 +38,26 @@ export class Chat implements BaseChat {
 
   setName(name: string) {
     this.name = name;
+    return this;
+  }
+
+
+  setFlag(flag: ChatFlag) {
+    this.flags |= ChatFlags[flag];
+    return this;
+  }
+
+  clearFlag(flag: ChatFlag) {
+    this.flags &= ~ChatFlags[flag];
+    return this;
+  }
+
+  hasFlag(flag: ChatFlag) {
+    return (this.flags & ChatFlags[flag]) !== 0;
+  }
+
+  setFlags(flags: number) {
+    this.flags = flags;
     return this;
   }
 
