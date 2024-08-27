@@ -66,8 +66,9 @@ export class Chat implements BaseChat {
   }
 
   static async exists(id: string) {
-    const count = await db.chats.where({ id }).count().first() as { "count(*)": number };
-    return count["count(*)"] > 0;
+    const count = await db.count("chats", { id });
+    console.log(count);
+    return count > 0;
   }
 
   async create() {
