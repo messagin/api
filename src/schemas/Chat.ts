@@ -12,7 +12,7 @@ interface BaseChat {
   id: string;
   name: string;
   flags: number;
-  space_id: string;
+  space_id: string | null;
   created_at: number;
 };
 
@@ -20,18 +20,18 @@ export class Chat implements BaseChat {
   id: string;
   name: string;
   flags: number;
-  space_id: string;
+  space_id: string | null;
   created_at: number;
 
   constructor(id?: string, time?: number) {
     this.id = id ?? generateIDv2();
     this.name = "";
     this.flags = 0;
-    this.space_id = "";
+    this.space_id = null;
     this.created_at = time ?? Date.now();
   }
 
-  setSpace(id: string) {
+  setSpace(id: string | null) {
     this.space_id = id;
     return this;
   }

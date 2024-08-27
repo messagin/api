@@ -151,7 +151,7 @@ export function configure(router: Router) {
 
     // todo perform permission checks on chats
     events.on("ChatCreate", async chat => {
-      const is_member = await new Space(chat.space_id).members.has(user.id);
+      const is_member = await new Space(chat.space_id!).members.has(user.id);
       if (!is_member) {
         return;
       }
@@ -159,7 +159,7 @@ export function configure(router: Router) {
     }, listeners);
 
     events.on("ChatUpdate", async chat => {
-      const is_member = await new Space(chat.space_id).members.has(user.id);
+      const is_member = await new Space(chat.space_id!).members.has(user.id);
       if (!is_member) {
         return;
       }
@@ -167,7 +167,7 @@ export function configure(router: Router) {
     }, listeners);
 
     events.on("ChatDelete", async chat => {
-      const is_member = await new Space(chat.space_id).members.has(user.id);
+      const is_member = await new Space(chat.space_id!).members.has(user.id);
       if (!is_member) {
         return;
       }
@@ -180,7 +180,7 @@ export function configure(router: Router) {
       if (!chat) {
         return;
       }
-      const is_member = await new Space(chat.space_id).members.has(user.id);
+      const is_member = await new Space(chat.space_id!).members.has(user.id);
       if (!is_member) {
         return;
       }
@@ -192,7 +192,7 @@ export function configure(router: Router) {
       if (!chat) {
         return;
       }
-      const is_member = await new Space(chat.space_id).members.has(user.id);
+      const is_member = await new Space(chat.space_id!).members.has(user.id);
       if (!is_member) {
         return;
       }
@@ -204,7 +204,7 @@ export function configure(router: Router) {
       if (!chat) {
         return;
       }
-      const is_member = await new Space(chat.space_id).members.has(user.id);
+      const is_member = await new Space(chat.space_id!).members.has(user.id);
       if (!is_member) {
         return;
       }

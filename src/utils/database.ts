@@ -73,7 +73,7 @@ interface Chat {
   id: string;
   name: string;
   flags: number;
-  space_id: string;
+  space_id: string | null;
   created_at: number;
 };
 
@@ -184,7 +184,7 @@ export async function initDatabase() {
 
   if (!chatsExists) await db_.schema.createTable("chats", table => {
     table.specificType("id", "char(16)").unique().primary();
-    table.specificType("space_id", "char(16)").references("id").inTable("spaces").nullable();
+    table.specificType("space_id", "char(16)").nullable().references("id").inTable("spaces");
     table.text("name").notNullable();
     table.integer("created_at").notNullable();
   });

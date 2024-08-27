@@ -29,7 +29,7 @@ export async function destroy(req: Request, res: Response) {
     if (!chat) {
       return respond(res, 404, "NotFound");
     }
-    const space = new Space(chat.space_id);
+    const space = new Space(chat.space_id!);
     const is_member = space.members.has(res.locals.user_id);
     if (!is_member) {
       return respond(res, 403, "Forbidden");
