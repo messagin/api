@@ -1,4 +1,4 @@
-import { Chat } from "../schemas/Chat";
+import { SpaceChat } from "../schemas/Chat";
 import db from "../utils/database";
 
 export class ChatManager {
@@ -9,17 +9,17 @@ export class ChatManager {
   }
 
   init(name: string) {
-    return new Chat().setSpace(this.space_id).setName(name);
+    return new SpaceChat().setSpace(this.space_id).setName(name);
   }
 
   async list() {
     const raw_chats = await db.chats.select("id").where({ space_id: this.space_id });
-    const chats: (Chat | null)[] = [];
+    const chats: (SpaceChat | null)[] = [];
 
     for (const { id } of raw_chats) {
-      chats.push(await Chat.getById(id));
+      chats.push(await SpaceChat.getById(id));
     }
 
-    return chats.filter(Boolean) as Chat[];
+    return chats.filter(Boolean) as SpaceChat[];
   }
 }

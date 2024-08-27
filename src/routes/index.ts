@@ -5,8 +5,8 @@ import * as memberController from "../controllers/member";
 import * as inviteController from "../controllers/invite";
 import * as messageController from "../controllers/message";
 import * as relationController from "../controllers/relation";
+import * as userChatController from "../controllers/userchat";
 import * as websocketController from "../controllers/websocket";
-import * as globalChatController from "../controllers/globalchat";
 
 import * as userValidator from "../validators/user";
 import * as chatValidator from "../validators/chat";
@@ -39,6 +39,7 @@ router.options("*", (_req, res) => {
 });
 
 // TODO REVIEW EVERY SINGLE METHOD.
+// todo implement reactions
 
 // router.get("/id"); //? request a server-generated ID
 //? the ID will be cached, and detected by the server.
@@ -58,10 +59,11 @@ router.get("/users/:user_id", authenticate, userValidator.getById, userControlle
 //#endregion
 
 //#region chats
-router.get("/chats", globalChatController.get);
-router.post("/chats", globalChatController.create);
+router.get("/chats", userChatController.get);
+router.post("/chats", userChatController.create);
 // todo add validation
-router.get("/chats/:id", globalChatController.getById);
+router.get("/chats/:id", userChatController.getById);
+// todo add delete method
 //#endregion
 
 //#region spaces
@@ -71,11 +73,13 @@ router.get("/spaces/:space_id", spaceValidator.getById, spaceController.getById)
 router.delete("/spaces/:space_id", spaceValidator.destroy, spaceController.destroy); // delete space
 //#endregion
 
+//#region invites
 router.get("/spaces/:space_id/invites", inviteValidator.get, inviteController.get); // get invites
 router.post("/invites/:invite_id", inviteValidator.accept, inviteController.accept); // accept invite
 router.get("/invites/:invite_id", inviteValidator.getById, inviteController.getById); // get invite
-router.delete("/invites/:invite_id", inviteValidator.destroy, inviteController.destroy); // delete invite
 router.post("/spaces/:space_id/invites", inviteValidator.create, inviteController.create); // create invite
+router.delete("/invites/:invite_id", inviteValidator.destroy, inviteController.destroy); // delete invite
+//#endregion
 
 //#region members
 // router.put("/spaces/:space_id/members/:member_id"); //? forcefully add a new member to the space (bots-only)

@@ -10,7 +10,7 @@ export class MemberManager {
 
   init(user_id: string) {
     return new Member()
-      .setSpace(this.space_id)
+      .setChat(this.space_id)
       .setUser(user_id);
   }
 
@@ -20,7 +20,7 @@ export class MemberManager {
     return new Member(member.created_at)
       .setColor(member.color)
       .setPermissions(member.permissions)
-      .setSpace(member.space_id)
+      .setChat(member.space_id)
       .setUser(member.user_id);
   }
 
@@ -28,7 +28,7 @@ export class MemberManager {
     const members = await db.members.where({ space_id: this.space_id });
 
     return members.map(member => new Member()
-      .setSpace(member.space_id)
+      .setChat(member.space_id)
       .setUser(member.user_id)
       .setPermissions(member.permissions)
       .setColor(member.color)

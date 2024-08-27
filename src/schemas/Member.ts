@@ -36,7 +36,7 @@ export class Member implements BaseMember {
     return this;
   }
 
-  setSpace(id: string) {
+  setChat(id: string) {
     this.space_id = id;
     return this;
   }
@@ -109,7 +109,7 @@ export class Member implements BaseMember {
     return new Member(member.created_at)
       .setPermissions(member.permissions)
       .setColor(member.color)
-      .setSpace(member.space_id)
+      .setChat(member.space_id)
       .setUser(member.user_id);
   }
 }

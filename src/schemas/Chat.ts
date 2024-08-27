@@ -1,3 +1,4 @@
+import { ChatMemberManager } from "../managers/ChatMember";
 import { MessageManager } from "../managers/Message";
 import { generateIDv2 } from "../utils/auth.node";
 import db from "../utils/database";
@@ -31,11 +32,6 @@ export class Chat implements BaseChat {
     this.created_at = time ?? Date.now();
   }
 
-  setSpace(id: string | null) {
-    this.space_id = id;
-    return this;
-  }
-
   setName(name: string) {
     this.name = name;
     return this;
@@ -65,7 +61,7 @@ export class Chat implements BaseChat {
     const chat = await db.chats.where({ id }).first();
     if (!chat) return null;
     return new Chat(chat.id, chat.created_at)
-      .setSpace(chat.space_id)
+      .setFlags(chat.flags)
       .setName(chat.name);
   }
 
@@ -100,5 +96,44 @@ export class Chat implements BaseChat {
       name: this.name
     }).where({ id: this.id });
     return this;
+  }
+}
+
+export class SpaceChat extends Chat {
+  constructor(id?: string, time?: number) {
+    super(id, time);
+  }
+
+
+  setSpace(id: string | null) {
+    this.space_id = id;
+    return this;
+  }
+
+  static async getById(id: string) {
+    const chat = await db.chats.where({ id }).first();
+    if (!chat) return null;
+    return new SpaceChat(chat.id, chat.created_at)
+      .setSpace(chat.space_id)
+      .setName(chat.name)
+      .setFlags(chat.flags)
+  }
+}
+
+export class UserChat extends Chat {
+  constructor(id?: string, time?: number) {
+    super(id, time);
+  }
+
+  get members() {
+    return new ChatMemberManager(this.id);
+  }
+
+  static async getById(id: string): Promise<UserChat | null> {
+    const chat = await db.chats.where({ id }).first();
+    if (!chat) return null;
+    return new UserChat(chat.id, chat.created_at)
+      .setName(chat.name)
+      .setFlags(chat.flags);
   }
 }

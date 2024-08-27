@@ -2,14 +2,14 @@ import { Request, Response } from "express";
 import { respond } from "../utils/respond";
 import { log } from "../utils/log";
 import { Emitter } from "../utils/events";
-import { Chat } from "../schemas/Chat";
+import { SpaceChat } from "../schemas/Chat";
 import { Space } from "../schemas/Space";
 
 // const { Chat } = require("../models/chat");
 
 export async function create(req: Request, res: Response) {
   try {
-    const chat = await new Chat()
+    const chat = await new SpaceChat()
       .setName(req.body.name)
       .setSpace(req.params.space_id)
       .create();
@@ -25,7 +25,7 @@ export async function create(req: Request, res: Response) {
 
 export async function destroy(req: Request, res: Response) {
   try {
-    const chat = await Chat.getById(req.params.chat_id);
+    const chat = await SpaceChat.getById(req.params.chat_id);
     if (!chat) {
       return respond(res, 404, "NotFound");
     }
@@ -50,7 +50,7 @@ export async function destroy(req: Request, res: Response) {
 
 export async function update(req: Request, res: Response) {
   try {
-    const chat = await Chat.getById(req.params.chat_id);
+    const chat = await SpaceChat.getById(req.params.chat_id);
     if (!chat) {
       return respond(res, 404, "NotFound");
     }
@@ -70,7 +70,7 @@ export async function update(req: Request, res: Response) {
 
 export async function getById(req: Request, res: Response) {
   try {
-    const chat = await Chat.getById(req.params.chat_id);
+    const chat = await SpaceChat.getById(req.params.chat_id);
     return respond(res, 200, "Ok", chat);
   }
   catch (err) {

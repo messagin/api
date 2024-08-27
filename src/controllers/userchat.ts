@@ -2,15 +2,13 @@ import { Request, Response } from "express";
 import { respond } from "../utils/respond";
 import { log } from "../utils/log";
 import { Emitter } from "../utils/events";
-import { Chat } from "../schemas/Chat";
+import { UserChat } from "../schemas/Chat";
 import db from "../utils/database";
 import { User } from "../schemas/User";
 
-// const { Chat } = require("../models/chat");
-
 export async function create(req: Request, res: Response) {
   try {
-    const chat = await new Chat()
+    const chat = await new UserChat()
       .setName(req.body.name)
       .create();
 
@@ -30,29 +28,29 @@ export async function create(req: Request, res: Response) {
   }
 }
 
-// export async function destroy(req: Request, res: Response) {
-//   try {
-//     const chat = await Chat.getById(req.params.chat_id);
-//     if (!chat) {
-//       return respond(res, 404, "NotFound");
-//     }
-//     const is_member = space.members.has(res.locals.user_id);
-//     if (!is_member) {
-//       return respond(res, 403, "Forbidden");
-//     }
+export async function destroy(req: Request, res: Response) {
+  try {
+    const chat = await UserChat.getById(req.params.chat_id);
+    if (!chat) {
+      return respond(res, 404, "NotFound");
+    }
+    const is_member = chat.members.has(res.locals.user_id);
+    if (!is_member) {
+      return respond(res, 403, "Forbidden");
+    }
 
-//     const emitter = Emitter.getInstance();
-//     emitter.emit("ChatDelete", chat);
+    const emitter = Emitter.getInstance();
+    emitter.emit("ChatDelete", chat);
 
-//     await chat.delete();
+    await chat.delete();
 
-//     return respond(res, 204, "Deleted");
-//   }
-//   catch (err) {
-//     log("red")((err as Error).message);
-//     return respond(res, 500, "InternalError");
-//   }
-// }
+    return respond(res, 204, "Deleted");
+  }
+  catch (err) {
+    log("red")((err as Error).message);
+    return respond(res, 500, "InternalError");
+  }
+}
 
 // export async function update(req: Request, res: Response) {
 //   try {
@@ -76,7 +74,7 @@ export async function create(req: Request, res: Response) {
 
 export async function getById(req: Request, res: Response) {
   try {
-    const chat = await Chat.getById(req.params.chat_id);
+    const chat = await UserChat.getById(req.params.chat_id);
     return respond(res, 200, "Ok", chat);
   }
   catch (err) {

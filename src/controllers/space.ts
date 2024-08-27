@@ -10,7 +10,7 @@ export async function getById(req: Request, res: Response) {
     const id = req.params.space_id;
     const space = await Space.getById(id);
 
-    if (!space || space.hasFlag("Deleted")) {
+    if (!space || space.hasFlag("Deleted") || !space.members.has(res.locals.user_id)) {
       return respond(res, 404, "NotFound");
     }
 
