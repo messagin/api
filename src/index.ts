@@ -2,14 +2,14 @@ import { inspect } from "util";
 import { log } from "./utils/log";
 import { Cluster } from "./cluster/Cluster";
 import { cpus } from "os";
-import { initDatabase } from "./utils/database";
+// import { initDatabase } from "./utils/database";
 
 const CPUs = cpus().length;
 
 async function main() {
 
   log("blue")(`Primary is running`);
-  await initDatabase();
+  // await initDatabase();
 
   const cluster = new Cluster(CPUs);
 

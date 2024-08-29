@@ -65,7 +65,8 @@ export class Space implements BaseSpace {
   }
 
   static async getById(id: string) {
-    const space = await db.spaces.where({ id }).first();
+    const space = await db.selectOneFrom("spaces", "*", { id });
+    // const space = await db.spaces.where({ id }).first();
     if (!space) return null;
     return new Space(space.id, space.created_at)
       .setName(space.name)
@@ -73,7 +74,7 @@ export class Space implements BaseSpace {
   }
 
   async create() {
-    await db.spaces.insert({
+    await db.insertInto("spaces", {
       id: this.id,
       name: this.name,
       flags: this.flags,
@@ -84,12 +85,12 @@ export class Space implements BaseSpace {
   }
 
   async update() {
-    await db.spaces.update({
+    await db.update("spaces", {
       name: this.name,
       flags: this.flags,
       owner_id: this.owner_id,
       created_at: this.created_at
-    }).where({ id: this.id });
+    }, { id: this.id });
     return this;
   }
 
@@ -112,8 +113,10 @@ export class Space implements BaseSpace {
   }
 
   static async exists(id: string) {
-    const count = await db.spaces.where({ id }).count().first() as { "count(*)": number };
-    return count["count(*)"] > 0;
+    const count = await db.selectFrom("spaces", "*", { id });
+    // const count = await db.spaces.where({ id }).count().first() as { "count(*)": number };
+    // return count["count(*)"] > 0;
+    return count.length > 0;
   }
 
   get chats() {

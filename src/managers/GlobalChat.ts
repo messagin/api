@@ -13,10 +13,13 @@ export class GlobalChatManager {
   }
 
   async list() {
-    const chats = await db.spaces
-      .join("chat-members", "chats.id", "=", "chat-members.chat_id")
-      .select("chats.*")
-      .where("chat-members.user_id", this.user_id);
+    const chats = [];
+    const member_entries = await db.selectFrom("chat_members", ["chat_id"], { user_id: this.user_id });
+    for (const member_entry of member_entries) {
+      const chat = await db.selectOneFrom("chats", "*", { id: member_entry.chat_id });
+      if (!chat) continue;
+      chats.push(chat);
+    }
 
     return chats.map(chat => new Chat(chat.id, chat.created_at)
       .setName(chat.name)

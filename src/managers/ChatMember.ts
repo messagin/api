@@ -15,7 +15,7 @@ export class ChatMemberManager {
   }
 
   async get(user_id: string) {
-    const member = await db.chatMembers.where({ chat_id: this.chat_id, user_id: user_id }).first();
+    const member = await db.selectOneFrom("chat_members", "*", { chat_id: this.chat_id, user_id: user_id });
     if (!member) return null;
     return new ChatMember(member.created_at)
       .setFlags(member.flags)
@@ -24,7 +24,7 @@ export class ChatMemberManager {
   }
 
   async list() {
-    const members = await db.chatMembers.where({ chat_id: this.chat_id });
+    const members = await db.selectFrom("chat_members", "*", { chat_id: this.chat_id });
 
     return members.map(member => new ChatMember()
       .setChat(member.chat_id)
@@ -34,7 +34,7 @@ export class ChatMemberManager {
   }
 
   async has(user_id: string) {
-    const member = await db.chatMembers.where({ chat_id: this.chat_id, user_id }).first();
+    const member = await db.selectOneFrom("chat_members", "*", { chat_id: this.chat_id, user_id })
     if (!member) return false;
     return true;
   }

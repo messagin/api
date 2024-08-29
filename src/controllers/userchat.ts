@@ -12,12 +12,12 @@ export async function create(req: Request, res: Response) {
       .setName(req.body.name)
       .create();
 
-    db.chatMembers.insert({
+    await db.insertInto("chat_members", {
       chat_id: chat.id,
       user_id: res.locals.user_id,
       flags: 0,
       created_at: Date.now()
-    })
+    });
 
     Emitter.getInstance().emit("ChatCreate", chat);
     return respond(res, 201, "ChatCreated", chat);

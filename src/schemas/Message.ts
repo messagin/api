@@ -69,7 +69,8 @@ export class Message implements BaseMessage {
   }
 
   static async getById(id: string) {
-    const message = await db.messages.where({ id }).first();
+    const message = await db.selectOneFrom("messages", "*", { id })
+    // const message = await db.messages.where({ id }).first();
     if (!message) return null;
     return new Message(message.id, message.created_at)
       .setChat(message.chat_id)
@@ -80,8 +81,10 @@ export class Message implements BaseMessage {
   }
 
   static async exists(id: string) {
-    const count = await db.messages.where({ id }).count().first() as { "count(*)": number };
-    return count["count(*)"] > 0;
+    const count = await db.selectFrom("messages", "*", { id });
+    // const count = await db.messages.where({ id }).count().first() as { "count(*)": number };
+    // return count["count(*)"] > 0;
+    return count.length > 0;
   }
 
   clean(): CleanMessage {
@@ -97,7 +100,7 @@ export class Message implements BaseMessage {
   }
 
   async create() {
-    await db.messages.insert({
+    await db.insertInto("messages", {
       chat_id: this.chat_id,
       content: this.content,
       flags: this.flags,
@@ -111,14 +114,14 @@ export class Message implements BaseMessage {
 
   async update() {
     this.updated_at = Date.now();
-    await db.messages.update({
+    await db.update("messages", {
       content: this.content,
       updated_at: this.updated_at
-    }).where({ id: this.id });
+    }, { id: this.id });
   }
 
   async delete() {
-    await db.messages.delete().where({ id: this.id });
+    await db.deleteFrom("messages", "*", { id: this.id });
     return this;
   }
 }

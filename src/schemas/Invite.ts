@@ -48,7 +48,8 @@ export class Invite implements BaseInvite {
   }
 
   static async getById(id: string) {
-    const invite = await db.invites.where({ id }).first();
+    const invite = await db.selectOneFrom("invites", "*", { id });
+    // const invite = await db.invites.where({ id }).first();
     if (!invite) return null;
     return new Invite(invite.id, invite.created_at)
       .setMaxAge(invite.max_age)
@@ -58,23 +59,25 @@ export class Invite implements BaseInvite {
   }
 
   static async exists(id: string) {
-    const count = await db.invites.where({ id }).count().first() as { "count(*)": number };
-    return count["count(*)"] > 0;
+    const count = await db.selectFrom("invites", "*", { id });
+    // const count = await db.invites.where({ id }).count().first() as { "count(*)": number };
+    // return count["count(*)"] > 0;
+    return count.length > 0;
   }
 
   // todo review the Invite.update function
   async update() {
     const uses = this.uses + 1;
     if (this.max_uses === 0 || uses < this.max_uses) {
-      await db.invites.update({ uses }).where({ id: this.id });
+      await db.update("invites", { uses }, { id: this.id });
     } else {
-      await db.invites.delete().where({ id: this.id });
+      await db.deleteFrom("invites", "*", { id: this.id });
     }
     return this;
   }
 
   async create() {
-    await db.invites.insert({
+    await db.insertInto("invites", {
       id: this.id,
       space_id: this.space_id,
       uses: this.uses,
@@ -86,7 +89,7 @@ export class Invite implements BaseInvite {
   }
 
   async destroy() {
-    await db.invites.delete().where({
+    await db.deleteFrom("invites", "*", {
       id: this.id
     });
     return this;

@@ -81,7 +81,7 @@ export class Relation implements BaseRelation {
   }
 
   async create() {
-    await db.relations.insert({
+    await db.insertInto("relations", {
       user_id0: this.user_id0,
       user_id1: this.user_id1,
       flags: this.flags,
@@ -92,9 +92,10 @@ export class Relation implements BaseRelation {
   }
 
   static async getByIds(id0: string, id1: string) {
-    const relation = await db.relations
-      .where({ user_id0: id0, user_id1: id1 })
-      .orWhere({ user_id0: id1, user_id1: id0 }).first();
+    const relation = await db.selectOneFrom("relations", "*", { user_id0: id0, user_id1: id1 }) || await db.selectOneFrom("relations", "*", { user_id0: id1, user_id1: id0 });
+    // .where({ user_id0: id0, user_id1: id1 })
+    // .orWhere({ user_id0: id1, user_id1: id0 }).first();
+
     if (!relation) return null;
     return new Relation(relation.created_at)
       .setUser0(relation.user_id0)
@@ -104,10 +105,12 @@ export class Relation implements BaseRelation {
   }
 
   async delete(id0: string, id1: string) {
-    await db.relations.delete()
-      .where({ user_id0: id0, user_id1: id1 })
-      .orWhere({ user_id0: id1, user_id1: id0 });
-    return this
+    await db.deleteFrom("relations", "*", { user_id0: id0, user_id1: id1 });
+    await db.deleteFrom("relations", "*", { user_id0: id1, user_id1: id0 });
+    // await db.relations.delete()
+    //   .where({ user_id0: id0, user_id1: id1 })
+    //   .orWhere({ user_id0: id1, user_id1: id0 });
+    return this;
   }
 
 

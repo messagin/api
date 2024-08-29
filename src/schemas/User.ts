@@ -56,7 +56,7 @@ export class User implements BaseUser {
   }
 
   async create() {
-    await db.users.insert({
+    await db.insertInto("users", {
       id: this.id,
       flags: this.flags,
       username: this.username,
@@ -77,15 +77,17 @@ export class User implements BaseUser {
       (updated[entry] as BaseUser[keyof BaseUser]) = this[entry] as BaseUser[keyof BaseUser];
     }
 
-    await db.users.update(updated).where({ id: this.id });
+    await db.update("users", updated, { id: this.id });
+    // await db.users.update(updated).where({ id: this.id });
     return this;
   }
 
   async delete() {
     // todo update user deletion to give them time to think twice
-    await db.sessions.delete().where({
-      user_id: this.id
-    });
+    await db.deleteFrom("sessions", "*", { user_id: this.id });
+    // await db.sessions.delete().where({
+    // user_id: this.id
+    // });
     await this.setEmail("", "").update()
     return this;
   }
@@ -190,7 +192,8 @@ export class User implements BaseUser {
   }
 
   static async getById(id: string) {
-    const user = await db.users.where({ id }).first();
+    const user = await db.selectOneFrom("users", "*", { id });
+    // const user = await db.users.where({ id }).first();
     if (!user) return null;
     return new User(user.id, user.created_at)
       .setFlags(user.flags)
@@ -203,22 +206,29 @@ export class User implements BaseUser {
   }
 
   static async id_exists(id: string) {
-    const count = await db.users.where({ id }).count().first() as { "count(*)": number };
-    return count["count(*)"] > 0;
+    const count = await db.selectFrom("users", "*", { id });
+    // const count = await db.users.where({ id }).count().first() as { "count(*)": number };
+    // return count["count(*)"] > 0;
+    return count.length > 0;
   }
 
   static async email_exists(email: string) {
-    const count = await db.users.where({ email }).count().first() as { "count(*)": number };
-    return count["count(*)"] > 0;
+    const count = await db.selectFrom("users", "*", { email });
+    // const count = await db.users.where({ email }).count().first() as { "count(*)": number };
+    // return count["count(*)"] > 0;
+    return count.length > 0;
   }
 
   static async username_exists(username: string) {
-    const count = await db.users.where({ username }).count().first() as { "count(*)": number };
-    return count["count(*)"] > 0;
+    const count = await db.selectFrom("users", "*", { username });
+    // const count = await db.users.where({ username }).count().first() as { "count(*)": number };
+    // return count["count(*)"] > 0;
+    return count.length > 0;
   }
 
-  static async getByEmail(email: string, ...fields: string[]) {
-    const user = await db.users.select(...fields).where({ email }).first();
+  static async getByEmail(email: string, ...fields: (keyof BaseUser)[]) {
+    const user = await db.selectOneFrom("users", fields, { email });
+    // const user = await db.users.select(...fields).where({ email }).first();
     if (!user) return null;
     return new User(user.id, user.created_at)
       .setFlags(user.flags)

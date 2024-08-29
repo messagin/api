@@ -58,7 +58,8 @@ export class Chat implements BaseChat {
   }
 
   static async getById(id: string) {
-    const chat = await db.chats.where({ id }).first();
+    const chat = await db.selectOneFrom("chats", "*", { id });
+    // const chat = await db.chats.where({ id }).first();
     if (!chat) return null;
     return new Chat(chat.id, chat.created_at)
       .setFlags(chat.flags)
@@ -72,7 +73,7 @@ export class Chat implements BaseChat {
   }
 
   async create() {
-    await db.chats.insert({
+    await db.insertInto("chats", {
       id: this.id,
       name: this.name,
       space_id: this.space_id,
@@ -87,15 +88,17 @@ export class Chat implements BaseChat {
 
   async delete() {
     // deleting a chat also deletes its messages
-    await db.messages.where({ chat_id: this.id }).delete();
-    await db.chats.where({ id: this.id }).delete();
+    await db.deleteFrom("messages", "*", { chat_id: this.id });
+    await db.deleteFrom("chats", "*", { id: this.id });
+    // await db.messages.where({ chat_id: this.id }).delete();
+    // await db.chats.where({ id: this.id }).delete();
     return this;
   }
 
   async update() {
-    await db.chats.update({
+    await db.update("chats", {
       name: this.name
-    }).where({ id: this.id });
+    }, { id: this.id });
     return this;
   }
 }
@@ -112,7 +115,8 @@ export class SpaceChat extends Chat {
   }
 
   static async getById(id: string) {
-    const chat = await db.chats.where({ id }).first();
+    const chat = await db.selectOneFrom("chats", "*", { id });
+    // const chat = await db.chats.where({ id }).first();
     if (!chat) return null;
     return new SpaceChat(chat.id, chat.created_at)
       .setSpace(chat.space_id)
@@ -131,7 +135,8 @@ export class UserChat extends Chat {
   }
 
   static async getById(id: string): Promise<UserChat | null> {
-    const chat = await db.chats.where({ id }).first();
+    const chat = await db.selectOneFrom("chats", "*", { id });
+    // const chat = await db.chats.where({ id }).first();
     if (!chat) return null;
     return new UserChat(chat.id, chat.created_at)
       .setName(chat.name)

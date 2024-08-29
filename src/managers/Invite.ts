@@ -13,7 +13,7 @@ export class InviteManager {
   }
 
   async list() {
-    const raw_invites = await db.invites.select("id").where({ space_id: this.space_id });
+    const raw_invites = await db.selectFrom("invites", ["id"], { space_id: this.space_id });
     const invites: (Invite | null)[] = [];
 
     for (const { id } of raw_invites) {

@@ -13,7 +13,8 @@ export class ChatManager {
   }
 
   async list() {
-    const raw_chats = await db.chats.select("id").where({ space_id: this.space_id });
+    // todo edit to avoid multiple db queries
+    const raw_chats = await db.selectFrom("chats", ["id"], { space_id: this.space_id });
     const chats: (SpaceChat | null)[] = [];
 
     for (const { id } of raw_chats) {

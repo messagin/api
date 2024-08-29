@@ -126,7 +126,7 @@ export class Session implements BaseSession {
 
     this.token = generateToken(this.id);
 
-    await db.sessions.insert({
+    await db.insertInto("sessions", {
       id: this.id,
       user_id: this.user_id,
       token: this.token.hash,
@@ -142,14 +142,15 @@ export class Session implements BaseSession {
   }
 
   async update() {
-    await db.sessions.update({
+    await db.update("sessions", {
       updated_at: this.updated_at
-    }).where({ id: this.id });
+    }, { id: this.id });
     return this;
   }
 
   static async getById(id: string) {
-    const session = await db.sessions.where({ id }).first();
+    const session = await db.selectOneFrom("sessions", "*", { id })
+    // const session = await db.sessions.where({ id }).first();
     if (!session) return null;
     return new Session
       (
@@ -173,7 +174,7 @@ export class Session implements BaseSession {
   // }
 
   async delete() {
-    await db.sessions.delete().where({ id: this.id });
+    await db.deleteFrom("sessions", "*", { id: this.id });
     return this;
   }
 }

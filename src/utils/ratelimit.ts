@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import db from "./database";
 import { respond } from "./respond";
 import { log } from "./log";
+import { eqLessThan } from "scyllo";
 
 // x-ratelimit-limit: 60
 // x-ratelimit-remaining: 59
@@ -18,12 +19,15 @@ export async function rateLimitByIp(_req: Request, res: Response, next: NextFunc
   const start = now - WINDOW_SIZE;
 
   try {
-    await db.ratelimits.where("created_at", "<", start).andWhere("type", "ip").del();
+    await db.deleteFrom("rate_limits", "*", { created_at: eqLessThan(start), type: "ip" });
+    // await db.ratelimits.where("created_at", "<", start).andWhere("type", "ip").del();
 
-    let data = await db.ratelimits.where({ ip }).first();
+    let data = await db.selectOneFrom("rate_limits", "*", { ip });
+    // let data = await db.ratelimits.where({ ip }).first();
 
     if (!data) {
-      await db.ratelimits.insert({ ip, created_at: now, count: 0, type: "ip" });
+      await db.insertInto("rate_limits", { ip, created_at: now, count: 0, type: "ip" });
+      // await db.ratelimits.insert({ ip, created_at: now, count: 0, type: "ip" });
       data = { count: 0, created_at: now, ip, type: "ip", id: null };
     }
 

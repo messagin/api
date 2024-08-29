@@ -59,7 +59,7 @@ export class ChatMember implements BaseChatMember {
   }
 
   async create() {
-    await db.chatMembers.insert({
+    await db.insertInto("chat_members", {
       flags: this.flags,
       user_id: this.user_id,
       chat_id: this.chat_id,
@@ -69,17 +69,20 @@ export class ChatMember implements BaseChatMember {
   }
 
   async delete() {
-    await db.chatMembers.delete().where({ user_id: this.user_id, chat_id: this.chat_id });
+    await db.deleteFrom("chat_members", "*", { user_id: this.user_id, chat_id: this.chat_id });
     return this;
   }
 
   static async exists(id: string, chat_id: string) {
-    const count = await db.chatMembers.where({ user_id: id, chat_id }).count().first() as { "count(*)": number };
-    return count["count(*)"] > 0;
+    const count = await db.selectFrom("chat_members", "*", { user_id: id, chat_id });
+    // const count = await db.chatMembers.where({ user_id: id, chat_id }).count().first() as { "count(*)": number };
+    // return count["count(*)"] > 0;
+    return count.length > 0;
   }
 
   static async get(chat_id: string, user_id: string) {
-    const member = await db.chatMembers.where({ chat_id, user_id }).first();
+    const member = await db.selectOneFrom("chat_members", "*", { chat_id, user_id });
+    // const member = await db.chatMembers.where({ chat_id, user_id }).first();
     if (!member) return null;
     return new ChatMember(member.created_at)
       .setFlags(member.flags)

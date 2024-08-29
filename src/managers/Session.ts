@@ -14,7 +14,7 @@ export class SessionManager {
   }
 
   async list() {
-    const raw_sessions = await db.sessions.select("id").where({ user_id: this.id });
+    const raw_sessions = await db.selectFrom("sessions", ["id"], { user_id: this.id });
     const sessions: (Session | null)[] = []
 
     for (const { id } of raw_sessions) {
