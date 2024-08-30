@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import db from "./database";
 import { respond } from "./respond";
 import { log } from "./log";
-import { eqLessThan } from "scyllo";
 
 // x-ratelimit-limit: 60
 // x-ratelimit-remaining: 59

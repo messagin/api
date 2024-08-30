@@ -1,4 +1,3 @@
-import { ScylloClient } from "scyllo";
 
 type User = {
   id: string;
