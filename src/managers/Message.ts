@@ -22,11 +22,7 @@ export class MessageManager {
   }
 
   async search(options: SearchOptions) {
-    const raw_messages = await db.selectFrom("messages", ["id"], { chat_id: this.chat_id }, "ORDER BY id DESC LIMIT " + options.limit);
-    // const raw_messages = await db.messages.select("id")
-    //   .where({ chat_id: this.chat_id })
-    //   .orderBy("id", "desc")
-    //   .limit(options.limit);
+    const raw_messages = (await db.execute("SELECT id FROM messagin.messages WHERE chat_id = ? ORDER BY id DESC LIMIT ?", [this.chat_id, options.limit])).rows;
     const messages: (Message | null)[] = [];
 
     for (const { id } of raw_messages) {
@@ -42,11 +38,7 @@ export class MessageManager {
       limit = 100;
     }
 
-    const messages = await db.selectFrom("messages", "*", { chat_id: this.chat_id }, "ORDER BY id DESC");
-    // const messages = await db.messages
-    //   .where({ chat_id: this.chat_id })
-    //   .orderBy("id", "desc")
-    //   .limit(limit);
+    const messages = (await db.execute("SELECT * FROM messagin.messages WHERE chat_id = ? ORDER BY id DESC", [this.chat_id])).rows;
 
     return messages.map(message => new Message(message.id, message.created_at)
       .setChat(message.chat_id)

@@ -13,8 +13,7 @@ export async function respond<T extends StatusCode>(res: Response, status: T, co
 
   if (status === 401 || status === 403) {
     // rate limit unauthorized requests (by IP)
-    await db.rawWithParams("UPDATE messagin.ratelimits  SET count = count + 1 WHERE ip = ?", [res.req.ip]);
-    // await db.ratelimits.where({ ip: res.req.ip! }).increment("count");
+    await db.execute("UPDATE ratelimits SET count = count + 1 WHERE ip = ?", [res.req.ip]);
     res.locals.rateLimit.remaining--;
   }
   if (res.locals.user_id && status === 429) {

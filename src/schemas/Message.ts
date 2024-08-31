@@ -69,7 +69,7 @@ export class Message implements BaseMessage {
   }
 
   static async getById(id: string) {
-    const message = await db.selectOneFrom("messages", "*", { id })
+    const message = (await db.execute("SELECT * FROM messages WHERE id = ? LIMIT 1", [id])).rows[0];
     // const message = await db.messages.where({ id }).first();
     if (!message) return null;
     return new Message(message.id, message.created_at)
@@ -81,10 +81,8 @@ export class Message implements BaseMessage {
   }
 
   static async exists(id: string) {
-    const count = await db.selectFrom("messages", "*", { id });
-    // const count = await db.messages.where({ id }).count().first() as { "count(*)": number };
-    // return count["count(*)"] > 0;
-    return count.length > 0;
+    const count = (await db.execute("SELECT count(*) FROM messages WHERE id = ?", [id])).rows[0].count.low;
+    return count > 0;
   }
 
   clean(): CleanMessage {
@@ -100,28 +98,17 @@ export class Message implements BaseMessage {
   }
 
   async create() {
-    await db.insertInto("messages", {
-      chat_id: this.chat_id,
-      content: this.content,
-      flags: this.flags,
-      id: this.id,
-      user_id: this.user_id,
-      updated_at: this.updated_at,
-      created_at: this.created_at
-    });
+    await db.execute("INSERT INTO messages (chat_id,content,flags,id,user_id,updated_at,created_at) VALUES (?,?,?,?,?,?,?)", [this.chat_id, this.content, this.flags, this.id, this.user_id, this.created_at, this.updated_at]);
     return this;
   }
 
   async update() {
     this.updated_at = Date.now();
-    await db.update("messages", {
-      content: this.content,
-      updated_at: this.updated_at
-    }, { id: this.id });
+    await db.execute("UPDATE messages SET content = ?, updated_at = ? WHERE id = ?", [this.content, this.updated_at, this.id]);
   }
 
   async delete() {
-    await db.deleteFrom("messages", "*", { id: this.id });
+    await db.execute("DELETE * FROM messages WHERE id = ?", [this.id]);
     return this;
   }
 }

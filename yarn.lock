@@ -663,6 +663,13 @@
     "@types/koa-compose" "*"
     "@types/node" "*"
 
+"@types/long@~5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@types/long/-/long-5.0.0.tgz#daaa7b7f74c919c946ff74889d5ca2afe363b2cd"
+  integrity sha512-eQs9RsucA/LNjnMoJvWG/nXa7Pot/RbBzilF/QRIU/xRl+0ApxrSUFsV5lmf01SvSlqMzJ7Zwxe440wmz2SJGA==
+  dependencies:
+    long "*"
+
 "@types/mime@^1":
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-1.3.5.tgz#1ef302e01cf7d2b5a0fa526790c9123bf1d06690"
@@ -679,6 +686,13 @@
   version "22.5.0"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-22.5.0.tgz#10f01fe9465166b4cab72e75f60d8b99d019f958"
   integrity sha512-DkFrJOe+rfdHTqqMg0bSNlGlQ85hSoh2TPzZyhHsXnMtligRWpxUySiyw8FY14ITt24HVCiQPWxS3KO/QlGmWg==
+  dependencies:
+    undici-types "~6.19.2"
+
+"@types/node@>=8":
+  version "22.5.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.5.1.tgz#de01dce265f6b99ed32b295962045d10b5b99560"
+  integrity sha512-KkHsxej0j9IW1KKOOAA/XBA0z08UFSrRQHErzEfA3Vgq57eXIMYboIlHJuYIfd+lwCQjtKqUu3UnmKbtUc9yRw==
   dependencies:
     undici-types "~6.19.2"
 
@@ -845,6 +859,11 @@ acorn@^8.11.0, acorn@^8.12.0, acorn@^8.4.1:
   version "8.12.1"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.12.1.tgz#71616bdccbe25e27a54439e0046e89ca76df2248"
   integrity sha512-tcpGyI9zbizT9JbV6oYE477V6mTlXvvi0T0G3SNIYE2apm/G5huBa1+K89VGeovbg+jycCrfhl3ADxErOuO6Jg==
+
+adm-zip@~0.5.10:
+  version "0.5.16"
+  resolved "https://registry.yarnpkg.com/adm-zip/-/adm-zip-0.5.16.tgz#0b5e4c779f07dedea5805cdccb1147071d94a909"
+  integrity sha512-TGw5yVi4saajsSEgz25grObGHEUaDrniwvA2qwSC060KfqGPdglhvPMA2lPIoxs3PQIItj2iag35fONcQqgUaQ==
 
 agent-base@^7.0.2:
   version "7.1.1"
@@ -1083,6 +1102,16 @@ camelize@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/camelize/-/camelize-1.0.1.tgz#89b7e16884056331a35d6b5ad064332c91daa6c3"
   integrity sha512-dU+Tx2fsypxTgtLoE36npi3UqcjSSMNYfkqgmoEhtZrraP5VWq0K7FkWVTYa8eMPtnU/G2txVsfdCJTn9uzpuQ==
+
+cassandra-driver@^4.7.2:
+  version "4.7.2"
+  resolved "https://registry.yarnpkg.com/cassandra-driver/-/cassandra-driver-4.7.2.tgz#87f120b6d73d64f0ff3e91cdd4e56bec416fca48"
+  integrity sha512-gwl1DeYvL8Wy3i1GDMzFtpUg5G473fU7EnHFZj7BUtdLB7loAfgZgB3zBhROc9fbaDSUDs6YwOPPojS5E1kbSA==
+  dependencies:
+    "@types/long" "~5.0.0"
+    "@types/node" ">=8"
+    adm-zip "~0.5.10"
+    long "~5.2.3"
 
 chalk@^2.3.0, chalk@^2.4.2:
   version "2.4.2"
@@ -2477,6 +2506,11 @@ lodash@^4.17.21:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
+
+long@*, long@~5.2.3:
+  version "5.2.3"
+  resolved "https://registry.yarnpkg.com/long/-/long-5.2.3.tgz#a3ba97f3877cf1d778eccbcb048525ebb77499e1"
+  integrity sha512-lcHwpNoggQTObv5apGNCTdJrO69eHOZMi4BNC+rTLER8iHAqGrUVeLh/irVIM7zTw2bOXA8T6uNPeujwOLg/2Q==
 
 loose-envify@^1.1.0, loose-envify@^1.4.0:
   version "1.4.0"

@@ -59,30 +59,22 @@ export class ChatMember implements BaseChatMember {
   }
 
   async create() {
-    await db.insertInto("chat_members", {
-      flags: this.flags,
-      user_id: this.user_id,
-      chat_id: this.chat_id,
-      created_at: this.created_at
-    });
+    await db.execute("INSERT INTO chat_members (flags,user_id,chat_id,created_at) VALUES (?,?,?,?)", [this.flags, this.user_id, this.chat_id, this.created_at]);
     return this;
   }
 
   async delete() {
-    await db.deleteFrom("chat_members", "*", { user_id: this.user_id, chat_id: this.chat_id });
+    await db.execute("DELETE * FROM chat_members WHERE user_id = ? AND chat_id = ?", [this.user_id, this.chat_id]);
     return this;
   }
 
   static async exists(id: string, chat_id: string) {
-    const count = await db.selectFrom("chat_members", "*", { user_id: id, chat_id });
-    // const count = await db.chatMembers.where({ user_id: id, chat_id }).count().first() as { "count(*)": number };
-    // return count["count(*)"] > 0;
-    return count.length > 0;
+    const count = (await db.execute("SELECT count(*) FROM chat_members WHERE user_id = ? AND chat_id = ?", [id, chat_id])).rows[0].count.low;
+    return count > 0;
   }
 
   static async get(chat_id: string, user_id: string) {
-    const member = await db.selectOneFrom("chat_members", "*", { chat_id, user_id });
-    // const member = await db.chatMembers.where({ chat_id, user_id }).first();
+    const member = (await db.execute("SELECT * FROM chat_members WHERE chat_id = ? AND user_id = ?", [chat_id, user_id])).rows[0];
     if (!member) return null;
     return new ChatMember(member.created_at)
       .setFlags(member.flags)

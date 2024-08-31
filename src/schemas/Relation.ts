@@ -81,20 +81,12 @@ export class Relation implements BaseRelation {
   }
 
   async create() {
-    await db.insertInto("relations", {
-      user_id0: this.user_id0,
-      user_id1: this.user_id1,
-      flags: this.flags,
-      updated_at: this.updated_at,
-      created_at: this.created_at
-    });
+    await db.execute("INSERT INTO relations (user_id0,user_id1,flags,updated_at,created_at) VALUES (?,?,?,?,?)", [this.user_id0, this.user_id1, this.flags, this.updated_at, this.created_at]);
     return this;
   }
 
   static async getByIds(id0: string, id1: string) {
-    const relation = await db.selectOneFrom("relations", "*", { user_id0: id0, user_id1: id1 }) || await db.selectOneFrom("relations", "*", { user_id0: id1, user_id1: id0 });
-    // .where({ user_id0: id0, user_id1: id1 })
-    // .orWhere({ user_id0: id1, user_id1: id0 }).first();
+    const relation = (await db.execute("SELECT * FROM relations WHERE (user_id0 = ? AND user_id1 = ?) OR (user_id0 = ? AND user_id1 = ?) LIMIT 1", [id0, id1, id1, id0])).rows[0];
 
     if (!relation) return null;
     return new Relation(relation.created_at)

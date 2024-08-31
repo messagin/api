@@ -14,9 +14,9 @@ export class GlobalChatManager {
 
   async list() {
     const chats = [];
-    const member_entries = await db.selectFrom("chat_members", ["chat_id"], { user_id: this.user_id });
+    const member_entries = (await db.execute("SELECT chat_id FROM chat_members WHERE user_id = ?", [this.user_id])).rows;
     for (const member_entry of member_entries) {
-      const chat = await db.selectOneFrom("chats", "*", { id: member_entry.chat_id });
+      const chat = (await db.execute("SELECT * FROM chats WHERE id = ?", [member_entry.chat_id])).rows[0];
       if (!chat) continue;
       chats.push(chat);
     }

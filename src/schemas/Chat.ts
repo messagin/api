@@ -58,8 +58,7 @@ export class Chat implements BaseChat {
   }
 
   static async getById(id: string) {
-    const chat = await db.selectOneFrom("chats", "*", { id });
-    // const chat = await db.chats.where({ id }).first();
+    const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id])).rows[0];
     if (!chat) return null;
     return new Chat(chat.id, chat.created_at)
       .setFlags(chat.flags)
@@ -67,18 +66,12 @@ export class Chat implements BaseChat {
   }
 
   static async exists(id: string) {
-    const count = await db.count("chats", { id });
-    console.log(count);
+    const count = (await db.execute("SELECT count(*) FROM chats WHERE id = ?", [id])).rows[0].count.low;
     return count > 0;
   }
 
   async create() {
-    await db.insertInto("chats", {
-      id: this.id,
-      name: this.name,
-      space_id: this.space_id,
-      created_at: this.created_at
-    });
+    await db.execute("INSERT INTO chats (id,name,space_id,created_at) VALUES (?,?,?,?)", [this.id, this.name, this.space_id, this.created_at]);
     return this;
   }
 
@@ -88,17 +81,13 @@ export class Chat implements BaseChat {
 
   async delete() {
     // deleting a chat also deletes its messages
-    await db.deleteFrom("messages", "*", { chat_id: this.id });
-    await db.deleteFrom("chats", "*", { id: this.id });
-    // await db.messages.where({ chat_id: this.id }).delete();
-    // await db.chats.where({ id: this.id }).delete();
+    await db.execute("DELETE * FROM messages WHERE chat_id = ?", [this.id]);
+    await db.execute("DELETE * FROM chats WHERE id = ?", [this.id]);
     return this;
   }
 
   async update() {
-    await db.update("chats", {
-      name: this.name
-    }, { id: this.id });
+    await db.execute("UPDATE chats SET name = ? WHERE id = ?", [this.name, this.id]);
     return this;
   }
 }
@@ -115,8 +104,7 @@ export class SpaceChat extends Chat {
   }
 
   static async getById(id: string) {
-    const chat = await db.selectOneFrom("chats", "*", { id });
-    // const chat = await db.chats.where({ id }).first();
+    const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id])).rows[0];
     if (!chat) return null;
     return new SpaceChat(chat.id, chat.created_at)
       .setSpace(chat.space_id)
@@ -135,8 +123,7 @@ export class UserChat extends Chat {
   }
 
   static async getById(id: string): Promise<UserChat | null> {
-    const chat = await db.selectOneFrom("chats", "*", { id });
-    // const chat = await db.chats.where({ id }).first();
+    const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id])).rows[0];
     if (!chat) return null;
     return new UserChat(chat.id, chat.created_at)
       .setName(chat.name)
