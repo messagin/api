@@ -97,13 +97,7 @@ export class Relation implements BaseRelation {
   }
 
   async delete(id0: string, id1: string) {
-    await db.deleteFrom("relations", "*", { user_id0: id0, user_id1: id1 });
-    await db.deleteFrom("relations", "*", { user_id0: id1, user_id1: id0 });
-    // await db.relations.delete()
-    //   .where({ user_id0: id0, user_id1: id1 })
-    //   .orWhere({ user_id0: id1, user_id1: id0 });
+    await db.execute("DELETE * FROM relations WHERE user_id0 = ? AND user_id1 = ? OR user_id0 = ? AND user_id1 = ?", [id0, id1, id1, id0]);
     return this;
   }
-
-
 }

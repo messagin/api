@@ -56,17 +56,7 @@ export class User implements BaseUser {
   }
 
   async create() {
-    await db.insertInto("users", {
-      id: this.id,
-      flags: this.flags,
-      username: this.username,
-      password: this.password,
-      name: this.name,
-      email: this.email,
-      phone: this.phone,
-      mfa: this.mfa,
-      created_at: this.created_at
-    });
+    await db.execute("INSERT INTO users (id,flags,username,password,name,email,phone,mfa,created_at) VALUES (?,?,?,?,?,?,?,?,?)", [this.id, this.flags, this.username, this.password, this.name, this.email, this.phone, this.mfa, this.created_at]);
     return this;
   }
 
@@ -77,18 +67,16 @@ export class User implements BaseUser {
       (updated[entry] as BaseUser[keyof BaseUser]) = this[entry] as BaseUser[keyof BaseUser];
     }
 
-    await db.update("users", updated, { id: this.id });
+    throw new Error("user update not implemented");
+    // await db.update("users", updated, { id: this.id });
     // await db.users.update(updated).where({ id: this.id });
     return this;
   }
 
   async delete() {
     // todo update user deletion to give them time to think twice
-    await db.deleteFrom("sessions", "*", { user_id: this.id });
-    // await db.sessions.delete().where({
-    // user_id: this.id
-    // });
-    await this.setEmail("", "").update()
+    await db.execute("DELETE * FROM sessions WHERE user_id = ?", [this.id]);
+    await this.setEmail("", "").update();
     return this;
   }
 
@@ -192,8 +180,7 @@ export class User implements BaseUser {
   }
 
   static async getById(id: string) {
-    const user = await db.selectOneFrom("users", "*", { id });
-    // const user = await db.users.where({ id }).first();
+    const user = (await db.execute("SELECT * FROM users WHERE id = ?", [id])).rows[0];
     if (!user) return null;
     return new User(user.id, user.created_at)
       .setFlags(user.flags)
@@ -206,29 +193,22 @@ export class User implements BaseUser {
   }
 
   static async id_exists(id: string) {
-    const count = await db.selectFrom("users", "*", { id });
-    // const count = await db.users.where({ id }).count().first() as { "count(*)": number };
-    // return count["count(*)"] > 0;
-    return count.length > 0;
+    const count = (await db.execute("SELECT count(*) FROM users WHERE id = ?", [id])).rows[0].count.low;
+    return count > 0;
   }
 
   static async email_exists(email: string) {
-    const count = await db.selectFrom("users", "*", { email });
-    // const count = await db.users.where({ email }).count().first() as { "count(*)": number };
-    // return count["count(*)"] > 0;
-    return count.length > 0;
+    const count = (await db.execute("SELECT count(*) FROM users WHERE email = ?", [email])).rows[0].count.low;
+    return count > 0;
   }
 
   static async username_exists(username: string) {
-    const count = await db.selectFrom("users", "*", { username });
-    // const count = await db.users.where({ username }).count().first() as { "count(*)": number };
-    // return count["count(*)"] > 0;
-    return count.length > 0;
+    const count = (await db.execute("SELECT count(*) FROM users WHERE username = ?", [username])).rows[0].count.low;
+    return count > 0;
   }
 
-  static async getByEmail(email: string, ...fields: (keyof BaseUser)[]) {
-    const user = await db.selectOneFrom("users", fields, { email });
-    // const user = await db.users.select(...fields).where({ email }).first();
+  static async getByEmail(email: string, /*...fields: (keyof BaseUser)[]*/) {
+    const user = (await db.execute("SELECT * FROM users WHERE email = ?", [email])).rows[0];
     if (!user) return null;
     return new User(user.id, user.created_at)
       .setFlags(user.flags)

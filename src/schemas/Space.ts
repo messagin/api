@@ -65,8 +65,7 @@ export class Space implements BaseSpace {
   }
 
   static async getById(id: string) {
-    const space = await db.selectOneFrom("spaces", "*", { id });
-    // const space = await db.spaces.where({ id }).first();
+    const space = (await db.execute("SELECT * FROM spaces WHERE id = ?", [id])).rows[0];
     if (!space) return null;
     return new Space(space.id, space.created_at)
       .setName(space.name)
@@ -74,23 +73,12 @@ export class Space implements BaseSpace {
   }
 
   async create() {
-    await db.insertInto("spaces", {
-      id: this.id,
-      name: this.name,
-      flags: this.flags,
-      owner_id: this.owner_id,
-      created_at: this.created_at
-    });
+    await db.execute("INSERT INTO spaces (id,name,flags,owner_id,created_at) VALUES (?,?,?,?,?)", [this.id, this.name, this.flags, this.owner_id, this.created_at]);
     return this;
   }
 
   async update() {
-    await db.update("spaces", {
-      name: this.name,
-      flags: this.flags,
-      owner_id: this.owner_id,
-      created_at: this.created_at
-    }, { id: this.id });
+    await db.execute("UPDATE spaces SET name = ?, flags = ?, owner_id = ?, created_at = ? WHERE id = ?", [this.name, this.flags, this.owner_id, this.created_at]);
     return this;
   }
 
@@ -113,10 +101,8 @@ export class Space implements BaseSpace {
   }
 
   static async exists(id: string) {
-    const count = await db.selectFrom("spaces", "*", { id });
-    // const count = await db.spaces.where({ id }).count().first() as { "count(*)": number };
-    // return count["count(*)"] > 0;
-    return count.length > 0;
+    const count = (await db.execute("SELECT count(*) FROM spaces WHERE id = ?", [id])).rows[0].count.low;
+    return count > 0;
   }
 
   get chats() {

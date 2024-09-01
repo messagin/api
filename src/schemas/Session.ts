@@ -126,31 +126,17 @@ export class Session implements BaseSession {
 
     this.token = generateToken(this.id);
 
-    await db.insertInto("sessions", {
-      id: this.id,
-      user_id: this.user_id,
-      token: this.token.hash,
-      flags: this.flags,
-      ip: this.ip,
-      os: this.os,
-      ua: this.ua,
-      browser: this.browser,
-      created_at: this.created_at,
-      updated_at: this.updated_at,
-    });
+    await db.execute("INSERT INTO sessions (id,user_id,token,flags,ip,os,ua,browser,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)", [this.id, this.user_id, this.token.hash, this.flags, this.ip, this.os, this.ua, this.browser, this.created_at, this.updated_at]);
     return this;
   }
 
   async update() {
-    await db.update("sessions", {
-      updated_at: this.updated_at
-    }, { id: this.id });
+    await db.execute("UPDATE sessions SET updated_at = ? WHERE id = ?", [this.updated_at, this.id]);
     return this;
   }
 
   static async getById(id: string) {
-    const session = await db.selectOneFrom("sessions", "*", { id })
-    // const session = await db.sessions.where({ id }).first();
+    const session = (await db.execute("SELECT * FROM sessions WHERE id = ?", [id])).rows[0];
     if (!session) return null;
     return new Session
       (
@@ -174,7 +160,7 @@ export class Session implements BaseSession {
   // }
 
   async delete() {
-    await db.deleteFrom("sessions", "*", { id: this.id });
+    await db.execute("DELETE * FROM sessions WHERE id = ?", [this.id]);
     return this;
   }
 }
