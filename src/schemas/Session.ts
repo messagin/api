@@ -126,7 +126,7 @@ export class Session implements BaseSession {
 
     this.token = generateToken(this.id);
 
-    await db.execute("INSERT INTO sessions (id,user_id,token,flags,ip,os,ua,browser,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)", [this.id, this.user_id, this.token.hash, this.flags, this.ip, this.os, this.ua, this.browser, this.created_at, this.updated_at]);
+    await db.execute("INSERT INTO sessions (id,user_id,token_,flags,ip,os,ua,browser,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)", [this.id, this.user_id, this.token.hash, this.flags, this.ip, this.os, this.ua, this.browser, this.created_at, this.updated_at], { prepare: true });
     return this;
   }
 
@@ -136,7 +136,7 @@ export class Session implements BaseSession {
   }
 
   static async getById(id: string) {
-    const session = (await db.execute("SELECT * FROM sessions WHERE id = ?", [id])).rows[0];
+    const session = (await db.execute("SELECT * FROM sessions WHERE id = ?", [id], { prepare: true })).rows[0];
     if (!session) return null;
     return new Session
       (

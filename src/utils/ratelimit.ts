@@ -14,26 +14,21 @@ const MAX_REQUESTS = 1000; // Max invalid requests per window size
 export async function rateLimitByIp(_req: Request, res: Response, next: NextFunction) {
   const ip = res.locals.ip as string;
 
-  const now = Math.floor(Date.now() / 1000);
-  const start = now - WINDOW_SIZE;
+  const now = Date.now();
 
   try {
-    await db.execute("DELETE * FROM rate_limits WHERE created_at < ? AND type = 'ip'", [start]);
-    // await db.ratelimits.where("created_at", "<", start).andWhere("type", "ip").del();
-
-    let data = (await db.execute("SELECT * FROM rate_limits WHERE ip = ? LIMIT 1", [ip])).rows[0] as any;
-    // let data = await db.ratelimits.where({ ip }).first();
+    let data = (await db.execute("SELECT * FROM ip_rate_limits WHERE ip = ?", [ip], { prepare: true })).rows[0] as unknown as { count: number, created_at: number, type: string, id: string | null, ip: string | null };
 
     if (!data) {
-      await db.execute("INSERT INTO rate_limits (ip,created_at,count,type) VALUES (?,?,0,'ip')", [ip, now]);
-      // await db.ratelimits.insert({ ip, created_at: now, count: 0, type: "ip" });
+      await db.execute("UPDATE ip_rate_limits SET count = count + 1 WHERE ip = ? AND created_at = ?", [ip, now]);
       data = { count: 0, created_at: now, ip, type: "ip", id: null };
     }
 
     res.locals.rateLimit = {
       limit: MAX_REQUESTS,
       remaining: MAX_REQUESTS - data.count,
-      reset: data.created_at + WINDOW_SIZE,
+      reset: Math.floor(data.created_at / 1000) + WINDOW_SIZE,
+      created_at: data.created_at,
       type: "ip"
     };
 
@@ -46,7 +41,7 @@ export async function rateLimitByIp(_req: Request, res: Response, next: NextFunc
     return;
   }
   catch (err) {
-    log("red")((err as Error).message)
+    log("red")(__filename, (err as Error).message)
     await respond(res, 500, "InternalError");
     return;
   }

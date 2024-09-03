@@ -14,9 +14,9 @@ export class SpaceManager {
 
   async list() {
     const spaces = [];
-    const member_entries = await db.selectFrom("members", ["space_id"], { user_id: this.user_id });
+    const member_entries = (await db.execute("SELECT space_id FROM members WHERE user_id = ?", [this.user_id], { prepare: true })).rows;
     for (const member_entry of member_entries) {
-      const space = await db.selectOneFrom("spaces", "*", { id: member_entry.space_id });
+      const space = (await db.execute("SELECT * FROM spaces WHERE id = ?", [member_entry.space_id], { prepare: true })).rows[0];
       if (!space) continue;
       spaces.push(space);
     }

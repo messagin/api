@@ -56,7 +56,7 @@ export class User implements BaseUser {
   }
 
   async create() {
-    await db.execute("INSERT INTO users (id,flags,username,password,name,email,phone,mfa,created_at) VALUES (?,?,?,?,?,?,?,?,?)", [this.id, this.flags, this.username, this.password, this.name, this.email, this.phone, this.mfa, this.created_at]);
+    await db.execute("INSERT INTO users (id,flags,username,password,name,email,phone,mfa,created_at) VALUES (?,?,?,?,?,?,?,?,?)", [this.id, this.flags, this.username, this.password, this.name, this.email, this.phone, this.mfa, this.created_at], { prepare: true });
     return this;
   }
 
