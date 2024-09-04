@@ -13,8 +13,8 @@ interface BaseMessage {
   user_id: string;
   content: string;
   flags: number;
-  updated_at: number;
-  created_at: number;
+  updated_at: string;
+  created_at: string;
 }
 
 type CleanMessage = Omit<BaseMessage, "">;
@@ -25,17 +25,17 @@ export class Message implements BaseMessage {
   user_id: string;
   content: string;
   flags: number;
-  updated_at: number;
-  created_at: number;
+  updated_at: string;
+  created_at: string;
 
-  constructor(id?: string, time?: number) {
+  constructor(id?: string, time?: string) {
     this.id = id ?? generateIDv2();
     this.chat_id = "";
     this.user_id = "";
     this.content = "";
     this.flags = 0;
-    this.updated_at = 0;
-    this.created_at = time ?? Date.now();
+    this.updated_at = "";
+    this.created_at = time ?? new Date().toISOString();
   }
 
   setChat(id: string) {
@@ -53,7 +53,7 @@ export class Message implements BaseMessage {
     return this;
   }
 
-  setUpdatedAt(time: number) {
+  setUpdatedAt(time: string) {
     this.updated_at = time;
     return this;
   }
@@ -69,7 +69,7 @@ export class Message implements BaseMessage {
   }
 
   static async getById(id: string) {
-    const message = (await db.execute("SELECT * FROM messages WHERE id = ? LIMIT 1", [id])).rows[0];
+    const message = (await db.execute("SELECT * FROM messages WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     // const message = await db.messages.where({ id }).first();
     if (!message) return null;
     return new Message(message.id, message.created_at)
@@ -81,7 +81,7 @@ export class Message implements BaseMessage {
   }
 
   static async exists(id: string) {
-    const count = (await db.execute("SELECT count(*) FROM messages WHERE id = ?", [id])).rows[0].count.low;
+    const count = (await db.execute("SELECT count(*) FROM messages WHERE id = ?", [id], { prepare: true })).rows[0].count.low;
     return count > 0;
   }
 
@@ -98,17 +98,17 @@ export class Message implements BaseMessage {
   }
 
   async create() {
-    await db.execute("INSERT INTO messages (chat_id,content,flags,id,user_id,updated_at,created_at) VALUES (?,?,?,?,?,?,?)", [this.chat_id, this.content, this.flags, this.id, this.user_id, this.created_at, this.updated_at]);
+    await db.execute("INSERT INTO messages (chat_id,content,flags,id,user_id,updated_at,created_at) VALUES (?,?,?,?,?,?,?)", [this.chat_id, this.content, this.flags, this.id, this.user_id, this.created_at, this.updated_at], { prepare: true });
     return this;
   }
 
   async update() {
-    this.updated_at = Date.now();
-    await db.execute("UPDATE messages SET content = ?, updated_at = ? WHERE id = ?", [this.content, this.updated_at, this.id]);
+    this.updated_at = new Date().toISOString();
+    await db.execute("UPDATE messages SET content = ?, updated_at = ? WHERE id = ?", [this.content, this.updated_at, this.id], { prepare: true });
   }
 
   async delete() {
-    await db.execute("DELETE * FROM messages WHERE id = ?", [this.id]);
+    await db.execute("DELETE FROM messages WHERE id = ?", [this.id], { prepare: true });
     return this;
   }
 }

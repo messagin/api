@@ -1,8 +1,9 @@
 import { generateHmac, generateIDv2 } from "../utils/auth";
 import { SessionManager } from "../managers/Session";
 import { SpaceManager } from "../managers/Space";
-import db from "../utils/database";
 import { GlobalChatManager } from "../managers/GlobalChat";
+import { RelationManager } from "../managers/Relation";
+import db from "../utils/database";
 
 const UserFlags = {
   Admin: 1 << 0,
@@ -75,7 +76,7 @@ export class User implements BaseUser {
 
   async delete() {
     // todo update user deletion to give them time to think twice
-    await db.execute("DELETE * FROM sessions WHERE user_id = ?", [this.id]);
+    await db.execute("DELETE * FROM sessions WHERE user_id = ?", [this.id], { prepare: true });
     await this.setEmail("", "").update();
     return this;
   }
@@ -180,7 +181,7 @@ export class User implements BaseUser {
   }
 
   static async getById(id: string) {
-    const user = (await db.execute("SELECT * FROM users WHERE id = ?", [id])).rows[0];
+    const user = (await db.execute("SELECT * FROM users WHERE id = ?", [id], { prepare: true })).rows[0];
     if (!user) return null;
     return new User(user.id, user.created_at)
       .setFlags(user.flags)
@@ -193,22 +194,22 @@ export class User implements BaseUser {
   }
 
   static async id_exists(id: string) {
-    const count = (await db.execute("SELECT count(*) FROM users WHERE id = ?", [id])).rows[0].count.low;
+    const count = (await db.execute("SELECT count(*) FROM users WHERE id = ?", [id], { prepare: true })).rows[0].count.low;
     return count > 0;
   }
 
   static async email_exists(email: string) {
-    const count = (await db.execute("SELECT count(*) FROM users WHERE email = ?", [email])).rows[0].count.low;
+    const count = (await db.execute("SELECT count(*) FROM users WHERE email = ?", [email], { prepare: true })).rows[0].count.low;
     return count > 0;
   }
 
   static async username_exists(username: string) {
-    const count = (await db.execute("SELECT count(*) FROM users WHERE username = ?", [username])).rows[0].count.low;
+    const count = (await db.execute("SELECT count(*) FROM users WHERE username = ?", [username], { prepare: true })).rows[0].count.low;
     return count > 0;
   }
 
   static async getByEmail(email: string, /*...fields: (keyof BaseUser)[]*/) {
-    const user = (await db.execute("SELECT * FROM users WHERE email = ?", [email])).rows[0];
+    const user = (await db.execute("SELECT * FROM users WHERE email = ?", [email], { prepare: true })).rows[0];
     if (!user) return null;
     return new User(user.id, user.created_at)
       .setFlags(user.flags)
@@ -232,7 +233,7 @@ export class User implements BaseUser {
     return new GlobalChatManager(this.id);
   }
 
-  // get relations() {
-  //   return new RelationManager(this.id);
-  // }
+  get relations() {
+    return new RelationManager(this.id);
+  }
 }

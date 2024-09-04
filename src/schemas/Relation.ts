@@ -4,8 +4,8 @@ interface BaseRelation {
   user_id0: string;
   user_id1: string;
   flags: number;
-  updated_at: number;
-  created_at: number;
+  updated_at: string;
+  created_at: string;
 }
 
 const RelationFlags = {
@@ -26,35 +26,31 @@ export class Relation implements BaseRelation {
   user_id0: string;
   user_id1: string;
   flags: number;
-  updated_at: number;
-  created_at: number;
+  updated_at: string;
+  created_at: string;
 
-  constructor(time?: number) {
+  constructor(time?: string) {
     this.user_id0 = "";
     this.user_id1 = "";
     this.flags = 0;
-    this.updated_at = 0;
-    this.created_at = time ?? Date.now();
+    this.updated_at = "";
+    this.created_at = time ?? new Date().toISOString();
 
     return this;
   }
 
-  setUser0(id: string) {
-    this.user_id0 = id;
+  setUsers(id0: string, id1: string) {
+    this.user_id0 = id0 < id1 ? id0 : id1;
+    this.user_id1 = id0 < id1 ? id1 : id0;
     return this;
   }
 
-  setUser1(id: string) {
-    this.user_id1 = id;
-    return this;
-  }
-
-  private setUpdatedAt(time: number) {
+  setUpdatedAt(time: string) {
     this.updated_at = time;
     return this;
   }
 
-  private setFlags(flags: number) {
+  setFlags(flags: number) {
     this.flags = flags;
     return this;
   }
@@ -81,23 +77,22 @@ export class Relation implements BaseRelation {
   }
 
   async create() {
-    await db.execute("INSERT INTO relations (user_id0,user_id1,flags,updated_at,created_at) VALUES (?,?,?,?,?)", [this.user_id0, this.user_id1, this.flags, this.updated_at, this.created_at]);
+    await db.execute("INSERT INTO relations (user_id0,user_id1,flags,updated_at,created_at) VALUES (?,?,?,?,?)", [this.user_id0, this.user_id1, this.flags, this.updated_at, this.created_at], { prepare: true });
     return this;
   }
 
   static async getByIds(id0: string, id1: string) {
-    const relation = (await db.execute("SELECT * FROM relations WHERE (user_id0 = ? AND user_id1 = ?) OR (user_id0 = ? AND user_id1 = ?) LIMIT 1", [id0, id1, id1, id0])).rows[0];
+    const relation = (await db.execute("SELECT * FROM relations WHERE user_id0 = ? AND user_id1 = ? LIMIT 1", [id0, id1], { prepare: true })).rows[0];
 
     if (!relation) return null;
     return new Relation(relation.created_at)
-      .setUser0(relation.user_id0)
-      .setUser1(relation.user_id1)
+      .setUsers(relation.user_id0, relation.user_id1)
       .setFlags(relation.flags)
       .setUpdatedAt(relation.updated_at);
   }
 
-  async delete(id0: string, id1: string) {
-    await db.execute("DELETE * FROM relations WHERE user_id0 = ? AND user_id1 = ? OR user_id0 = ? AND user_id1 = ?", [id0, id1, id1, id0]);
+  static async delete(id0: string, id1: string) {
+    await db.execute("DELETE FROM relations WHERE user_id0 = ? AND user_id1 = ?", [id0, id1], { prepare: true });
     return this;
   }
 }

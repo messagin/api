@@ -31,8 +31,6 @@ export async function get(_req: Request, res: Response) {
   const spaces = await user.spaces.list();
   const filtered = spaces.filter(space => !space.hasFlag("Deleted"));
 
-  console.log(filtered);
-
   return respond(res, 200, "Ok", filtered);
 }
 

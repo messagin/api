@@ -131,7 +131,7 @@ export class Session implements BaseSession {
   }
 
   async update() {
-    await db.execute("UPDATE sessions SET updated_at = ? WHERE id = ?", [this.updated_at, this.id]);
+    await db.execute("UPDATE sessions SET updated_at = ? WHERE id = ?", [this.updated_at, this.id], { prepare: true });
     return this;
   }
 
@@ -147,7 +147,7 @@ export class Session implements BaseSession {
       )
       .setBrowser(session.browser)
       .setFlags(session.flags)
-      .setToken(session.token)
+      .setToken(session.token_)
       .setOS(session.os)
       .setUA(session.ua)
       .setIP(session.ip);
@@ -160,7 +160,7 @@ export class Session implements BaseSession {
   // }
 
   async delete() {
-    await db.execute("DELETE * FROM sessions WHERE id = ?", [this.id]);
+    await db.execute("DELETE FROM sessions WHERE id = ?", [this.id], { prepare: true });
     return this;
   }
 }

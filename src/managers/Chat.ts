@@ -14,7 +14,7 @@ export class ChatManager {
 
   async list() {
     // todo edit to avoid multiple db queries
-    const raw_chats = (await db.execute("SELECT id FROM chats WHERE space_id = ?", [this.space_id])).rows;
+    const raw_chats = (await db.execute("SELECT id FROM chats WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
     const chats: (SpaceChat | null)[] = [];
 
     for (const { id } of raw_chats) {

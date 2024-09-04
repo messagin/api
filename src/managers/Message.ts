@@ -22,13 +22,17 @@ export class MessageManager {
   }
 
   async search(options: SearchOptions) {
-    const raw_messages = (await db.execute("SELECT id FROM messagin.messages WHERE chat_id = ? ORDER BY id DESC LIMIT ?", [this.chat_id, options.limit])).rows;
-    const messages: (Message | null)[] = [];
+    // todo modify to avoid querying the database several times
 
-    for (const { id } of raw_messages) {
-      messages.push(await Message.getById(id));
-    }
-    return messages.filter(Boolean) as Message[];
+    const messages = (await db.execute("SELECT * FROM messages WHERE chat_id = ? ORDER BY id DESC LIMIT ?", [this.chat_id, options.limit], { prepare: true })).rows;
+
+    return messages.map(message => new Message(message.id, message.created_at)
+      .setChat(message.chat_id)
+      .setContent(message.content)
+      .setFlags(message.flags)
+      .setUser(message.user_id)
+      .setUpdatedAt(message.created_at)
+    );
   }
 
   async list(options?: { limit?: number }) {
@@ -38,7 +42,7 @@ export class MessageManager {
       limit = 100;
     }
 
-    const messages = (await db.execute("SELECT * FROM messagin.messages WHERE chat_id = ? ORDER BY id DESC", [this.chat_id])).rows;
+    const messages = (await db.execute("SELECT * FROM messages WHERE chat_id = ? ORDER BY id DESC", [this.chat_id], { prepare: true })).rows;
 
     return messages.map(message => new Message(message.id, message.created_at)
       .setChat(message.chat_id)

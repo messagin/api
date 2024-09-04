@@ -20,7 +20,7 @@ export async function rateLimitByIp(_req: Request, res: Response, next: NextFunc
     let data = (await db.execute("SELECT * FROM ip_rate_limits WHERE ip = ?", [ip], { prepare: true })).rows[0] as unknown as { count: number, created_at: number, type: string, id: string | null, ip: string | null };
 
     if (!data) {
-      await db.execute("UPDATE ip_rate_limits SET count = count + 1 WHERE ip = ? AND created_at = ?", [ip, now]);
+      await db.execute("UPDATE ip_rate_limits SET count = count + 1 WHERE ip = ? AND created_at = ?", [ip, now], { prepare: true });
       data = { count: 0, created_at: now, ip, type: "ip", id: null };
     }
 

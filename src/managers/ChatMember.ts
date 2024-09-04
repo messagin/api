@@ -15,7 +15,7 @@ export class ChatMemberManager {
   }
 
   async get(user_id: string) {
-    const member = (await db.execute("SELECT * FROM chat_members WHERE chat_id = ? AND user_id = ?", [this.chat_id, user_id])).rows[0];
+    const member = (await db.execute("SELECT * FROM chat_members WHERE chat_id = ? AND user_id = ?", [this.chat_id, user_id], { prepare: true })).rows[0];
     if (!member) return null;
     return new ChatMember(member.created_at)
       .setFlags(member.flags)
@@ -24,7 +24,7 @@ export class ChatMemberManager {
   }
 
   async list() {
-    const members = (await db.execute("SELECT * FROM chat_members WHERE chat_id = ?", [this.chat_id])).rows;
+    const members = (await db.execute("SELECT * FROM chat_members WHERE chat_id = ?", [this.chat_id], { prepare: true })).rows;
 
     return members.map(member => new ChatMember()
       .setChat(member.chat_id)
@@ -34,7 +34,7 @@ export class ChatMemberManager {
   }
 
   async has(user_id: string) {
-    const member = (await db.execute("SELECT * FROM chat_members WHERE chat_id = ? AND user_id = ?", [this.chat_id, user_id])).rows[0];
+    const member = (await db.execute("SELECT * FROM chat_members WHERE chat_id = ? AND user_id = ?", [this.chat_id, user_id], { prepare: true })).rows[0];
     if (!member) return false;
     return true;
   }

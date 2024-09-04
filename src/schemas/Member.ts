@@ -12,7 +12,7 @@ interface BaseMember {
   share: number;
   permissions: number;
   color: number | null;
-  created_at: number;
+  created_at: string;
 }
 
 type CleanMember = Omit<BaseMember, "share">;
@@ -23,15 +23,15 @@ export class Member implements BaseMember {
   share: number;
   permissions: number;
   color: number | null;
-  created_at: number;
+  created_at: string;
 
-  constructor(time?: number) {
+  constructor(time?: string) {
     this.space_id = "";
     this.user_id = "";
     this.permissions = 0;
     this.share = 0;
     this.color = 0;
-    this.created_at = time ?? Date.now();
+    this.created_at = time ?? new Date().toISOString();
 
     return this;
   }
@@ -82,23 +82,23 @@ export class Member implements BaseMember {
   }
 
   async create() {
-    await db.execute("INSERT INTO members (user_id,space_id,permissions,color,created_at) VALUES (?,?,?,?,?)", [this.user_id, this.space_id, this.permissions, this.color, this.created_at]);
+    await db.execute("INSERT INTO members (user_id,space_id,permissions,color,created_at) VALUES (?,?,?,?,?)", [this.user_id, this.space_id, this.permissions, this.color, this.created_at], { prepare: true });
     return this;
   }
 
   async delete() {
-    await db.execute("DELETE * FROM member_roles WHERE user_id = ? AND space_id = ?", [this.user_id, this.space_id]);
-    await db.execute("DELETE * FROM members WHERE user_id = ? AND space_id = ?", [this.user_id, this.space_id]);
+    await db.execute("DELETE FROM member_roles WHERE user_id = ? AND space_id = ?", [this.user_id, this.space_id], { prepare: true });
+    await db.execute("DELETE FROM members WHERE user_id = ? AND space_id = ?", [this.user_id, this.space_id], { prepare: true });
     return this;
   }
 
   static async exists(id: string, space_id: string) {
-    const count = (await db.execute("SELECT count(*) FROM members WHERE user_id = ? AND space_id = ? LIMIT 1", [id, space_id])).rows[0].count.low;
+    const count = (await db.execute("SELECT count(*) FROM members WHERE user_id = ? AND space_id = ? LIMIT 1", [id, space_id], { prepare: true })).rows[0].count.low;
     return count > 0;
   }
 
   static async get(space_id: string, user_id: string) {
-    const member = (await db.execute("SELECT * FROM members WHERE space_id = ? AND user_id = ? LIMIT 1", [space_id, user_id])).rows[0];
+    const member = (await db.execute("SELECT * FROM members WHERE space_id = ? AND user_id = ? LIMIT 1", [space_id, user_id], { prepare: true })).rows[0];
     // const member = await db.members.where({ space_id, user_id }).first();
     if (!member) return null;
     return new Member(member.created_at)

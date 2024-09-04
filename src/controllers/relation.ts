@@ -4,21 +4,25 @@ import { log } from "../utils/log";
 import { Relation } from "../schemas/Relation";
 import { User } from "../schemas/User";
 
-export function get(req: Request, res: Response) {
+export async function get(_req: Request, res: Response) {
+  const user = await User.getById(res.locals.user_id);
+  if (!user) {
+    return respond(res, 500, "InternalError");
+  }
+  const relations = await user.relations.list();
 
-  log("white")(req.params.friend_id);
-  return respond(res, 500, "InternalError");
+  return respond(res, 200, "Ok", relations);
 }
 
 export async function create(req: Request, res: Response) {
   try {
-    const user_exists = User.id_exists(req.body.id);
+    const user_exists = await User.id_exists(req.params.user_id);
     if (!user_exists) {
       return respond(res, 404, "NotFound");
     }
     const relation = new Relation()
-      .setUser0(res.locals.user_id)
-      .setUser1(req.body.id);
+      .setUsers(res.locals.user_id, req.params.user_id);
+
     await relation.create();
 
     return respond(res, 201, "RelationCreated");

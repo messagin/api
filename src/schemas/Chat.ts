@@ -14,7 +14,7 @@ interface BaseChat {
   name: string;
   flags: number;
   space_id: string | null;
-  created_at: number;
+  created_at: string;
 };
 
 export class Chat implements BaseChat {
@@ -22,14 +22,14 @@ export class Chat implements BaseChat {
   name: string;
   flags: number;
   space_id: string | null;
-  created_at: number;
+  created_at: string;
 
-  constructor(id?: string, time?: number) {
+  constructor(id?: string, time?: string) {
     this.id = id ?? generateIDv2();
     this.name = "";
     this.flags = 0;
     this.space_id = null;
-    this.created_at = time ?? Date.now();
+    this.created_at = time ?? new Date().toISOString();
   }
 
   setName(name: string) {
@@ -58,7 +58,7 @@ export class Chat implements BaseChat {
   }
 
   static async getById(id: string) {
-    const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id])).rows[0];
+    const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!chat) return null;
     return new Chat(chat.id, chat.created_at)
       .setFlags(chat.flags)
@@ -66,12 +66,12 @@ export class Chat implements BaseChat {
   }
 
   static async exists(id: string) {
-    const count = (await db.execute("SELECT count(*) FROM chats WHERE id = ?", [id])).rows[0].count.low;
+    const count = (await db.execute("SELECT count(*) FROM chats WHERE id = ?", [id], { prepare: true })).rows[0].count.low;
     return count > 0;
   }
 
   async create() {
-    await db.execute("INSERT INTO chats (id,name,space_id,created_at) VALUES (?,?,?,?)", [this.id, this.name, this.space_id, this.created_at]);
+    await db.execute("INSERT INTO chats (id,name,space_id,created_at) VALUES (?,?,?,?)", [this.id, this.name, this.space_id, this.created_at], { prepare: true });
     return this;
   }
 
@@ -81,19 +81,19 @@ export class Chat implements BaseChat {
 
   async delete() {
     // deleting a chat also deletes its messages
-    await db.execute("DELETE * FROM messages WHERE chat_id = ?", [this.id]);
-    await db.execute("DELETE * FROM chats WHERE id = ?", [this.id]);
+    await db.execute("DELETE FROM messages WHERE chat_id = ?", [this.id], { prepare: true });
+    await db.execute("DELETE FROM chats WHERE id = ?", [this.id], { prepare: true });
     return this;
   }
 
   async update() {
-    await db.execute("UPDATE chats SET name = ? WHERE id = ?", [this.name, this.id]);
+    await db.execute("UPDATE chats SET name = ? WHERE id = ?", [this.name, this.id], { prepare: true });
     return this;
   }
 }
 
 export class SpaceChat extends Chat {
-  constructor(id?: string, time?: number) {
+  constructor(id?: string, time?: string) {
     super(id, time);
   }
 
@@ -104,7 +104,7 @@ export class SpaceChat extends Chat {
   }
 
   static async getById(id: string) {
-    const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id])).rows[0];
+    const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!chat) return null;
     return new SpaceChat(chat.id, chat.created_at)
       .setSpace(chat.space_id)
@@ -114,7 +114,7 @@ export class SpaceChat extends Chat {
 }
 
 export class UserChat extends Chat {
-  constructor(id?: string, time?: number) {
+  constructor(id?: string, time?: string) {
     super(id, time);
   }
 
@@ -123,7 +123,7 @@ export class UserChat extends Chat {
   }
 
   static async getById(id: string): Promise<UserChat | null> {
-    const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id])).rows[0];
+    const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!chat) return null;
     return new UserChat(chat.id, chat.created_at)
       .setName(chat.name)

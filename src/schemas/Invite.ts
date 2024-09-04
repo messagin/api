@@ -7,7 +7,7 @@ interface BaseInvite {
   uses: number;
   max_uses: number;
   max_age: number;
-  created_at: number;
+  created_at: string;
 };
 
 export class Invite implements BaseInvite {
@@ -16,15 +16,15 @@ export class Invite implements BaseInvite {
   uses: number;
   max_uses: number;
   max_age: number;
-  created_at: number;
+  created_at: string;
 
-  constructor(id?: string, time?: number) {
+  constructor(id?: string, time?: string) {
     this.id = id ?? generateIDv2();
     this.space_id = "";
     this.uses = 0;
     this.max_uses = 0;
     this.max_age = 86400; // 1 day
-    this.created_at = time ?? Date.now();
+    this.created_at = time ?? new Date().toISOString();
   }
 
   setSpace(id: string) {
@@ -48,7 +48,7 @@ export class Invite implements BaseInvite {
   }
 
   static async getById(id: string) {
-    const invite = (await db.execute("SELECT * FROM invites WHERE id = ? LIMIT 1", [id])).rows[0];
+    const invite = (await db.execute("SELECT * FROM invites WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     // const invite = await db.invites.where({ id }).first();
     if (!invite) return null;
     return new Invite(invite.id, invite.created_at)
@@ -59,7 +59,7 @@ export class Invite implements BaseInvite {
   }
 
   static async exists(id: string) {
-    const count = (await db.execute("SELECT count(*) FROM invites WHERE id = ?", [id])).rows[0].count.low;
+    const count = (await db.execute("SELECT count(*) FROM invites WHERE id = ?", [id], { prepare: true })).rows[0].count.low;
     return count > 0;
   }
 
@@ -67,20 +67,20 @@ export class Invite implements BaseInvite {
   async update() {
     const uses = this.uses + 1;
     if (this.max_uses === 0 || uses < this.max_uses) {
-      await db.execute("UPDATE invites SET uses = ? WHERE id = ?", [uses, this.id]);
+      await db.execute("UPDATE invites SET uses = ? WHERE id = ?", [uses, this.id], { prepare: true });
     } else {
-      await db.execute("DELETE * FROM invites WHERE id = ?", [this.id]);
+      await db.execute("DELETE FROM invites WHERE id = ?", [this.id], { prepare: true });
     }
     return this;
   }
 
   async create() {
-    await db.execute("INSERT INTO invites (id,space_id,uses,max_uses,max_age,created_at) VALUES (?,?,?,?,?,?)", [this.id, this.space_id, this.uses, this.max_uses, this.max_age, this.created_at]);
+    await db.execute("INSERT INTO invites (id,space_id,uses,max_uses,max_age,created_at) VALUES (?,?,?,?,?,?)", [this.id, this.space_id, this.uses, this.max_uses, this.max_age, this.created_at], { prepare: true });
     return this;
   }
 
   async destroy() {
-    await db.execute("DELETE * FROM invites WHERE id = ?", [this.id]);
+    await db.execute("DELETE FROM invites WHERE id = ?", [this.id], { prepare: true });
     return this;
   }
 }

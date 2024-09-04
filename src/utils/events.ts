@@ -3,7 +3,7 @@ import { Types } from "./actions";
 interface SessionEvent {
   id: string;
   user_id: string;
-  created_at: number;
+  created_at: string;
 };
 
 interface SessionCreateEvent extends SessionEvent {
@@ -11,12 +11,12 @@ interface SessionCreateEvent extends SessionEvent {
   os: string;
   ip: string;
   time: number;
-  created_at: number;
+  created_at: string;
 };
 
 interface SessionUpdateEvent extends SessionEvent {
   time: number;
-  created_at: number;
+  created_at: string;
 };
 
 // tslint:disable-next-line:no-empty-interface
@@ -26,7 +26,7 @@ interface SpaceEvent {
   id: string;
   name: string;
   owner_id: string;
-  created_at: number;
+  created_at: string;
 };
 
 interface ChatEvent {
@@ -34,7 +34,7 @@ interface ChatEvent {
   flags: number;
   id: string;
   name: string;
-  created_at: number;
+  created_at: string;
 };
 
 interface MessageEvent {
@@ -43,14 +43,14 @@ interface MessageEvent {
   chat_id: string;
   content: string;
   flags: number;
-  created_at: number;
+  created_at: string;
 };
 
 interface RoleEvent {
   space_id: string;
   id: string;
   permissions: number;
-  created_at: number;
+  created_at: string;
 };
 
 interface MemberEvent {
@@ -58,7 +58,7 @@ interface MemberEvent {
   user_id: string;
   permissions: number;
   color: number | null;
-  created_at: number;
+  created_at: string;
 }
 
 interface ReadyEvent {

@@ -14,7 +14,7 @@ export class SessionManager {
   }
 
   async list() {
-    const raw_sessions = (await db.execute("SELECT id FROM messagin.sessions WHERE user_id = ?", [this.id])).rows;
+    const raw_sessions = (await db.execute("SELECT id FROM messagin.sessions WHERE user_id = ?", [this.id], { prepare: true })).rows;
     const sessions: (Session | null)[] = []
 
     for (const { id } of raw_sessions) {

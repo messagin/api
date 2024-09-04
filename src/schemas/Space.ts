@@ -16,7 +16,7 @@ interface BaseSpace {
   name: string;
   flags: number;
   owner_id: string;
-  created_at: number;
+  created_at: string;
 };
 
 export class Space implements BaseSpace {
@@ -24,14 +24,14 @@ export class Space implements BaseSpace {
   name: string;
   flags: number;
   owner_id: string;
-  created_at: number;
+  created_at: string;
 
-  constructor(id?: string, time?: number) {
+  constructor(id?: string, time?: string) {
     this.id = id ?? generateIDv2();
     this.name = "";
     this.flags = 0;
     this.owner_id = "";
-    this.created_at = time ?? Date.now();
+    this.created_at = time ?? new Date().toISOString();
   }
 
   setName(name: string) {
@@ -65,7 +65,7 @@ export class Space implements BaseSpace {
   }
 
   static async getById(id: string) {
-    const space = (await db.execute("SELECT * FROM spaces WHERE id = ?", [id])).rows[0];
+    const space = (await db.execute("SELECT * FROM spaces WHERE id = ?", [id], { prepare: true })).rows[0];
     if (!space) return null;
     return new Space(space.id, space.created_at)
       .setName(space.name)
@@ -73,12 +73,12 @@ export class Space implements BaseSpace {
   }
 
   async create() {
-    await db.execute("INSERT INTO spaces (id,name,flags,owner_id,created_at) VALUES (?,?,?,?,?)", [this.id, this.name, this.flags, this.owner_id, this.created_at]);
+    await db.execute("INSERT INTO spaces (id,name,flags,owner_id,created_at) VALUES (?,?,?,?,?)", [this.id, this.name, this.flags, this.owner_id, this.created_at], { prepare: true });
     return this;
   }
 
   async update() {
-    await db.execute("UPDATE spaces SET name = ?, flags = ?, owner_id = ?, created_at = ? WHERE id = ?", [this.name, this.flags, this.owner_id, this.created_at]);
+    await db.execute("UPDATE spaces SET name = ?, flags = ?, owner_id = ?, created_at = ? WHERE id = ?", [this.name, this.flags, this.owner_id, this.created_at], { prepare: true });
     return this;
   }
 
@@ -101,7 +101,7 @@ export class Space implements BaseSpace {
   }
 
   static async exists(id: string) {
-    const count = (await db.execute("SELECT count(*) FROM spaces WHERE id = ?", [id])).rows[0].count.low;
+    const count = (await db.execute("SELECT count(*) FROM spaces WHERE id = ?", [id], { prepare: true })).rows[0].count.low;
     return count > 0;
   }
 

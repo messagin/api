@@ -38,6 +38,8 @@ router.options("*", (_req, res) => {
   respond(res, 200, "Ok");
 });
 
+//! created_at is now deprecated. Exception: ratelimits
+
 // TODO REVIEW EVERY SINGLE METHOD.
 // todo implement reactions
 
@@ -105,10 +107,10 @@ router.delete("/chats/:chat_id/messages/:message_id", messageValidator.destroy, 
 //#endregion
 
 //#region friends
-router.get("/users/me/relations", relationController.get); // list relations
-router.post("/users/me/relations", relationValidator.create, relationController.create); // add friend
-router.get("/users/me/relations/:user_id", relationValidator.getById, relationController.getById); // get friend
-router.delete("/users/me/relations/:user_id", relationValidator.destroy, relationController.destroy); // remove friend
+router.get("/users/self/relations", relationController.get); // list relations
+router.put("/users/self/relations/:user_id", relationValidator.create, relationController.create); // add friend
+router.get("/users/self/relations/:user_id", relationValidator.getById, relationController.getById); // get friend
+router.delete("/users/self/relations/:user_id", relationValidator.destroy, relationController.destroy); // remove friend
 //#endregion
 
 router.all("*", (_req, res) => {

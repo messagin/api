@@ -13,7 +13,7 @@ export class InviteManager {
   }
 
   async list() {
-    const raw_invites = (await db.execute("SELECT id FROM messagin.invites WHERE space_id = ?", [this.space_id])).rows;
+    const raw_invites = (await db.execute("SELECT id FROM messagin.invites WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
 
     const invites: (Invite | null)[] = [];
 
