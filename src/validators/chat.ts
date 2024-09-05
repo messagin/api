@@ -16,12 +16,6 @@ export function getById(req: Request, res: Response, next: NextFunction) {
   if (!id_regex.test(req.params.chat_id)) {
     return respond(res, 400, "MalformedId");
   }
-  if (!req.body.name) {
-    return respond(res, 400, "InvalidBody", { errors: { name: "missing" } });
-  }
-  if (typeof req.body.name !== "string" || req.body.name.length < 2) {
-    return respond(res, 400, "InvalidBody", { errors: { name: "invalid" } });
-  }
   return next();
 }
 

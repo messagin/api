@@ -60,9 +60,16 @@ export class Chat implements BaseChat {
   static async getById(id: string) {
     const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!chat) return null;
-    return new Chat(chat.id, chat.created_at)
-      .setFlags(chat.flags)
-      .setName(chat.name);
+    if (chat.space_id) {
+      return new SpaceChat(chat.id, chat.created_at)
+        .setSpace(chat.space_id)
+        .setFlags(chat.flags)
+        .setName(chat.name);
+    } else {
+      return new UserChat(chat.id, chat.created_at)
+        .setFlags(chat.flags)
+        .setName(chat.name);
+    }
   }
 
   static async exists(id: string) {

@@ -14,15 +14,15 @@ export async function create(req: Request, res: Response) {
       return respond(res, 404, "NotFound");
     }
     const member = await Member.get(chat.space_id!, res.locals.user_id);
+    console.log(chat, member);
     if (!member) {
       return respond(res, 403, "Forbidden");
     }
 
-    const message = await chat.messages.create(res.locals.user_id, req.body.content);
-    message.setContent(req.body.content);
-    Emitter.getInstance().emit("MessageCreate", message.clean());
+    const message = (await chat.messages.create(res.locals.user_id, req.body.content)).clean();
+    Emitter.getInstance().emit("MessageCreate", message);
 
-    return respond(res, 201, "MessageCreated", message.clean());
+    return respond(res, 201, "MessageCreated", message);
   }
   catch (err) {
     log("red")((err as Error).message);

@@ -73,9 +73,9 @@ export class Member implements BaseMember {
 
   clean(): CleanMember {
     return {
-      permissions: this.permissions,
       user_id: this.user_id,
       space_id: this.space_id,
+      permissions: this.permissions,
       color: this.color,
       created_at: this.created_at
     }

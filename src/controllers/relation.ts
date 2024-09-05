@@ -52,9 +52,10 @@ export async function getById(req: Request, res: Response) {
   }
 }
 
-export async function destroy(_req: Request, res: Response) {
+export async function destroy(req: Request, res: Response) {
   try {
-    // FIX end the friendController.destroy function
+    const relation = new Relation().setUsers(res.locals.user_id, req.params.user_id);
+    relation.delete();
   }
   catch (err) {
     log("red")((err as Error).message);

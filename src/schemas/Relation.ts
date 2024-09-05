@@ -91,8 +91,8 @@ export class Relation implements BaseRelation {
       .setUpdatedAt(relation.updated_at);
   }
 
-  static async delete(id0: string, id1: string) {
-    await db.execute("DELETE FROM relations WHERE user_id0 = ? AND user_id1 = ?", [id0, id1], { prepare: true });
+  async delete() {
+    await db.execute("DELETE FROM relations WHERE user_id0 = ? AND user_id1 = ?", [this.user_id0, this.user_id1], { prepare: true });
     return this;
   }
 }

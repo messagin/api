@@ -13,7 +13,7 @@ interface BaseMessage {
   user_id: string;
   content: string;
   flags: number;
-  updated_at: string;
+  updated_at: string | null;
   created_at: string;
 }
 
@@ -25,7 +25,7 @@ export class Message implements BaseMessage {
   user_id: string;
   content: string;
   flags: number;
-  updated_at: string;
+  updated_at: string | null;
   created_at: string;
 
   constructor(id?: string, time?: string) {
@@ -34,7 +34,7 @@ export class Message implements BaseMessage {
     this.user_id = "";
     this.content = "";
     this.flags = 0;
-    this.updated_at = "";
+    this.updated_at = null;
     this.created_at = time ?? new Date().toISOString();
   }
 
@@ -53,7 +53,7 @@ export class Message implements BaseMessage {
     return this;
   }
 
-  setUpdatedAt(time: string) {
+  setUpdatedAt(time: string | null) {
     this.updated_at = time;
     return this;
   }
@@ -98,7 +98,7 @@ export class Message implements BaseMessage {
   }
 
   async create() {
-    await db.execute("INSERT INTO messages (chat_id,content,flags,id,user_id,updated_at,created_at) VALUES (?,?,?,?,?,?,?)", [this.chat_id, this.content, this.flags, this.id, this.user_id, this.created_at, this.updated_at], { prepare: true });
+    await db.execute("INSERT INTO messages (chat_id,content,flags,id,user_id,updated_at,created_at) VALUES (?,?,?,?,?,?,?)", [this.chat_id, this.content, this.flags, this.id, this.user_id, this.updated_at, this.created_at], { prepare: true });
     return this;
   }
 

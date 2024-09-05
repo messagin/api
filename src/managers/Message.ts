@@ -49,7 +49,7 @@ export class MessageManager {
       .setContent(message.content)
       .setFlags(message.flags)
       .setUser(message.user_id)
-      .setUpdatedAt(message.created_at)
+      .setUpdatedAt(message.updated_at)
     );
   }
 }

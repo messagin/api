@@ -60,14 +60,6 @@ router.get("/users/:user_id", authenticate, userValidator.getById, userControlle
 // router.get("/users/:user_id/profile", authenticate, userValidator.getProfile, userController.getProfile); // todo implement getProfile
 //#endregion
 
-//#region chats
-router.get("/chats", userChatController.get);
-router.post("/chats", userChatController.create);
-// todo add validation
-router.get("/chats/:id", userChatController.getById);
-// todo add delete method
-//#endregion
-
 //#region spaces
 router.get("/spaces", spaceController.get); // list user spaces
 router.post("/spaces", spaceValidator.create, spaceController.create); // create new space
@@ -90,10 +82,12 @@ router.get("/spaces/:space_id/members/:member_id", memberValidator.getById, memb
 //#endregion
 
 //#region chats
-router.get("/spaces/:space_id/chats", chatValidator.get, chatController.get); // list chats
+router.get("/chats", userChatController.get);
+router.post("/chats", userChatController.create);
 router.get("/chats/:chat_id", chatValidator.getById, chatController.getById); // get chat
 router.patch("/chats/:chat_id", chatValidator.update, chatController.update); // update chat
 router.delete("/chats/:chat_id", chatValidator.destroy, chatController.destroy); // delete chat
+router.get("/spaces/:space_id/chats", chatValidator.get, chatController.get); // list chats
 router.post("/spaces/:space_id/chats", chatValidator.create, chatController.create); // create chat
 //#endregion
 
