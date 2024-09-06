@@ -94,7 +94,7 @@ export class Chat implements BaseChat {
   }
 
   async update() {
-    await db.execute("UPDATE chats SET name = ? WHERE id = ?", [this.name, this.id], { prepare: true });
+    await db.execute("UPDATE chats SET name = ? WHERE id = ? AND space_id = ?", [this.name, this.id, this.space_id], { prepare: true });
     return this;
   }
 }
