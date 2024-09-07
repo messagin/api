@@ -108,7 +108,7 @@ export class Message implements BaseMessage {
   }
 
   async delete() {
-    await db.execute("DELETE FROM messages WHERE id = ?", [this.id], { prepare: true });
+    await db.execute("DELETE FROM messages WHERE id = ? AND chat_id = ?", [this.id, this.chat_id], { prepare: true });
     return this;
   }
 }
