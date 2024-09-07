@@ -4,7 +4,7 @@ interface BaseRelation {
   user_id0: string;
   user_id1: string;
   flags: number;
-  updated_at: string;
+  updated_at: string | null;
   created_at: string;
 }
 
@@ -26,14 +26,14 @@ export class Relation implements BaseRelation {
   user_id0: string;
   user_id1: string;
   flags: number;
-  updated_at: string;
+  updated_at: string | null;
   created_at: string;
 
   constructor(time?: string) {
     this.user_id0 = "";
     this.user_id1 = "";
     this.flags = 0;
-    this.updated_at = "";
+    this.updated_at = null;
     this.created_at = time ?? new Date().toISOString();
 
     return this;

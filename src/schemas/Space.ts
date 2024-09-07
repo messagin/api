@@ -78,7 +78,7 @@ export class Space implements BaseSpace {
   }
 
   async update() {
-    await db.execute("UPDATE spaces SET name = ?, flags = ?, owner_id = ?, created_at = ? WHERE id = ?", [this.name, this.flags, this.owner_id, this.created_at], { prepare: true });
+    await db.execute("UPDATE spaces SET name = ?, flags = ?, owner_id = ?, created_at = ? WHERE id = ?", [this.name, this.flags, this.owner_id, this.created_at, this.id], { prepare: true });
     return this;
   }
 
