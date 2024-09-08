@@ -175,7 +175,7 @@ export async function updatePassword(req: Request, res: Response) {
     if (generateHmac(old_password, user.email) !== user.password) {
       return respond(res, 400, "WrongPassword");
     }
-    await user.setPassword(new_password).update();
+    await user.setPassword(new_password).updatePassword();
     return respond(res, 204, "Updated");
   } catch (err) {
     log("red")((err as Error).message);

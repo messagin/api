@@ -62,15 +62,18 @@ export class User implements BaseUser {
   }
 
   async update() {
-    const updated: Partial<BaseUser> = {};
+    // const updated: Partial<BaseUser> = {};
 
-    for (const entry of this.updatedEntries || []) {
-      (updated[entry] as BaseUser[keyof BaseUser]) = this[entry] as BaseUser[keyof BaseUser];
-    }
+    // for (const entry of this.updatedEntries || []) {
+    //   (updated[entry] as BaseUser[keyof BaseUser]) = this[entry] as BaseUser[keyof BaseUser];
+    // }
 
     throw new Error("user update not implemented");
-    // await db.update("users", updated, { id: this.id });
-    // await db.users.update(updated).where({ id: this.id });
+    return this;
+  }
+
+  async updatePassword() {
+    await db.execute("UPDATE users SET password = ? WHERE id = ?", [this.password, this.id], { prepare: true });
     return this;
   }
 

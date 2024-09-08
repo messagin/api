@@ -49,7 +49,7 @@ router.options("*", (_req, res) => {
 
 //#region users
 router.get("/users/self", userController.getSelf);
-router.put("/users/self/password", userController.updatePassword);
+router.put("/users/self/password", userValidator.updatePassword, userController.updatePassword);
 router.post("/users/self/mfa/validate", userController.validateMfa);
 router.delete("/users/self", userController.destroy);
 

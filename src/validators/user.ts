@@ -73,3 +73,26 @@ export function login(req: Request, res: Response, next: NextFunction) {
   }
   return next();
 }
+
+export function updatePassword(req: Request, res: Response, next: NextFunction) {
+  const errors: { old_password?: ValueError, new_password?: ValueError } = {};
+
+  if (!req.body?.old_password) {
+    errors.old_password = "missing";
+  }
+  else if (typeof req.body?.old_password !== "string" || req.body?.old_password?.length < 8) {
+    errors.old_password = "invalid";
+  }
+
+  if (!req.body?.new_password) {
+    errors.new_password = "missing";
+  }
+  else if (typeof req.body?.new_password !== "string" || req.body?.new_password?.length < 8) {
+    errors.new_password = "invalid";
+  }
+
+  if (Object.keys(errors).length) {
+    return respond(res, 400, "InvalidBody", { errors });
+  }
+  return next();
+}
