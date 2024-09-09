@@ -6,10 +6,11 @@ import { RelationManager } from "../managers/Relation";
 import db from "../utils/database";
 
 const UserFlags = {
-  Admin: 1 << 0,
-  MfaEnabled: 1 << 1,
-  Bot: 1 << 2,
-  UnverifiedEmail: 1 << 3,
+  Deleted: 1 << 0,
+  Admin: 1 << 1,
+  MfaEnabled: 1 << 2,
+  Bot: 1 << 3,
+  UnverifiedEmail: 1 << 4,
 };
 
 type UserFlag = keyof typeof UserFlags;
@@ -80,7 +81,10 @@ export class User implements BaseUser {
   async delete() {
     // todo update user deletion to give them time to think twice
     await db.execute("DELETE * FROM sessions WHERE user_id = ?", [this.id], { prepare: true });
-    await this.setEmail("", "").update();
+    // keep the user record but mark as deleted
+    // todo delete personal data from record (email, phone, etc)
+    this.setFlag("Deleted");
+    await db.execute("UPDATE users SET flags = ? WHERE id = ?", [this.flags, this.id], { prepare: true });
     return this;
   }
 

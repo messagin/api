@@ -9,10 +9,11 @@ interface BaseRelation {
 }
 
 const RelationFlags = {
-  // Pending: 0
-  Accepted: 1 << 0,
-  Blocked0: 1 << 1,
-  Blocked1: 1 << 2
+  Pending0: 1 << 0, // <- direction
+  Pending1: 1 << 1, // -> direction
+  Accepted: 1 << 2,
+  Blocked0: 1 << 3, // <- direction
+  Blocked1: 1 << 4, // -> direction
 } as const;
 
 type RelationFlag = keyof typeof RelationFlags;
@@ -40,8 +41,16 @@ export class Relation implements BaseRelation {
   }
 
   setUsers(id0: string, id1: string) {
-    this.user_id0 = id0 < id1 ? id0 : id1;
-    this.user_id1 = id0 < id1 ? id1 : id0;
+    if (id0 < id1) {
+      this.setFlag("Pending0");
+      this.user_id0 = id0;
+      this.user_id1 = id1;
+    }
+    else {
+      this.setFlag("Pending1");
+      this.user_id0 = id1;
+      this.user_id1 = id0;
+    }
     return this;
   }
 
@@ -65,10 +74,17 @@ export class Relation implements BaseRelation {
     return this;
   }
 
+  hasFlag(flag: RelationFlag) {
+    return (this.flags & RelationFlags[flag]) !== 0;
+  }
+
+  private cleanFlags() {
+    return this.flags & ~(RelationFlags["Blocked0"] | RelationFlags["Blocked1"]);
+  }
+
   clean(user_id: string): CleanRelation {
     return {
-      // todo clean relation flags (blocked)
-      flags: this.flags,
+      flags: this.cleanFlags(),
       updated_at: this.updated_at,
       created_at: this.created_at,
       user_id: user_id,

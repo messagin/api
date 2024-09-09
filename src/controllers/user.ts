@@ -154,7 +154,7 @@ export async function getById(req: Request, res: Response) {
 }
 
 export async function validateMfa(req: Request, res: Response) {
-  // todo funish implementing
+  // todo finish implementing
   req; res;
   return null;
 }
