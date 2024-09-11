@@ -2,27 +2,32 @@ import { generateHash } from "../utils/auth.node";
 import { Session } from "../schemas/Session";
 import { log } from "../utils/log";
 
-export async function authenticateWebSocket(authorization?: string): Promise<Session | null> {
+type AuthenticationResponse = {
+  code: number;
+  session?: Session;
+};
+
+export async function authenticateWebSocket(authorization?: string): Promise<AuthenticationResponse> {
   if (typeof authorization !== "string") {
-    return null;
+    return { code: -1 };
   }
   const [type, xtoken] = authorization.split(" ");
   if (!xtoken) {
-    return null;
+    return { code: -1 };
   }
   if (type !== "User" && type !== "Bot") {
-    return null;
+    return { code: -1 };
   }
 
   if (xtoken.length !== 96) {
-    return null;
+    return { code: -2 };
   }
 
   const id = Buffer.from(xtoken.slice(0, 22), "base64url").toString("utf8");
   const token = generateHash(xtoken);
 
   if (!/^[0-9A-HJKMNP-TV-Z]{16}$/.test(id)) {
-    return null;
+    throw new Error("invalid token");
   }
 
   let session;
@@ -31,16 +36,16 @@ export async function authenticateWebSocket(authorization?: string): Promise<Ses
   }
   catch (err) {
     log("red")((err as Error).message);
-    return null;
+    return { code: -2 };
   }
 
   if (!session || session.token.hash !== token) {
-    return null;
+    return { code: -2 };
   }
 
   if ((session.hasFlag("Bot") && type === "Bot") || (!session.hasFlag("Bot") && type === "User")) {
-    return session;
+    return { code: 0, session };
   }
 
-  return null;
+  return { code: -2 };
 }

@@ -61,10 +61,10 @@ function requestAuthentication(ws: WebSocket) {
     const listener = async (data: RawData) => {
       const event = JSON.parse(data.toString()) as WsAuthEvent;
       if (event.op === OpCodes.Authenticate) {
-        const session = await authenticateWebSocket(event.d?.auth);
-        if (session) {
-          ws.off("message", listener);
-          return resolve(session);
+        const response = await authenticateWebSocket(event.d?.auth);
+        ws.off("message", listener);
+        if (response.code === 0) {
+          return resolve(response.session!);
         }
       }
     };
@@ -81,8 +81,14 @@ export function configure(router: Router) {
 
     const listeners = Emitter.getCollector();
 
-    let s = await authenticateWebSocket(req.headers.authorization);
-    // todo check if user tried to authenticate, in which case we should close the connection
+    const auth_response = await authenticateWebSocket(req.headers.authorization);
+    let s = auth_response.session;
+
+    if (auth_response.code === -2) {
+      // todo check error code for invalid authorization
+      ws.close(3003);
+      return;
+    }
 
     if (!s) {
       s = await requestAuthentication(ws);
@@ -122,7 +128,7 @@ export function configure(router: Router) {
       }
       dispatch(ws, { t: "SessionDelete", d: session_ });
       if (session_.id === session.id) {
-        ws.close();
+        ws.close(1000);
       }
     }, listeners);
 
@@ -262,7 +268,8 @@ export function configure(router: Router) {
       dispatch(ws, { t: "MemberUpdate", d: member });
     }, listeners);
 
-    ws.on("close", () => {
+    ws.on("close", (_code, reason) => {
+      log("white")(reason.toString());
       ws.removeAllListeners();
       events.disposeCollector(listeners);
     });
