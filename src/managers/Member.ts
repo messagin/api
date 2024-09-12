@@ -10,25 +10,25 @@ export class MemberManager {
 
   init(user_id: string) {
     return new Member()
-      .setChat(this.space_id)
+      .setSpace(this.space_id)
       .setUser(user_id);
   }
 
   async get(user_id: string) {
-    const member = (await db.execute("SELECT * FROM messagin.members WHERE space_id = ? AND user_id = ? LIMIT 1", [this.space_id, user_id])).rows[0];
+    const member = (await db.execute("SELECT * FROM members WHERE space_id = ? AND user_id = ? LIMIT 1", [this.space_id, user_id])).rows[0];
     if (!member) return null;
     return new Member(member.created_at)
       .setColor(member.color)
       .setPermissions(member.permissions)
-      .setChat(member.space_id)
+      .setSpace(member.space_id)
       .setUser(member.user_id);
   }
 
   async list() {
-    const members = (await db.execute("SELECT * FROM messagin.members WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
+    const members = (await db.execute("SELECT * FROM members WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
 
     return members.map(member => new Member()
-      .setChat(member.space_id)
+      .setSpace(member.space_id)
       .setUser(member.user_id)
       .setPermissions(member.permissions)
       .setColor(member.color)
@@ -36,7 +36,7 @@ export class MemberManager {
   }
 
   async has(user_id: string) {
-    const member = (await db.execute("SELECT * FROM messagin.members WHERE space_id = ? AND user_id = ? LIMIT 1", [this.space_id, user_id], { prepare: true })).rows;
+    const member = (await db.execute("SELECT * FROM members WHERE space_id = ? AND user_id = ? LIMIT 1", [this.space_id, user_id], { prepare: true })).rows;
     if (!member) return false;
     return true;
   }

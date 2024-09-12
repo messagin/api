@@ -36,7 +36,7 @@ export class Member implements BaseMember {
     return this;
   }
 
-  setChat(id: string) {
+  setSpace(id: string) {
     this.space_id = id;
     return this;
   }

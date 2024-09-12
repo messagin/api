@@ -37,6 +37,7 @@ export const StatusCodes = {
     TempUserPassword: 40301,
     NotOwner: 40302,
     Forbidden: 40303,
+    NotABot: 40304,
   },
   404: {
     NotFound: 40400,
@@ -106,6 +107,7 @@ export const StatusMessages = Object.freeze({
   40301: "Cannot change the password of a temporary user",
   40302: "Only the space owner can perform this action",
   40303: "You do not have permission to access this resource",
+  40304: "This action can only be performed as a bot",
   //#endregion
   //#region 404 Not Found
   40400: "The requested resource was not found",

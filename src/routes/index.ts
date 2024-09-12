@@ -76,7 +76,7 @@ router.delete("/invites/:invite_id", inviteValidator.destroy, inviteController.d
 //#endregion
 
 //#region members
-// router.put("/spaces/:space_id/members/:member_id"); //? forcefully add a new member to the space (bots-only)
+router.put("/spaces/:space_id/members/:member_id", memberValidator.add, memberController.add); //? forcefully add a new member to the space (bots-only)
 router.get("/spaces/:space_id/members", memberValidator.get, memberController.get); // list members
 router.get("/spaces/:space_id/members/:member_id", memberValidator.getById, memberController.getById); // get member
 //#endregion
