@@ -21,7 +21,7 @@ interface ApiRole {
   created_at: string;
 };
 
-class Role implements ApiRole {
+export class Role implements ApiRole {
   id: string;
   space_id: string;
   flags: number;
@@ -29,7 +29,7 @@ class Role implements ApiRole {
   created_at: string;
   
   constructor(id?: string, time?: string) {
-    this.id = id ?? generareIDv2();
+    this.id = id ?? generateIDv2();
     this.space_id = "";
     this.flags = 0;
     this.permissions = 0;
