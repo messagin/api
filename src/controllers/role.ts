@@ -3,7 +3,6 @@ import { respond } from "../utils/respond";
 import { log } from "../utils/log";
 import { Emitter } from "../utils/events";
 import { Space } from "../schemas/Space";
-import { Role } from "../schemas/Role";
 
 export async function create(req: Request, res: Response) {
   try {
