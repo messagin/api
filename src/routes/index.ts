@@ -11,6 +11,7 @@ import * as websocketController from "../controllers/websocket";
 
 import * as userValidator from "../validators/user";
 import * as chatValidator from "../validators/chat";
+import * as roleValidator from "../validators/role";
 import * as spaceValidator from "../validators/space";
 import * as memberValidator from "../validators/member";
 import * as inviteValidator from "../validators/invite";

@@ -87,7 +87,7 @@ export async function destroy(req: Request, res: Response) {
 
     await invite.destroy();
 
-    Emitter.getInstance().emitter.emit("InviteDelete", invite);
+    Emitter.getInstance().emit("InviteDelete", invite);
     return respond(res, 204, "Deleted", invite);
   }
   catch (err) {

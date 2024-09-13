@@ -59,11 +59,20 @@ interface MemberEvent {
   permissions: number;
   color: number | null;
   created_at: string;
-}
+};
+
+interface InviteEvent {
+  id: string;
+  space_id: string;
+  name: string;
+  permissions: number;
+  flags: number;
+  created_at: string;
+};
 
 interface ReadyEvent {
 
-}
+};
 
 export interface Events {
   Ready: [ReadyEvent];
@@ -85,6 +94,9 @@ export interface Events {
   MemberCreate: [MemberEvent];
   MemberUpdate: [MemberEvent];
   MemberDelete: [MemberEvent];
+  InviteCreate: [InviteEvent];
+  InviteUpdate: [InviteEvent];
+  InviteDelete: [InviteEvent];
 };
 
 export type EventName = keyof Events;

@@ -32,8 +32,6 @@ export class Member implements BaseMember {
     this.share = 0;
     this.color = 0;
     this.created_at = time ?? new Date().toISOString();
-
-    return this;
   }
 
   setSpace(id: string) {
@@ -53,7 +51,6 @@ export class Member implements BaseMember {
 
   setPermission(permission: Permission) {
     this.permissions |= Permissions[permission];
-    // todo track updated entries (Member)
     return this;
   }
 
@@ -103,7 +100,7 @@ export class Member implements BaseMember {
     return new Member(member.created_at)
       .setPermissions(member.permissions)
       .setColor(member.color)
-      .setChat(member.space_id)
+      .setSpace(member.space_id)
       .setUser(member.user_id);
   }
 }

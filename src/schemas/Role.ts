@@ -16,6 +16,7 @@ type RoleFlag = keyof typeof RoleFlags;
 interface ApiRole {
   id: string;
   space_id: string;
+  name: string;
   flags: number;
   permissions: number;
   created_at: string;
@@ -24,6 +25,7 @@ interface ApiRole {
 export class Role implements ApiRole {
   id: string;
   space_id: string;
+  name: string;
   flags: number;
   permissions: number;
   created_at: string;
@@ -31,6 +33,7 @@ export class Role implements ApiRole {
   constructor(id?: string, time?: string) {
     this.id = id ?? generateIDv2();
     this.space_id = "";
+    this.name = "";
     this.flags = 0;
     this.permissions = 0;
     this.created_at = time ?? new Date().toISOString();
@@ -38,6 +41,11 @@ export class Role implements ApiRole {
   
   setSpace(id: string) {
     this.space_id = id;
+    return this;
+  }
+  
+  setName(name: string) {
+    this.name = name;
     return this;
   }
   
@@ -80,7 +88,7 @@ export class Role implements ApiRole {
   }
   
   async create() {
-    await db.execute("INSERT INTO roles (id,space_id,permissions,flags,created_at) VALUES (?,?,?,?,?)", [this.id, this.space_id, this.permissions, this.flags, this.created_at], { prepare: true });
+    await db.execute("INSERT INTO roles (id,space_id,name,permissions,flags,created_at) VALUES (?,?,?,?,?)", [this.id, this.space_id, this.name, this.permissions, this.flags, this.created_at], { prepare: true });
     return this;
   }
   
@@ -88,6 +96,7 @@ export class Role implements ApiRole {
     const role = (await db.execute("SELECT * FROM roles WHERE id = ? AND space_id = ? LIMIT 1", [id, space_id], { prepare: true })).rows[0];
     if (!role) return null;
     return new Role(role.id, role.created_at)
+      .setName(role.name)
       .setPermissions(role.permissions)
       .setFlags(role.flags)
       .setSpace(role.space_id);

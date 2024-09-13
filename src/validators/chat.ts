@@ -6,7 +6,7 @@ type ValueError = "missing" | "invalid";
 const id_regex = /^[0-9A-HJKMNP-TV-Z]{16}$/;
 
 export function get(req: Request, res: Response, next: NextFunction) {
-  if (!/^[0-9A-HJKMNP-TV-Z]{16}$/.test(req.params.space_id)) {
+  if (!id_regex.test(req.params.space_id)) {
     return respond(res, 400, "MalformedId");
   }
   return next();
