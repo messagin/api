@@ -47,9 +47,11 @@ interface MessageEvent {
 };
 
 interface RoleEvent {
-  space_id: string;
   id: string;
+  space_id: string;
+  name: string;
   permissions: number;
+  flags: number;
   created_at: string;
 };
 
@@ -64,9 +66,9 @@ interface MemberEvent {
 interface InviteEvent {
   id: string;
   space_id: string;
-  name: string;
-  permissions: number;
-  flags: number;
+  uses: number;
+  max_uses: number;
+  max_age: number;
   created_at: string;
 };
 
