@@ -2,7 +2,7 @@ import db from "../utils/database";
 
 const Flags = {
   Admin: 1 << 0
-}
+} as const;
 
 type Flag = keyof typeof Flags;
 

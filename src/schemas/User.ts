@@ -11,7 +11,7 @@ const UserFlags = {
   MfaEnabled: 1 << 2,
   Bot: 1 << 3,
   UnverifiedEmail: 1 << 4,
-};
+} as const;
 
 type UserFlag = keyof typeof UserFlags;
 

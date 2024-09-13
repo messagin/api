@@ -2,7 +2,7 @@ import db from "../utils/database";
 
 const Permissions = {
   Admin: 1 << 0
-}
+} as const;
 
 type Permission = keyof typeof Permissions;
 
@@ -99,7 +99,6 @@ export class Member implements BaseMember {
 
   static async get(space_id: string, user_id: string) {
     const member = (await db.execute("SELECT * FROM members WHERE space_id = ? AND user_id = ? LIMIT 1", [space_id, user_id], { prepare: true })).rows[0];
-    // const member = await db.members.where({ space_id, user_id }).first();
     if (!member) return null;
     return new Member(member.created_at)
       .setPermissions(member.permissions)

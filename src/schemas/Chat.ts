@@ -5,7 +5,7 @@ import db from "../utils/database";
 
 const ChatFlags = {
   Deleted: 1 << 0,
-};
+} as const;
 
 type ChatFlag = keyof typeof ChatFlags;
 

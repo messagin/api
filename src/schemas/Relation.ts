@@ -1,13 +1,5 @@
 import db from "../utils/database";
 
-interface BaseRelation {
-  user_id0: string;
-  user_id1: string;
-  flags: number;
-  updated_at: string | null;
-  created_at: string;
-}
-
 const RelationFlags = {
   Pending0: 1 << 0, // <- direction
   Pending1: 1 << 1, // -> direction
@@ -15,6 +7,14 @@ const RelationFlags = {
   Blocked0: 1 << 3, // <- direction
   Blocked1: 1 << 4, // -> direction
 } as const;
+
+interface BaseRelation {
+  user_id0: string;
+  user_id1: string;
+  flags: number;
+  updated_at: string | null;
+  created_at: string;
+}
 
 type RelationFlag = keyof typeof RelationFlags;
 

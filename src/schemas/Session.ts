@@ -5,7 +5,7 @@ import { UAParser } from "ua-parser-js";
 
 const SessionFlags = {
   Bot: 1 << 0,
-};
+} as const;
 
 type SessionFlag = keyof typeof SessionFlags;
 

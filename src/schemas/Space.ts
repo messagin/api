@@ -1,15 +1,15 @@
 import { generateIDv2 } from "../utils/auth.node";
 import db from "../utils/database";
 import { ChatManager } from "../managers/Chat";
+import { RoleManager } from "../managers/Role";
 import { MemberManager } from "../managers/Member"
 import { InviteManager } from "../managers/Invite";
 
 const SpaceFlags = {
   Deleted: 1 << 0,
-};
+} as const;
 
 type SpaceFlag = keyof typeof SpaceFlags;
-
 
 interface BaseSpace {
   id: string;
@@ -117,7 +117,7 @@ export class Space implements BaseSpace {
     return new InviteManager(this.id);
   }
 
-  // get roles() {
-  //   return new RoleManager(this.id);
-  // }
+  get roles() {
+    return new RoleManager(this.id);
+  }
 }

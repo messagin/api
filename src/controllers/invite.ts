@@ -7,11 +7,13 @@ import { log } from "../utils/log";
 
 export async function create(req: Request, res: Response) {
   try {
+    // todo fix
     const invite = new Invite()
       .setSpace(req.params.space_id);
 
     await invite.create();
-
+    
+    Emitter.getInstance().emit("InviteCreate", invite);
     return respond(res, 201, "InviteCreated", invite);
   }
   catch (err) {
@@ -65,8 +67,7 @@ export async function accept(req: Request, res: Response) {
     const member = await space.members.init(res.locals.user_id);
     await invite.update();
 
-    const emitter = Emitter.getInstance();
-    emitter.emit("MemberCreate", member);
+    Emitter.getInstance().emit("MemberCreate", member);
     // emitter.emit("InviteUpdate", invite);
 
     return respond(res, 201, "MemberCreated");
@@ -86,8 +87,7 @@ export async function destroy(req: Request, res: Response) {
 
     await invite.destroy();
 
-    // const emitter = Emitter.getInstance()
-    // emitter.emit("InviteDelete", invite);
+    Emitter.getInstance().emitter.emit("InviteDelete", invite);
     return respond(res, 204, "Deleted", invite);
   }
   catch (err) {

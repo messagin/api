@@ -3,7 +3,7 @@ import db from "../utils/database";
 
 const MessageFlags = {
   System: 1 << 0,
-};
+} as const;
 
 type MessageFlag = keyof typeof MessageFlags;
 

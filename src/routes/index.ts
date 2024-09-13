@@ -1,5 +1,6 @@
 import * as userController from "../controllers/user";
 import * as chatController from "../controllers/chat";
+import * as roleController from "../controllers/role";
 import * as spaceController from "../controllers/space";
 import * as memberController from "../controllers/member";
 import * as inviteController from "../controllers/invite";
@@ -79,6 +80,10 @@ router.delete("/invites/:invite_id", inviteValidator.destroy, inviteController.d
 router.put("/spaces/:space_id/members/:member_id", memberValidator.add, memberController.add); //? forcefully add a new member to the space (bots-only)
 router.get("/spaces/:space_id/members", memberValidator.get, memberController.get); // list members
 router.get("/spaces/:space_id/members/:member_id", memberValidator.getById, memberController.getById); // get member
+//#endregion
+
+//#region roles
+router.post("/spaces/:space_id/roles", roleValidator.create, roleController.create);
 //#endregion
 
 //#region chats
