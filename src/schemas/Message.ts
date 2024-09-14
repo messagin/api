@@ -68,7 +68,7 @@ export class Message implements BaseMessage {
     return this;
   }
 
-  static async getById(id: string) {
+  static async getById(id: string): Promise<Message | null> {
     const message = (await db.execute("SELECT * FROM messages WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!message) return null;
     return new Message(message.id, message.created_at)

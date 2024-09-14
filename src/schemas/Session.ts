@@ -135,7 +135,7 @@ export class Session implements BaseSession {
     return this;
   }
 
-  static async getById(id: string) {
+  static async getById(id: string): Promise<Session | null> {
     const session = (await db.execute("SELECT * FROM sessions WHERE id = ?", [id], { prepare: true })).rows[0];
     if (!session) return null;
     return new Session

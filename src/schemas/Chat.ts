@@ -37,7 +37,6 @@ export class Chat implements BaseChat {
     return this;
   }
 
-
   setFlag(flag: ChatFlag) {
     this.flags |= ChatFlags[flag];
     return this;
@@ -110,7 +109,7 @@ export class SpaceChat extends Chat {
     return this;
   }
 
-  static async getById(id: string) {
+  static async getById(id: string): Promise<SpaceChat | null> {
     const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!chat) return null;
     return new SpaceChat(chat.id, chat.created_at)

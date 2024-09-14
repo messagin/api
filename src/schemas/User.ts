@@ -187,7 +187,7 @@ export class User implements BaseUser {
     };
   }
 
-  static async getById(id: string) {
+  static async getById(id: string): Promise<User | null> {
     const user = (await db.execute("SELECT * FROM users WHERE id = ?", [id], { prepare: true })).rows[0];
     if (!user) return null;
     return new User(user.id, user.created_at)

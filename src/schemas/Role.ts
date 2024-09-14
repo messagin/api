@@ -98,7 +98,7 @@ export class Role implements ApiRole {
     return this;
   }
   
-  static async getById(id: string, space_id: string) {
+  static async getById(id: string, space_id: string): Promise<Role | null> {
     const role = (await db.execute("SELECT * FROM roles WHERE id = ? AND space_id = ? LIMIT 1", [id, space_id], { prepare: true })).rows[0];
     if (!role) return null;
     return new Role(role.id, role.created_at)

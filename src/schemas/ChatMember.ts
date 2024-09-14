@@ -73,7 +73,7 @@ export class ChatMember implements BaseChatMember {
     return count > 0;
   }
 
-  static async get(chat_id: string, user_id: string) {
+  static async get(chat_id: string, user_id: string): Promise<ChatMember | null> {
     const member = (await db.execute("SELECT * FROM chat_members WHERE chat_id = ? AND user_id = ?", [chat_id, user_id], { prepare: true })).rows[0];
     if (!member) return null;
     return new ChatMember(member.created_at)

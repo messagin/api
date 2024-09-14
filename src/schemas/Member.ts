@@ -94,7 +94,7 @@ export class Member implements BaseMember {
     return count > 0;
   }
 
-  static async get(space_id: string, user_id: string) {
+  static async get(space_id: string, user_id: string): Promise<Member | null> {
     const member = (await db.execute("SELECT * FROM members WHERE space_id = ? AND user_id = ? LIMIT 1", [space_id, user_id], { prepare: true })).rows[0];
     if (!member) return null;
     return new Member(member.created_at)

@@ -64,7 +64,7 @@ export class Space implements BaseSpace {
     return this;
   }
 
-  static async getById(id: string) {
+  static async getById(id: string): Promise<Space | null> {
     const space = (await db.execute("SELECT * FROM spaces WHERE id = ?", [id], { prepare: true })).rows[0];
     if (!space) return null;
     return new Space(space.id, space.created_at)

@@ -97,7 +97,7 @@ export class Relation implements BaseRelation {
     return this;
   }
 
-  static async getByIds(id0: string, id1: string) {
+  static async getByIds(id0: string, id1: string): Promise<Relation | null> {
     const relation = (await db.execute("SELECT * FROM relations WHERE user_id0 = ? AND user_id1 = ? LIMIT 1", [id0, id1], { prepare: true })).rows[0];
 
     if (!relation) return null;

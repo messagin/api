@@ -47,7 +47,7 @@ export class Invite implements BaseInvite {
     return this;
   }
 
-  static async getById(id: string) {
+  static async getById(id: string): Promise<Invite | null> {
     const invite = (await db.execute("SELECT * FROM invites WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     // const invite = await db.invites.where({ id }).first();
     if (!invite) return null;
