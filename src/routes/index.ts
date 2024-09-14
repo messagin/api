@@ -85,6 +85,7 @@ router.get("/spaces/:space_id/members/:member_id", memberValidator.getById, memb
 
 //#region roles
 router.post("/spaces/:space_id/roles", roleValidator.create, roleController.create);
+router.delete("/spaces/:space_id/roles/:role_id", roleValidator.destroy, roleController.destroy);
 //#endregion
 
 //#region chats

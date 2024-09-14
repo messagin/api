@@ -1,4 +1,4 @@
-import { generateIDv2 } from "../utils/auth.node";
+import { generateIDv2 } from "../utils/auth";
 import db from "../utils/database";
 
 const Permissions = {
@@ -92,7 +92,13 @@ export class Role implements ApiRole {
     return this;
   }
   
-  static async get(id: string, space_id: string) {
+  async delete() {
+    // todo check member_roles
+    await db.execute("DELETE FROM roles WHERE id = ? AND space_id = ?", [this.id, this.space_id], { prepare: true });
+    return this;
+  }
+  
+  static async getById(id: string, space_id: string) {
     const role = (await db.execute("SELECT * FROM roles WHERE id = ? AND space_id = ? LIMIT 1", [id, space_id], { prepare: true })).rows[0];
     if (!role) return null;
     return new Role(role.id, role.created_at)

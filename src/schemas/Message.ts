@@ -1,4 +1,4 @@
-import { generateIDv2 } from "../utils/auth.node";
+import { generateIDv2 } from "../utils/auth";
 import db from "../utils/database";
 
 const MessageFlags = {
@@ -70,7 +70,6 @@ export class Message implements BaseMessage {
 
   static async getById(id: string) {
     const message = (await db.execute("SELECT * FROM messages WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
-    // const message = await db.messages.where({ id }).first();
     if (!message) return null;
     return new Message(message.id, message.created_at)
       .setChat(message.chat_id)

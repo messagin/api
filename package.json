@@ -35,7 +35,7 @@
     "lint": "eslint",
     "compile": "tsc",
     "build": "for i in ./dist/**/*.js; do uglifyjs $i -o $i --compress --mangle; done; for i in ./dist/*.js; do uglifyjs $i -o $i --compress --mangle; done",
-    "prestart": "yarn run lint && yarn run compile",
+    "prestart": "yarn run lint && yarn run compile && cp ./src/utils/auth.node ./dist/utils/auth.node",
     "start": "node -r dotenv/config dist/index.js"
   },
   "devDependencies": {

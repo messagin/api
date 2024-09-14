@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 // import db from "../utils/database";
 import { respond } from "../utils/respond";
 import { Space } from "../schemas/Space";
+import { User } from "../schemas/User";
 
 export async function add(req: Request, res: Response) {
   const space = await Space.getById(req.params.space_id);

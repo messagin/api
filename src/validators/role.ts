@@ -23,3 +23,14 @@ export function create(req: Request, res: Response, next: NextFunction) {
   }
   return next();
 }
+
+export function destroy(req: Request, res: Response, next: NextFunction) {
+  const errors: { name?: ValueError } = {};
+  if (!id_regex.test(req.params.space_id)) {
+    return respond(res, 400, "MalformedId");
+  }
+  if (!id_regex.test(req.params.role_id)) {
+    return respond(res, 400, "MalformedId");
+  }
+  return next();
+}

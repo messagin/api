@@ -1,4 +1,4 @@
-import { generateIDv2 } from "../utils/auth.node";
+import { generateIDv2 } from "../utils/auth";
 import db from "../utils/database";
 import { ChatManager } from "../managers/Chat";
 import { RoleManager } from "../managers/Role";

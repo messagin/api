@@ -3,6 +3,7 @@ import { respond } from "../utils/respond";
 import { log } from "../utils/log";
 import { Emitter } from "../utils/events";
 import { Space } from "../schemas/Space";
+import { Role } from "../schemas/Role";
 
 export async function create(req: Request, res: Response) {
   try {
@@ -15,6 +16,24 @@ export async function create(req: Request, res: Response) {
 
     Emitter.getInstance().emit("RoleCreate", role);
     return respond(res, 201, "RoleCreated", role);
+  }
+  catch (err) {
+    log("red")((err as Error).message);
+    return respond(res, 500, "InternalError");
+  }
+}
+
+export async function destroy(req: Request, res: Response) {
+  try {
+    const role = await Role.getById(req.params.role_id, req.params.space_id);
+    if (!role) {
+      return respond(res, 404, "NotFound");
+    }
+    // todo check permissions
+    await role.delete();
+    
+    Emitter.getInstance().emit("RoleDelete", role);
+    return respond(res, 204, "Deleted");
   }
   catch (err) {
     log("red")((err as Error).message);
