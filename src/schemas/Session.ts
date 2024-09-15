@@ -104,7 +104,7 @@ export class Session implements BaseSession {
   }
 
   setUpdatedAt(time?: string) {
-    this.updated_at = time;
+    this.updated_at = time ?? new Date().toISOString();
     return this;
   }
 

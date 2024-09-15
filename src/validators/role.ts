@@ -25,7 +25,6 @@ export function create(req: Request, res: Response, next: NextFunction) {
 }
 
 export function destroy(req: Request, res: Response, next: NextFunction) {
-  const errors: { name?: ValueError } = {};
   if (!id_regex.test(req.params.space_id)) {
     return respond(res, 400, "MalformedId");
   }

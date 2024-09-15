@@ -3,6 +3,7 @@ import { respond } from "../utils/respond";
 import { generateHash } from "../utils/auth.node";
 import { log } from "../utils/log";
 import { Session } from "../schemas/Session";
+import { User } from "../schemas/User";
 
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
 
@@ -44,6 +45,7 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     res.locals.is_bot = session.hasFlag("Bot");
     res.locals.session = session.id;
     res.locals.user_id = session.user_id;
+    res.locals.user = User.getById(session.user_id);
     await session.setUpdatedAt().update();
     return next();
   }
