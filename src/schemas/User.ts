@@ -24,7 +24,7 @@ interface BaseUser {
   email: string | null;
   phone: string | null;
   mfa: string | null;
-  created_at: number;
+  created_at: string;
 }
 
 type CleanUser = Omit<BaseUser, "password" | "mfa">;
@@ -39,11 +39,11 @@ export class User implements BaseUser {
   email: string | null;
   phone: string | null;
   mfa: string | null;
-  created_at: string | null;
+  created_at: string;
 
   private updatedEntries?: (keyof BaseUser)[];
 
-  constructor(id?: string, time?: number) {
+  constructor(id?: string, time?: string) {
     this.id = id ?? generateIDv2();
     this.flags = 0;
     this.username = "";
@@ -52,7 +52,7 @@ export class User implements BaseUser {
     this.email = null;
     this.phone = null;
     this.mfa = null;
-    this.created_at = time ?? Date.now();
+    this.created_at = time ?? new Date().toISOString();
 
     this.updatedEntries = [];
   }
@@ -157,11 +157,6 @@ export class User implements BaseUser {
   setMFA(mfa: string | null) {
     this.mfa = mfa;
     this.updatedEntries?.push("mfa");
-    return this;
-  }
-
-  setCreatedAt(time: number) {
-    this.created_at = time;
     return this;
   }
 

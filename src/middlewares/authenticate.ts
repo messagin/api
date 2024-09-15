@@ -4,8 +4,9 @@ import { generateHash } from "../utils/auth.node";
 import { log } from "../utils/log";
 import { Session } from "../schemas/Session";
 import { User } from "../schemas/User";
+import { ResLocals } from "../utils/locals";
 
-export async function authenticate(req: Request, res: Response, next: NextFunction) {
+export async function authenticate(req: Request, res: Response<unknown, ResLocals>, next: NextFunction) {
 
   const [type, xtoken] = req.headers.authorization?.split(" ") ?? [null, null];
 
@@ -42,10 +43,13 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
   }
 
   if ((session.hasFlag("Bot") && type === "Bot") || (!session.hasFlag("Bot") && type === "User")) {
+    const user = await User.getById(session.user_id!);
+    if (!user) {
+      return respond(res, 500, "InternalError");
+    }
     res.locals.is_bot = session.hasFlag("Bot");
     res.locals.session = session.id;
-    res.locals.user_id = session.user_id;
-    res.locals.user = User.getById(session.user_id);
+    res.locals.user = user;
     await session.setUpdatedAt().update();
     return next();
   }

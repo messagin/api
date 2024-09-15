@@ -42,7 +42,6 @@ router.options("*", (_req, res) => {
 
 //! created_at is now deprecated. Exception: ratelimits
 
-// TODO REVIEW EVERY SINGLE METHOD.
 // todo implement reactions
 
 // router.get("/id"); //? request a server-generated ID

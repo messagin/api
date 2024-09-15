@@ -11,15 +11,15 @@ type SessionFlag = keyof typeof SessionFlags;
 
 interface BaseSession {
   id: string;
-  user_id: string;
+  user_id: string | null;
   flags: number;
   token: { key: string, string: string, hash: string };
   os: string | null;
   ip: string | null;
   ua: string | null;
   browser: string | null;
-  updated_at: number;
-  created_at: number;
+  updated_at: string | null;
+  created_at: string;
 };
 
 type CleanSession = Omit<BaseSession, "token" | "user_id">;
@@ -48,7 +48,7 @@ export class Session implements BaseSession {
     this.updated_at = null;
     this.created_at = created_at ?? new Date().toISOString();
   }
-  
+
   setUser(id: string) {
     this.user_id = id;
     return this;
@@ -88,18 +88,13 @@ export class Session implements BaseSession {
     return (this.flags & SessionFlags[flag]) !== 0;
   }
 
-  private setFlags(flags: number) {
+  setFlags(flags: number) {
     this.flags = flags;
     return this;
   }
 
-  private setToken(token: string) {
+  setToken(token: string) {
     this.token.hash = token;
-    return this;
-  }
-
-  setCreatedAt(time?: string) {
-    this.created_at = time;
     return this;
   }
 
@@ -145,14 +140,14 @@ export class Session implements BaseSession {
     if (!session) return null;
     return new Session
       (
-        session.user_id,
         session.id,
-        session.updated_at,
         session.created_at,
       )
+      .setUpdatedAt(session.updated_at)
       .setBrowser(session.browser)
       .setFlags(session.flags)
       .setToken(session.token_)
+      .setUser(session.user_id)
       .setOS(session.os)
       .setUA(session.ua)
       .setIP(session.ip);

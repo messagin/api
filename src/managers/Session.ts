@@ -20,9 +20,7 @@ export class SessionManager {
 
     return sessions.map(session => new Session
       (
-        session.user_id,
         session.id,
-        session.updated_at,
         session.created_at,
       )
       .setBrowser(session.browser)

@@ -31,7 +31,7 @@ export async function destroy(req: Request, res: Response) {
     }
     // todo check permissions
     await role.delete();
-    
+
     Emitter.getInstance().emit("RoleDelete", role);
     return respond(res, 204, "Deleted");
   }

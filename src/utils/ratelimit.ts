@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import db from "./database";
 import { respond } from "./respond";
 import { log } from "./log";
+import { ResLocals } from "./locals";
 
 // x-ratelimit-limit: 60
 // x-ratelimit-remaining: 59
@@ -11,8 +12,8 @@ import { log } from "./log";
 const WINDOW_SIZE = 24 * 60 * 60; // 1 day
 const MAX_REQUESTS = 1000; // Max invalid requests per window size
 
-export async function rateLimitByIp(_req: Request, res: Response, next: NextFunction) {
-  const ip = res.locals.ip as string;
+export async function rateLimitByIp(_req: Request, res: Response<unknown, ResLocals>, next: NextFunction) {
+  const ip = res.locals.ip;
 
   const now = Date.now();
 

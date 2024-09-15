@@ -96,7 +96,7 @@ export function configure(router: Router) {
 
     const session = s;
 
-    const user = await User.getById(session.user_id);
+    const user = await User.getById(session.user_id!);
 
     if (!user) {
       ws.close(1011, "Internal Server Error");
