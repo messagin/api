@@ -9,7 +9,7 @@ export interface ResLocals {
     created_at: number;
   };
   ip: string;
-  user: User;
+  user: User | null;
   is_bot: boolean;
   session: string;
 };

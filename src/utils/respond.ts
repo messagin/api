@@ -18,7 +18,7 @@ export async function respond<T extends StatusCode>(resp: Response, status: T, c
     await db.execute("UPDATE ip_rate_limits SET count = count + 1 WHERE ip = ? AND created_at = ?", [res.req.ip, res.locals.rateLimit.created_at], { prepare: true });
     res.locals.rateLimit.remaining--;
   }
-  if (res.locals.user.id && status === 429) {
+  if (res.locals.user?.id && status === 429) {
     // rate limit the application (by ID)
     // if too many 429 requests, reset the application token
   }
