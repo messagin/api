@@ -26,27 +26,32 @@ type CleanSession = Omit<BaseSession, "token" | "user_id">;
 
 export class Session implements BaseSession {
   id: string;
-  user_id: string;
+  user_id: string | null;
   flags: number;
   token: { key: string, string: string, hash: string };
   os: string | null;
   ip: string | null;
   ua: string | null;
   browser: string | null;
-  updated_at: number;
-  created_at: number;
+  updated_at: string | null;
+  created_at: string;
 
-  constructor(user_id: string, id?: string, updated_at?: number, created_at?: number) {
+  constructor(id?: string, created_at?: string) {
     this.id = id ?? generateIDv2();
-    this.user_id = user_id;
+    this.user_id = "";
     this.flags = 0;
     this.token = { hash: "", key: "", string: "" };
     this.os = null;
     this.ip = null;
     this.ua = null;
     this.browser = null;
-    this.updated_at = updated_at ?? Date.now();
-    this.created_at = created_at ?? Date.now();
+    this.updated_at = null;
+    this.created_at = created_at ?? new Date().toISOString();
+  }
+  
+  setUser(id: string) {
+    this.user_id = id;
+    return this;
   }
 
   setBrowser(browser: string | null) {
@@ -93,13 +98,13 @@ export class Session implements BaseSession {
     return this;
   }
 
-  setCreatedAt(time?: number) {
-    this.created_at = time ?? Date.now();
+  setCreatedAt(time?: string) {
+    this.created_at = time;
     return this;
   }
 
-  setUpdatedAt(time?: number) {
-    this.updated_at = time ?? Date.now();
+  setUpdatedAt(time?: string) {
+    this.updated_at = time;
     return this;
   }
 

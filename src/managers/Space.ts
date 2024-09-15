@@ -21,11 +21,6 @@ export class SpaceManager {
       spaces.push(space);
     }
 
-    // const spaces = await db.spaces
-    //   .join("members", "spaces.id", "=", "members.space_id")
-    //   .select("spaces.*")
-    //   .where("members.user_id", this.user_id);
-
     return spaces.map(space => new Space(space.id, space.created_at)
       .setFlags(space.flags)
       .setName(space.name)

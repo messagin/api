@@ -12,15 +12,14 @@ export class InviteManager {
     return new Invite().setSpace(this.space_id).create();
   }
 
-  async list() {
-    const raw_invites = (await db.execute("SELECT id FROM messagin.invites WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
+  async list(): Promise<Invite[]> {
+    const invites = (await db.execute("SELECT * FROM invites WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
 
-    const invites: (Invite | null)[] = [];
-
-    for (const { id } of raw_invites) {
-      invites.push(await Invite.getById(id));
-    }
-
-    return invites.filter(Boolean) as Invite[];
+    return invites.map(invite => new Invite(invite.id, invite.created_at)
+      .setMaxAge(invite.max_age)
+      .setMaxUses(invite.max_uses)
+      .setSpace(invite.space_id)
+      .setUses(invite.uses)
+    );
   }
 }

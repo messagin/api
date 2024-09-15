@@ -22,8 +22,6 @@ export class MessageManager {
   }
 
   async search(options: SearchOptions) {
-    // todo modify to avoid querying the database several times
-
     const messages = (await db.execute("SELECT * FROM messages WHERE chat_id = ? ORDER BY id DESC LIMIT ?", [this.chat_id, options.limit], { prepare: true })).rows;
 
     return messages.map(message => new Message(message.id, message.created_at)

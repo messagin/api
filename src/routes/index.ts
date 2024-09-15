@@ -114,6 +114,10 @@ router.get("/users/self/relations/:user_id", relationValidator.getById, relation
 router.delete("/users/self/relations/:user_id", relationValidator.destroy, relationController.destroy); // remove friend
 //#endregion
 
+router.get("/", (_req, res) => {
+  return respond(res, 200, "Ok");
+})
+
 router.all("*", (_req, res) => {
   return respond(res, 404, "NotFound");
 });

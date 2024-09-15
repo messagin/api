@@ -39,7 +39,7 @@ export class User implements BaseUser {
   email: string | null;
   phone: string | null;
   mfa: string | null;
-  created_at: number;
+  created_at: string | null;
 
   private updatedEntries?: (keyof BaseUser)[];
 

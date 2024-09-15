@@ -8,19 +8,17 @@ export class ChatManager {
     this.space_id = space_id;
   }
 
-  init(name: string) {
+  init(name: string): SpaceChat {
     return new SpaceChat().setSpace(this.space_id).setName(name);
   }
 
-  async list() {
-    // todo edit to avoid multiple db queries
-    const raw_chats = (await db.execute("SELECT id FROM chats WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
-    const chats: (SpaceChat | null)[] = [];
-
-    for (const { id } of raw_chats) {
-      chats.push(await SpaceChat.getById(id));
-    }
-
-    return chats.filter(Boolean) as SpaceChat[];
+  async list(): Promise<SpaceChat[]> {
+    const chats = (await db.execute("SELECT * FROM chats WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
+    
+    return chats.map(chat => new SpaceChat(chat.id, chat.created_at)
+      .setSpace(chat.space_id)
+      .setFlags(chat.flags)
+      .setName(chat.name)
+    );
   }
 }

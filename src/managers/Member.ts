@@ -24,7 +24,7 @@ export class MemberManager {
       .setUser(member.user_id);
   }
 
-  async list() {
+  async list(): Promise<Member[]> {
     const members = (await db.execute("SELECT * FROM members WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
 
     return members.map(member => new Member()

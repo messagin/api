@@ -10,17 +10,26 @@ export class SessionManager {
   }
 
   create(req: Request) {
-    return new Session(this.id).create(req);
+    return new Session()
+      .setUser(this.id)
+      .create(req);
   }
 
   async list() {
-    const raw_sessions = (await db.execute("SELECT id FROM messagin.sessions WHERE user_id = ?", [this.id], { prepare: true })).rows;
-    const sessions: (Session | null)[] = []
+    const sessions = (await db.execute("SELECT * FROM messagin.sessions WHERE user_id = ?", [this.id], { prepare: true })).rows;
 
-    for (const { id } of raw_sessions) {
-      sessions.push(await Session.getById(id));
-    }
-
-    return sessions.filter(Boolean) as Session[];
+    return sessions.map(session => new Session
+      (
+        session.user_id,
+        session.id,
+        session.updated_at,
+        session.created_at,
+      )
+      .setBrowser(session.browser)
+      .setFlags(session.flags)
+      .setToken(session.token_)
+      .setOS(session.os)
+      .setUA(session.ua)
+      .setIP(session.ip));
   }
 }

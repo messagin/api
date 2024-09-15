@@ -57,7 +57,7 @@ async function initLifeCycle(ws: WebSocket) {
 }
 
 function requestAuthentication(ws: WebSocket) {
-  return new Promise<Session>((resolve) => {
+  return new Promise<Session>(resolve => {
     const listener = async (data: RawData) => {
       const event = JSON.parse(data.toString()) as WsAuthEvent;
       if (event.op === OpCodes.Authenticate) {
@@ -109,14 +109,14 @@ export function configure(router: Router) {
     dispatch(ws, { t: "Ready", d: state });
 
     events.on("SessionCreate", session_ => {
-      if (session_.id !== user.id) {
+      if (session_.user_id !== user.id) {
         return;
       }
       dispatch(ws, { t: "SessionCreate", d: session_ });
     }, listeners);
 
     events.on("SessionUpdate", session_ => {
-      if (session_.id !== user.id) {
+      if (session_.user_id !== user.id) {
         return;
       }
       dispatch(ws, { t: "SessionUpdate", d: session_ });
