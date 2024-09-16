@@ -5,7 +5,7 @@ import { generateHash, generateHmac } from "../utils/auth";
 import { log } from "../utils/log";
 import { Session } from "../schemas/Session";
 
-export async function create(req: Request, res: Response) {
+export async function create(req: CreateRequest, res: Response) {
   const emailExists = await User.email_exists(req.body.email);
   if (emailExists) {
     return respond(res, 409, "EmailExists");
@@ -123,9 +123,8 @@ export async function createTrial(req: Request, res: Response) {
   }
 }
 
-export async function getSelf(_req: Request, res: Response<Record<string, never>, { user_id: string }>) {
+export async function getSelf(_req: Request, res: Response) {
   try {
-    console.log(res.locals);
     const user = await User.getById(res.locals.user_id);
     return respond(res, 200, "Ok", user!.clean());
   }
