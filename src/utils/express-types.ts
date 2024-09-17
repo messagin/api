@@ -9,4 +9,8 @@ export namespace UserRequest {
       name?: string;
     }
   }
+  export interface Destroy extends Request {
+    params: {};
+    body: {};
+  }
 }

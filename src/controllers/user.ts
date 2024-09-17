@@ -5,7 +5,7 @@ import { generateHash, generateHmac } from "../utils/auth";
 import { log } from "../utils/log";
 import { Session } from "../schemas/Session";
 
-export async function create(req: CreateRequest, res: Response) {
+export async function create(req: UserRequest.Create, res: Response) {
   const emailExists = await User.email_exists(req.body.email);
   if (emailExists) {
     return respond(res, 409, "EmailExists");
@@ -35,13 +35,13 @@ export async function create(req: CreateRequest, res: Response) {
   }
 }
 
-export async function destroy(_req: Request, res: Response) {
+export async function destroy(_req: UserRequest.Destroy, res: Response) {
   // todo allow the user to think twice, so delete after some delay and warn him by email
 
   respond(res, 202, "UserDeletionPending");
 }
 
-export async function login(req: Request, res: Response) {
+export async function login(req: UserRequest.Login, res: Response) {
   if (req.body.token) {
     const xtoken = req.body.token;
     const id = Buffer.from(xtoken.slice(0, 22), "base64url").toString("utf8");
@@ -98,7 +98,7 @@ export async function login(req: Request, res: Response) {
   });
 }
 
-export async function createTrial(req: Request, res: Response) {
+export async function createTrial(req: UserRequest.CreateTrial, res: Response) {
 
   // generate an ID for the user
 
@@ -123,7 +123,7 @@ export async function createTrial(req: Request, res: Response) {
   }
 }
 
-export async function getSelf(_req: Request, res: Response) {
+export async function getSelf(_req: UserRequest.GetSelf, res: Response) {
   try {
     const user = await User.getById(res.locals.user_id);
     return respond(res, 200, "Ok", user!.clean());
@@ -134,7 +134,7 @@ export async function getSelf(_req: Request, res: Response) {
   }
 }
 
-export async function getById(req: Request, res: Response) {
+export async function getById(req: UserRequest.GetById, res: Response) {
   const id = req.params.user_id;
 
   let user;
@@ -152,13 +152,13 @@ export async function getById(req: Request, res: Response) {
   return respond(res, 200, "Ok", user.public());
 }
 
-export async function validateMfa(req: Request, res: Response) {
+export async function validateMfa(req: UserRequest.ValidateMfa, res: Response) {
   // todo finish implementing
   req; res;
   return null;
 }
 
-export async function updatePassword(req: Request, res: Response) {
+export async function updatePassword(req: UserRequest.UpdatePassword, res: Response) {
   const { old_password, new_password } = req.body;
 
   try {
