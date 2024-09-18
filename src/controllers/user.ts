@@ -1,11 +1,13 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { User } from "../schemas/User";
 import { respond } from "../utils/respond";
 import { generateHash, generateHmac } from "../utils/auth";
 import { log } from "../utils/log";
 import { Session } from "../schemas/Session";
 
-export async function create(req: UserRequest.Create, res: Response) {
+import * as user from "../types/user";
+
+export async function create(req: user.CreateRequest, res: Response) {
   const emailExists = await User.email_exists(req.body.email);
   if (emailExists) {
     return respond(res, 409, "EmailExists");
@@ -35,13 +37,13 @@ export async function create(req: UserRequest.Create, res: Response) {
   }
 }
 
-export async function destroy(_req: UserRequest.Destroy, res: Response) {
+export async function destroy(_req: user.DestroyRequest, res: Response) {
   // todo allow the user to think twice, so delete after some delay and warn him by email
 
   respond(res, 202, "UserDeletionPending");
 }
 
-export async function login(req: UserRequest.Login, res: Response) {
+export async function login(req: user.LoginRequest, res: Response) {
   if (req.body.token) {
     const xtoken = req.body.token;
     const id = Buffer.from(xtoken.slice(0, 22), "base64url").toString("utf8");
@@ -98,7 +100,7 @@ export async function login(req: UserRequest.Login, res: Response) {
   });
 }
 
-export async function createTrial(req: UserRequest.CreateTrial, res: Response) {
+export async function createTrial(req: user.CreateTrialRequest, res: Response) {
 
   // generate an ID for the user
 
@@ -123,7 +125,7 @@ export async function createTrial(req: UserRequest.CreateTrial, res: Response) {
   }
 }
 
-export async function getSelf(_req: UserRequest.GetSelf, res: Response) {
+export async function getSelf(_req: user.GetSelfRequest, res: Response) {
   try {
     const user = await User.getById(res.locals.user_id);
     return respond(res, 200, "Ok", user!.clean());
@@ -134,7 +136,7 @@ export async function getSelf(_req: UserRequest.GetSelf, res: Response) {
   }
 }
 
-export async function getById(req: UserRequest.GetById, res: Response) {
+export async function getById(req: user.GetByIdRequest, res: Response) {
   const id = req.params.user_id;
 
   let user;
@@ -152,13 +154,13 @@ export async function getById(req: UserRequest.GetById, res: Response) {
   return respond(res, 200, "Ok", user.public());
 }
 
-export async function validateMfa(req: UserRequest.ValidateMfa, res: Response) {
+export async function validateMfa(req: user.ValidateMfaRequest, res: Response) {
   // todo finish implementing
   req; res;
   return null;
 }
 
-export async function updatePassword(req: UserRequest.UpdatePassword, res: Response) {
+export async function updatePassword(req: user.UpdatePasswordRequest, res: Response) {
   const { old_password, new_password } = req.body;
 
   try {

@@ -18,7 +18,6 @@ import * as inviteValidator from "../validators/invite";
 import * as messageValidator from "../validators/message";
 import * as relationValidator from "../validators/relation";
 
-import { UserRequest } from "../utils/express-types";
 import { Router } from "express";
 import { respond } from "../utils/respond";
 import { authenticate } from "../middlewares/authenticate";
@@ -56,7 +55,7 @@ router.post("/users/self/mfa/validate", userController.validateMfa);
 router.delete("/users/self", userController.destroy);
 
 router.post("/users/try", userValidator.createTrial, userController.createTrial);
-router.post<"/users/signup", {}, {}, UserRequest.Create>("/users/signup", userValidator.create, userController.create);
+router.post("/users/signup", userValidator.create, userController.create);
 router.post("/users/authenticate", userValidator.login, userController.login);
 router.get("/users/:user_id", authenticate, userValidator.getById, userController.getById);
 // router.get("/users/:user_id/profile", authenticate, userValidator.getProfile, userController.getProfile); // todo implement getProfile
