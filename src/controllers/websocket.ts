@@ -82,7 +82,6 @@ export function configure(router: Router) {
     const listeners = Emitter.getCollector();
 
     const auth_response = await authenticateWebSocket(req.headers.authorization);
-    let s = auth_response.session;
 
     if (auth_response.code === -2) {
       // todo check error code for invalid authorization
@@ -90,11 +89,7 @@ export function configure(router: Router) {
       return;
     }
 
-    if (!s) {
-      s = await requestAuthentication(ws);
-    }
-
-    const session = s;
+    const session = auth_response.session ?? await requestAuthentication(ws);
 
     const user = await User.getById(session.user_id!);
 

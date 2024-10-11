@@ -58,7 +58,7 @@ export async function login(req: user.LoginRequest, res: Response) {
       session = await Session.getById(id);
     }
     catch (err) {
-      log("red")((err as Error).message)
+      log("red")((err as Error).message);
       return respond(res, 500, "InternalError");
     }
 
