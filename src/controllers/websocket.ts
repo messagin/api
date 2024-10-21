@@ -1,4 +1,5 @@
-import expressWs, { Application, Router } from "express-ws";
+import expressWs, { Application, Router as WsRouter } from "express-ws";
+import { Router } from "express";
 import { authenticateWebSocket } from "../middlewares/authenticateWs";
 // import db from "../utils/database";
 // import { Session } from "../models/Session";
@@ -76,7 +77,9 @@ function requestAuthentication(ws: WebSocket) {
 export function configure(router: Router) {
   expressWs(router as Application);
 
-  router.ws("/events", async (ws, req) => {
+  const r = router as WsRouter;
+
+  r.ws("/events", async (ws, req) => {
     initLifeCycle(ws);
 
     const listeners = Emitter.getCollector();

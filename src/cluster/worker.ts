@@ -33,7 +33,7 @@ app.use(helmet({
 
 app.use((_req, res, next) => {
   const request_size = Number(_req.headers["content-length"] ?? 0);
-  if (request_size > 0x10000) {
+  if (request_size > 0x10000) { // 64 KiB
     return respond(res, 413, "PayloadTooLarge");
   }
   res.setHeader("Access-Control-Allow-Origin", "*");
