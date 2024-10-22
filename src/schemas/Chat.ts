@@ -13,7 +13,7 @@ interface BaseSpaceChat {
   id: string;
   name: string;
   flags: number;
-  space_id: string | null;
+  space_id: string;
   created_at: string;
 };
 
@@ -68,13 +68,13 @@ export class SpaceChat implements BaseSpaceChat {
     return this;
   }
 
-  static async getById(id: string): Promise<SpaceChat | null> {
+  static async getById(id: string): Promise<SpaceChat | undefined> {
     const chat = (await db.execute("SELECT * FROM space_chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
-    if (!chat) return null;
+    if (!chat) return;
     return new SpaceChat(chat.id, chat.created_at)
       .setSpace(chat.space_id)
       .setName(chat.name)
-      .setFlags(chat.flags)
+      .setFlags(chat.flags);
   }
 
   static async exists(id: string) {
@@ -150,9 +150,9 @@ export class UserChat implements BaseUserChat {
     return this;
   }
 
-  static async getById(id: string): Promise<UserChat | null> {
+  static async getById(id: string): Promise<UserChat | undefined> {
     const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
-    if (!chat) return null;
+    if (!chat) return;
     return new UserChat(chat.id, chat.created_at)
       .setName(chat.name)
       .setFlags(chat.flags);

@@ -13,7 +13,7 @@ interface BaseMessage {
   user_id: string;
   content: string;
   flags: number;
-  updated_at: string | null;
+  updated_at?: string;
   created_at: string;
 }
 
@@ -25,7 +25,7 @@ export class Message implements BaseMessage {
   user_id: string;
   content: string;
   flags: number;
-  updated_at: string | null;
+  updated_at?: string;
   created_at: string;
 
   constructor(id?: string, time?: string) {
@@ -34,7 +34,6 @@ export class Message implements BaseMessage {
     this.user_id = "";
     this.content = "";
     this.flags = 0;
-    this.updated_at = null;
     this.created_at = time ?? new Date().toISOString();
   }
 
@@ -53,7 +52,7 @@ export class Message implements BaseMessage {
     return this;
   }
 
-  setUpdatedAt(time: string | null) {
+  setUpdatedAt(time?: string) {
     this.updated_at = time;
     return this;
   }
