@@ -1,4 +1,4 @@
-import { SpaceChat, UserChat } from "../schemas/Chat";
+import { UserChat } from "../schemas/Chat";
 import db from "../utils/database";
 
 export class GlobalChatManager {
