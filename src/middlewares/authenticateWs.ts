@@ -3,8 +3,12 @@ import { Session } from "../schemas/Session";
 import { log } from "../utils/log";
 
 type AuthenticationResponse = {
-  code: number;
-  session?: Session;
+  code: -1;
+} | {
+  code: -2;
+} | {
+  code: 0;
+  session: Session;
 };
 
 export async function authenticateWebSocket(authorization?: string): Promise<AuthenticationResponse> {

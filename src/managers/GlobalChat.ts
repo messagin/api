@@ -1,4 +1,4 @@
-import { Chat } from "../schemas/Chat";
+import { SpaceChat } from "../schemas/Chat";
 import db from "../utils/database";
 
 export class GlobalChatManager {
@@ -9,7 +9,7 @@ export class GlobalChatManager {
   }
 
   init(name: string) {
-    return new Chat().setName(name);
+    return new SpaceChat().setName(name);
   }
 
   async list() {
@@ -21,7 +21,7 @@ export class GlobalChatManager {
       chats.push(chat);
     }
 
-    return chats.map(chat => new Chat(chat.id, chat.created_at)
+    return chats.map(chat => new SpaceChat(chat.id, chat.created_at)
       .setName(chat.name)
     ).filter(chat => !chat.hasFlag("Deleted"));
   }

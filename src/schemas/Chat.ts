@@ -9,7 +9,7 @@ const ChatFlags = {
 
 type ChatFlag = keyof typeof ChatFlags;
 
-interface BaseChat {
+interface BaseSpaceChat {
   id: string;
   name: string;
   flags: number;
@@ -17,19 +17,31 @@ interface BaseChat {
   created_at: string;
 };
 
-export class Chat implements BaseChat {
+interface BaseUserChat {
   id: string;
   name: string;
   flags: number;
-  space_id: string | null;
+  created_at: string;
+};
+
+export class SpaceChat implements BaseSpaceChat {
+  id: string;
+  name: string;
+  flags: number;
+  space_id: string;
   created_at: string;
 
   constructor(id?: string, time?: string) {
     this.id = id ?? generateIDv2();
     this.name = "";
     this.flags = 0;
-    this.space_id = null;
+    this.space_id = "";
     this.created_at = time ?? new Date().toISOString();
+  }
+
+  setSpace(id: string) {
+    this.space_id = id;
+    return this;
   }
 
   setName(name: string) {
@@ -56,28 +68,22 @@ export class Chat implements BaseChat {
     return this;
   }
 
-  static async getById(id: string) {
-    const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
+  static async getById(id: string): Promise<SpaceChat | null> {
+    const chat = (await db.execute("SELECT * FROM space_chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!chat) return null;
-    if (chat.space_id) {
-      return new SpaceChat(chat.id, chat.created_at)
-        .setSpace(chat.space_id)
-        .setFlags(chat.flags)
-        .setName(chat.name);
-    } else {
-      return new UserChat(chat.id, chat.created_at)
-        .setFlags(chat.flags)
-        .setName(chat.name);
-    }
+    return new SpaceChat(chat.id, chat.created_at)
+      .setSpace(chat.space_id)
+      .setName(chat.name)
+      .setFlags(chat.flags)
   }
 
   static async exists(id: string) {
-    const count = (await db.execute("SELECT count(*) FROM chats WHERE id = ?", [id], { prepare: true })).rows[0].count.low;
+    const count = (await db.execute("SELECT count(*) FROM space_chats WHERE id = ?", [id], { prepare: true })).rows[0].count.low;
     return count > 0;
   }
 
   async create() {
-    await db.execute("INSERT INTO chats (id,name,space_id,created_at) VALUES (?,?,?,?)", [this.id, this.name, this.space_id, this.created_at], { prepare: true });
+    await db.execute("INSERT INTO space_chats (id,name,flags,space_id,created_at) VALUES (?,?,?,?,?)", [this.id, this.name, this.flags, this.space_id, this.created_at], { prepare: true });
     return this;
   }
 
@@ -88,44 +94,46 @@ export class Chat implements BaseChat {
   async delete() {
     // deleting a chat also deletes its messages
     await db.execute("DELETE FROM messages WHERE chat_id = ?", [this.id], { prepare: true });
-    await db.execute("DELETE FROM chats WHERE id = ?", [this.id], { prepare: true });
+    await db.execute("DELETE FROM space_chats WHERE id = ?", [this.id], { prepare: true });
     return this;
   }
 
   async update() {
-    await db.execute("UPDATE chats SET name = ? WHERE id = ? AND space_id = ?", [this.name, this.id, this.space_id], { prepare: true });
+    await db.execute("UPDATE space_chats SET name = ? WHERE id = ? AND space_id = ?", [this.name, this.id, this.space_id], { prepare: true });
     return this;
   }
 }
 
-export class SpaceChat extends Chat {
+export class UserChat implements BaseUserChat {
+  id: string;
+  name: string;
+  flags: number;
+  created_at: string;
+
   constructor(id?: string, time?: string) {
-    super(id, time);
+    this.id = id ?? generateIDv2();
+    this.name = "";
+    this.flags = 0;
+    this.created_at = time ?? new Date().toISOString();
   }
 
-
-  setSpace(id: string | null) {
-    this.space_id = id;
+  setName(name: string) {
+    this.name = name;
     return this;
   }
 
-  static async getById(id: string): Promise<SpaceChat | null> {
-    const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
-    if (!chat) return null;
-    return new SpaceChat(chat.id, chat.created_at)
-      .setSpace(chat.space_id)
-      .setName(chat.name)
-      .setFlags(chat.flags)
-  }
-}
-
-export class UserChat extends Chat {
-  constructor(id?: string, time?: string) {
-    super(id, time);
+  setFlags(flags: number) {
+    this.flags = flags;
+    return this;
   }
 
   get members() {
     return new ChatMemberManager(this.id);
+  }
+
+  async create() {
+    await db.execute("INSERT INTO chats (id,name,flags,created_at) VALUES (?,?,?,?)", [this.id, this.name, this.flags, this.created_at], { prepare: true });
+    return this;
   }
 
   static async getById(id: string): Promise<UserChat | null> {
@@ -135,4 +143,12 @@ export class UserChat extends Chat {
       .setName(chat.name)
       .setFlags(chat.flags);
   }
+
+  async delete() {
+    // deleting a chat also deletes its messages
+    await db.execute("DELETE FROM messages WHERE chat_id = ?", [this.id], { prepare: true });
+    await db.execute("DELETE FROM chats WHERE id = ?", [this.id], { prepare: true });
+    return this;
+  }
+
 }

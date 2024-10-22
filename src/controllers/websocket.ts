@@ -8,7 +8,7 @@ import { Emitter, EventName, Events } from "../utils/events";
 import { WebSocket, RawData } from "ws";
 import { log } from "../utils/log";
 import { Space } from "../schemas/Space";
-import { Chat } from "../schemas/Chat";
+import { SpaceChat } from "../schemas/Chat";
 import { Session } from "../schemas/Session";
 // import { log } from "../utils/log";
 
@@ -45,7 +45,6 @@ async function initLifeCycle(ws: WebSocket) {
     } as WsLifeCycleEvent),
   );
 
-
   ws.on("close", () => { })
 
   ws.on("message", (message) => {
@@ -65,7 +64,7 @@ function requestAuthentication(ws: WebSocket) {
         const response = await authenticateWebSocket(event.d?.auth);
         ws.off("message", listener);
         if (response.code === 0) {
-          return resolve(response.session!);
+          return resolve(response.session);
         }
       }
     };
@@ -86,8 +85,7 @@ export function configure(router: Router) {
 
     const auth_response = await authenticateWebSocket(req.headers.authorization);
 
-    if (auth_response.code === -2) {
-      // todo check error code for invalid authorization
+    if (auth_response.code !== 0) {
       ws.close(3003);
       return;
     }
@@ -180,7 +178,7 @@ export function configure(router: Router) {
 
     // todo perform checks on messages
     events.on("MessageCreate", async message => {
-      const chat = await Chat.getById(message.chat_id);
+      const chat = await SpaceChat.getById(message.chat_id);
       if (!chat) {
         return;
       }
@@ -192,7 +190,7 @@ export function configure(router: Router) {
     }, listeners);
 
     events.on("MessageUpdate", async message => {
-      const chat = await Chat.getById(message.chat_id);
+      const chat = await SpaceChat.getById(message.chat_id);
       if (!chat) {
         return;
       }
@@ -204,7 +202,7 @@ export function configure(router: Router) {
     }, listeners);
 
     events.on("MessageDelete", async message => {
-      const chat = await Chat.getById(message.chat_id);
+      const chat = await SpaceChat.getById(message.chat_id);
       if (!chat) {
         return;
       }

@@ -30,7 +30,7 @@ interface SpaceEvent {
 };
 
 interface ChatEvent {
-  space_id: string | null;
+  space_id?: string;
   flags: number;
   id: string;
   name: string;
