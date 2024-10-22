@@ -85,12 +85,12 @@ export function configure(router: Router) {
 
     const auth_response = await authenticateWebSocket(req.headers.authorization);
 
-    if (auth_response.code !== 0) {
+    if (auth_response.code === -2) {
       ws.close(3003);
       return;
     }
 
-    const session = auth_response.session ?? await requestAuthentication(ws);
+    const session = auth_response.code === 0 ? auth_response.session : await requestAuthentication(ws);
 
     const user = await User.getById(session.user_id!);
 
