@@ -122,6 +122,20 @@ export class UserChat implements BaseUserChat {
     return this;
   }
 
+  setFlag(flag: ChatFlag) {
+    this.flags |= ChatFlags[flag];
+    return this;
+  }
+
+  clearFlag(flag: ChatFlag) {
+    this.flags &= ~ChatFlags[flag];
+    return this;
+  }
+
+  hasFlag(flag: ChatFlag) {
+    return (this.flags & ChatFlags[flag]) !== 0;
+  }
+
   setFlags(flags: number) {
     this.flags = flags;
     return this;

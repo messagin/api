@@ -16,7 +16,7 @@ export class SessionManager {
   }
 
   async list() {
-    const sessions = (await db.execute("SELECT * FROM messagin.sessions WHERE user_id = ?", [this.id], { prepare: true })).rows;
+    const sessions = (await db.execute("SELECT * FROM sessions WHERE user_id = ?", [this.id], { prepare: true })).rows;
 
     return sessions.map(session => new Session
       (
