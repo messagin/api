@@ -24,14 +24,20 @@ export async function getById(req: Request, res: Response) {
 }
 
 export async function get(_req: Request, res: Response) {
-  const user = await User.getById(res.locals.user_id);
-  if (!user) {
+  try {
+    const user = await User.getById(res.locals.user_id);
+    if (!user) {
+      return respond(res, 500, "InternalError");
+    }
+    const spaces = await user.spaces.list();
+    const filtered = spaces.filter(space => !space.hasFlag("Deleted"));
+
+    return respond(res, 200, "Ok", filtered);
+  }
+  catch (err) {
+    log("red")((err as Error).message);
     return respond(res, 500, "InternalError");
   }
-  const spaces = await user.spaces.list();
-  const filtered = spaces.filter(space => !space.hasFlag("Deleted"));
-
-  return respond(res, 200, "Ok", filtered);
 }
 
 export async function destroy(req: Request, res: Response) {

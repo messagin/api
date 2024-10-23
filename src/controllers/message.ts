@@ -13,7 +13,7 @@ export async function create(req: Request, res: Response) {
     if (!chat) {
       return respond(res, 404, "NotFound");
     }
-    const member = await Member.get(chat.space_id!, res.locals.user_id);
+    const member = await Member.get(chat.space_id, res.locals.user_id);
     console.log(chat, member);
     if (!member) {
       return respond(res, 403, "Forbidden");
