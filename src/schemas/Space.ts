@@ -74,7 +74,7 @@ export class Space implements BaseSpace {
 
   async create() {
     console.log(this);
-    await db.execute("INSERT INTO spaces (id,name,flags,owner_id,created_at) VALUES (?,?,?,?,?)", [this.id, this.name, this.flags, this.owner_id, this.created_at], { prepare: true });
+    await db.execute("INSERT INTO spaces (id,name,flags,owner_id,created_at) VALUES (?,?,?,?,?)", [this.id, this.name, this.flags, this.owner_id, this.created_at]);
     return this;
   }
 
