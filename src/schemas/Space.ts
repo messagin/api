@@ -1,5 +1,5 @@
 import { generateIDv2 } from "../utils/auth";
-import db, { types } from "../utils/database";
+import db from "../utils/database";
 import { ChatManager } from "../managers/Chat";
 import { RoleManager } from "../managers/Role";
 import { MemberManager } from "../managers/Member"
@@ -73,7 +73,8 @@ export class Space implements BaseSpace {
   }
 
   async create() {
-    const flags = types.Integer.fromNumber(this.flags)
+    const flags = Buffer.alloc(8);
+    flags.writeUInt32BE(this.flags);
     await db.execute("INSERT INTO spaces (id,name,flags,owner_id,created_at) VALUES (?,?,?,?,?)", [this.id, this.name, flags, this.owner_id, this.created_at]);
     return this;
   }

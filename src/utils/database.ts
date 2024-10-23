@@ -159,5 +159,4 @@ const db = new Client({
   localDataCenter: "datacenter1"
 });
 
-export { types } from "cassandra-driver";
 export default db;
