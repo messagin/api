@@ -76,7 +76,7 @@ export class Space implements BaseSpace {
     await db.execute("INSERT INTO spaces (id,name,flags,owner_id,created_at) VALUES (?,?,?,?,?)", [
       this.id,
       this.name,
-      Uint32Array.from([this.flags])[0],
+      Buffer.from(Uint32Array.from([this.flags]), 0, 4),
       this.owner_id,
       new Date(this.created_at).getTime()
     ]);
