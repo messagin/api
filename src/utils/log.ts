@@ -1,5 +1,3 @@
-// @
-
 // const { inspect } = require("node:util");
 
 // define colors used in \x1b[ escape sequences
@@ -43,9 +41,7 @@ export function log(color: keyof typeof colors = "white", suffix = "") {
 
     if (process.stdout.isTTY) process.stdout.write(
       `\r \x1b[${colors[color]};1m[${month}-${date} ${hours}:${minutes}:${seconds}.${ms}]\x1b[0m ` + suffix + " " + data.join(" ") + "\x1b[0m\n"
-    ); else process.stdout.write(
-      `[${month}-${date} ${hours}:${minutes}:${seconds}.${ms}] ` + suffix + " " + data.join(" ") + "\n"
-    );
+    ); else process.stdout.write(suffix + data.join(" ") + "\n");
   }
 }
 

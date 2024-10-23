@@ -14,6 +14,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "@types/better-sqlite3": "^7.6.11",
     "@types/cors": "^2.8.17",
     "better-sqlite3": "^10.0.0",
     "cassandra-driver": "^4.7.2",

@@ -73,15 +73,7 @@ export class Space implements BaseSpace {
   }
 
   async create() {
-    const flags = Buffer.alloc(4);
-    flags.writeUint32BE(this.flags);
-    await db.execute("INSERT INTO spaces (id,name,flags,owner_id,created_at) VALUES (?,?,?,?,?)", [
-      this.id,
-      this.name,
-      flags,
-      this.owner_id,
-      new Date(this.created_at).getTime()
-    ]);
+    await db.execute(`INSERT INTO spaces (id,name,flags,owner_id,created_at) VALUES (%{this.id},${this.name},${this.flags},${this.owner_id},${this.created_at})`);
     return this;
   }
 
