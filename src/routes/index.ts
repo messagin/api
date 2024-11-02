@@ -30,6 +30,7 @@ export default router;
 
 router.use(rateLimitByIp);
 
+router.use("/purge", authenticate);
 router.use("/chats", authenticate);
 router.use("/spaces", authenticate);
 router.use("/invites", authenticate);
