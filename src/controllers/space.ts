@@ -10,7 +10,7 @@ export async function getById(req: Request, res: Response) {
     const id = req.params.space_id;
     const space = await Space.getById(id);
 
-    if (!space || space.hasFlag("Deleted") || !space.members.has(res.locals.user_id)) {
+    if (!space || space.hasFlag("Deleted") || !space.members.has(res.locals.user.id)) {
       return respond(res, 404, "NotFound");
     }
 
@@ -25,7 +25,7 @@ export async function getById(req: Request, res: Response) {
 
 export async function get(_req: Request, res: Response) {
   try {
-    const user = await User.getById(res.locals.user_id);
+    const user = await User.getById(res.locals.user.id);
     if (!user) {
       return respond(res, 500, "InternalError");
     }
@@ -46,7 +46,7 @@ export async function destroy(req: Request, res: Response) {
     if (!space || space.hasFlag("Deleted")) {
       return respond(res, 404, "NotFound");
     }
-    if (space.owner_id !== res.locals.user_id) {
+    if (space.owner_id !== res.locals.user.id) {
       return respond(res, 403, "NotOwner");
     }
 
@@ -67,11 +67,11 @@ export async function destroy(req: Request, res: Response) {
 
 export async function create(req: Request, res: Response) {
   try {
-    const user = new User(res.locals.user_id);
+    const user = new User(res.locals.user.id);
     const space = user.spaces.init(req.body.name);
     await space.create();
 
-    const member = space.members.init(res.locals.user_id);
+    const member = space.members.init(res.locals.user.id);
     await member.create();
 
     const chat = space.chats.init("main");

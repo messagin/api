@@ -22,6 +22,8 @@ import { Router } from "express";
 import { respond } from "../utils/respond";
 import { authenticate } from "../middlewares/authenticate";
 import { rateLimitByIp } from "../utils/ratelimit";
+import { User } from "../schemas/User";
+import db from "../utils/database";
 
 const router = Router();
 export default router;
@@ -112,6 +114,56 @@ router.put("/users/self/relations/:user_id", relationValidator.create, relationC
 router.get("/users/self/relations/:user_id", relationValidator.getById, relationController.getById); // get friend
 router.delete("/users/self/relations/:user_id", relationValidator.destroy, relationController.destroy); // remove friend
 //#endregion
+
+router.delete("/purge", async (_req, res) => {
+  const user = res.locals.user as User;
+  if (!user.hasFlag("Admin")) {
+    respond(res, 403, "Forbidden");
+    return;
+  }
+  console.log("PURGING DATABASE ON ADMIN REQUEST...");
+  // delete everything from the databases
+  const chats = await db.execute("SELECT * FROM chats");
+  const users = await db.execute("SELECT * FROM users");
+  const roles = await db.execute("SELECT * FROM roles");
+  const spaces = await db.execute("SELECT * FROM spaces");
+  const members = await db.execute("SELECT * FROM members");
+  const signups = await db.execute("SELECT * FROM signups");
+  const invites = await db.execute("SELECT * FROM invites");
+  const sessions = await db.execute("SELECT * FROM sessions");
+  const messages = await db.execute("SELECT * FROM messages");
+  const relations = await db.execute("SELECT * FROM relations");
+  const space_chats = await db.execute("SELECT * FROM space_chats");
+  const chat_members = await db.execute("SELECT * FROM chat_members");
+  const member_roles = await db.execute("SELECT * FROM member_roles");
+  const ip_rate_limits = await db.execute("SELECT * FROM ip_rate_limits");
+  const id_rate_limits = await db.execute("SELECT * FROM id_rate_limits");
+  const password_resets = await db.execute("SELECT * FROM password_resets");
+  const email_validations = await db.execute("SELECT * FROM email_validations");
+
+  for (const chat of chats) await db.execute("DELETE FROM chats WHERE id = ?", [chat.id], { prepare: true });
+  for (const role of roles) await db.execute("DELETE FROM roles WHERE id = ?", [role.id], { prepare: true });
+  for (const space of spaces) await db.execute("DELETE FROM spaces WHERE id = ?", [space.id], { prepare: true });
+  for (const member of members) await db.execute("DELETE FROM members WHERE user_id = ? AND space_id = ?", [member.user_id, member.space_id], { prepare: true });
+  for (const signup of signups) await db.execute("DELETE FROM signups WHERE id = ?", [signup.id], { prepare: true });
+  for (const invite of invites) await db.execute("DELETE FROM invites WHERE id = ?", [invite.id], { prepare: true });
+  for (const session of sessions) await db.execute("DELETE FROM sessions WHERE id = ?", [session.id], { prepare: true });
+  for (const message of messages) await db.execute("DELETE FROM messages WHERE id = ?", [message.id], { prepare: true });
+  for (const relation of relations) await db.execute("DELETE FROM relations WHERE user_id0 = ? AND user_id1 = ?", [relation.user_id0, relation.user_id1], { prepare: true });
+  for (const space_chat of space_chats) await db.execute("DELETE FROM space_chats WHERE id = ?", [space_chat.id], { prepare: true });
+  for (const chat_member of chat_members) await db.execute("DELETE FROM chat_members WHERE chat_id = ?", [chat_member.chat_id], { prepare: true });
+  for (const member_role of member_roles) await db.execute("DELETE FROM member_roles WHERE space_id = ?", [member_role.space_id], { prepare: true });
+  for (const ip_rate_limit of ip_rate_limits) await db.execute("DELETE FROM ip_rate_limits WHERE ip = ?", [ip_rate_limit.ip], { prepare: true });
+  for (const id_rate_limit of id_rate_limits) await db.execute("DELETE FROM id_rate_limits WHERE id = ?", [id_rate_limit.ip], { prepare: true });
+  for (const password_reset of password_resets) await db.execute("DELETE FROM password_resets WHERE id = ?", [password_reset.id], { prepare: true });
+  for (const email_validation of email_validations) await db.execute("DELETE FROM email_validations WHERE id = ?", [email_validation.id], { prepare: true });
+
+  // execute user deletion last in case something goes wrong
+  for (const user of users) await db.execute("DELETE FROM users WHERE id = ?", [user.id], { prepare: true });
+
+  respond(res, 204, "Deleted");
+  return;
+});
 
 router.get("/", (_req, res) => {
   return respond(res, 200, "Ok");

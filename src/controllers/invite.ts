@@ -12,7 +12,7 @@ export async function create(req: Request, res: Response) {
       .setSpace(req.params.space_id);
 
     await invite.create();
-    
+
     Emitter.getInstance().emit("InviteCreate", invite);
     return respond(res, 201, "InviteCreated", invite);
   }
@@ -60,11 +60,11 @@ export async function accept(req: Request, res: Response) {
     }
     // avoid using Space.getById for less db calls
     const space = new Space(invite.space_id);
-    const isMember = await space.members.has(res.locals.user_id);
+    const isMember = await space.members.has(res.locals.user.id);
     if (isMember) {
       return respond(res, 409, "ExistingMember")
     }
-    const member = await space.members.init(res.locals.user_id);
+    const member = await space.members.init(res.locals.user.id);
     await invite.update();
 
     Emitter.getInstance().emit("MemberCreate", member);

@@ -127,7 +127,7 @@ export async function createTrial(req: user.CreateTrialRequest, res: Response) {
 
 export async function getSelf(_req: user.GetSelfRequest, res: Response) {
   try {
-    const user = await User.getById(res.locals.user_id);
+    const user = await User.getById(res.locals.user.id);
     return respond(res, 200, "Ok", user!.clean());
   }
   catch (err) {
@@ -164,7 +164,7 @@ export async function updatePassword(req: user.UpdatePasswordRequest, res: Respo
   const { old_password, new_password } = req.body;
 
   try {
-    const user = await User.getById(res.locals.user_id);
+    const user = await User.getById(res.locals.user.id);
     if (!user) {
       return respond(res, 500, "InternalError");
     }

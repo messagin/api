@@ -12,7 +12,7 @@ export async function create(req: Request, res: Response) {
       .setName(req.body.name)
       .create();
 
-    await db.execute("INSERT INTO messagin.chat_members (chat_id,user_id,flags,created_at) VALUES (?,?,?,?)", [chat.id, res.locals.user_id, 0, Date.now()])
+    await db.execute("INSERT INTO messagin.chat_members (chat_id,user_id,flags,created_at) VALUES (?,?,?,?)", [chat.id, res.locals.user.id, 0, Date.now()])
 
     Emitter.getInstance().emit("ChatCreate", chat);
     return respond(res, 201, "ChatCreated", chat);
@@ -29,7 +29,7 @@ export async function destroy(req: Request, res: Response) {
     if (!chat) {
       return respond(res, 404, "NotFound");
     }
-    const is_member = chat.members.has(res.locals.user_id);
+    const is_member = chat.members.has(res.locals.user.id);
     if (!is_member) {
       return respond(res, 403, "Forbidden");
     }
@@ -81,7 +81,7 @@ export async function getById(req: Request, res: Response) {
 export async function get(_req: Request, res: Response) {
   try {
     // todo change
-    const chats = await new User(res.locals.user_id).chats.list();
+    const chats = await new User(res.locals.user.id).chats.list();
 
     return respond(res, 200, "Ok", chats);
   }

@@ -13,13 +13,12 @@ export async function create(req: Request, res: Response) {
     if (!chat) {
       return respond(res, 404, "NotFound");
     }
-    const member = await Member.get(chat.space_id, res.locals.user_id);
-    console.log(chat, member);
+    const member = await Member.get(chat.space_id, res.locals.user.id);
     if (!member) {
       return respond(res, 403, "Forbidden");
     }
 
-    const message = (await chat.messages.create(res.locals.user_id, req.body.content)).clean();
+    const message = (await chat.messages.create(res.locals.user.id, req.body.content)).clean();
     Emitter.getInstance().emit("MessageCreate", message);
 
     return respond(res, 201, "MessageCreated", message);
@@ -54,7 +53,7 @@ export async function destroy(req: Request, res: Response) {
     }
     // todo check permissions to delete message
     // for now only authors can delete
-    if (message.user_id !== res.locals.user_id) {
+    if (message.user_id !== res.locals.user.id) {
       return respond(res, 403, "Forbidden");
     }
 
@@ -76,7 +75,7 @@ export async function update(req: Request, res: Response) {
     if (!message || message.chat_id !== req.params.chat_id) {
       return respond(res, 404, "NotFound");
     }
-    if (message.user_id !== res.locals.user_id) {
+    if (message.user_id !== res.locals.user.id) {
       return respond(res, 403, "Forbidden");
     }
 
@@ -100,7 +99,7 @@ export async function search(req: Request, res: Response) {
       return respond(res, 404, "NotFound");
     }
     const space = new Space(chat.space_id!);
-    const is_member = space.members.has(res.locals.user_id);
+    const is_member = space.members.has(res.locals.user.id);
 
     if (!is_member) {
       return respond(res, 403, "Forbidden");
