@@ -56,6 +56,11 @@ async function initLifeCycle(ws: WsWrapper) {
     if (event.op !== OpCodes.LifeCycle) return;
 
     ws.lastPing = Date.now();
+    ws.client.send(
+      JSON.stringify({
+        op: OpCodes.LifeCycle
+      } as WsLifeCycleEvent)
+    )
     // we received a ping
     // reply with pong and update tracking
   });
