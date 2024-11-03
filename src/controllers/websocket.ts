@@ -20,11 +20,15 @@ enum OpCodes {
   Dispatch,
   LifeCycle,
   Authenticate,
+  Hello = 10,
+  PingRecv = 11,
 }
 
 type WsDispatchEvent<K extends EventName> = { op: OpCodes.Dispatch; t: K; d: Events[K][0] };
-type WsLifeCycleEvent = { op: OpCodes.LifeCycle; d?: { interval: number } };
+type WsLifeCycleEvent = { op: OpCodes.LifeCycle; };
 type WsAuthEvent = { op: OpCodes.Authenticate; d?: { auth: string } };
+type WsHelloEvent = { op: OpCodes.Hello, d: { interval: number } };
+type WsPingRecvEvent = { op: OpCodes.PingRecv };
 
 type WsWrapper = { client: WebSocket, lastPing: number };
 
@@ -42,11 +46,11 @@ async function initLifeCycle(ws: WsWrapper) {
 
   ws.client.send(
     JSON.stringify({
-      op: OpCodes.LifeCycle,
+      op: OpCodes.Hello,
       d: {
         interval: timeout
       }
-    } as WsLifeCycleEvent)
+    } as WsHelloEvent)
   );
 
   ws.client.on("close", () => { })
@@ -58,8 +62,8 @@ async function initLifeCycle(ws: WsWrapper) {
     ws.lastPing = Date.now();
     ws.client.send(
       JSON.stringify({
-        op: OpCodes.LifeCycle
-      } as WsLifeCycleEvent)
+        op: OpCodes.PingRecv
+      } as WsPingRecvEvent)
     )
     // we received a ping
     // reply with pong and update tracking
