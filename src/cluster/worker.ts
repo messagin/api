@@ -33,7 +33,7 @@ app.use((req, res, next) => {
     res.set("Access-Control-Allow-Credentials", "true");
   }
   next();
-})
+});
 
 app.options("*", (_req, res) => {
   res.status(204).end();

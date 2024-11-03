@@ -13,6 +13,8 @@ import { Session } from "../schemas/Session";
 // import { log } from "../utils/log";
 
 const events = Emitter.getInstance();
+const timeout = 30000;
+const network_margin = 5000;
 
 enum OpCodes {
   Dispatch,
@@ -24,6 +26,8 @@ type WsDispatchEvent<K extends EventName> = { op: OpCodes.Dispatch; t: K; d: Eve
 type WsLifeCycleEvent = { op: OpCodes.LifeCycle; d?: { interval: number } };
 type WsAuthEvent = { op: OpCodes.Authenticate; d?: { auth: string } };
 
+type WsWrapper = { client: WebSocket, lastPing: number };
+
 function dispatch(ws: WebSocket, data: Partial<WsDispatchEvent<EventName>>) {
   try {
     ws.send(JSON.stringify({ op: OpCodes.Dispatch, ...data }));
@@ -32,25 +36,26 @@ function dispatch(ws: WebSocket, data: Partial<WsDispatchEvent<EventName>>) {
   }
 }
 
-async function initLifeCycle(ws: WebSocket) {
+async function initLifeCycle(ws: WsWrapper) {
   // todo manage PING / PONG
   // ! disconnect client on timeout
 
-  ws.send(
+  ws.client.send(
     JSON.stringify({
       op: OpCodes.LifeCycle,
       d: {
-        interval: 30000,
-      },
-    } as WsLifeCycleEvent),
+        interval: timeout
+      }
+    } as WsLifeCycleEvent)
   );
 
-  ws.on("close", () => { })
+  ws.client.on("close", () => { })
 
-  ws.on("message", (message) => {
+  ws.client.on("message", (message) => {
     const event: WsLifeCycleEvent = JSON.parse(message.toString());
     if (event.op !== OpCodes.LifeCycle) return;
 
+    ws.lastPing = Date.now();
     // we received a ping
     // reply with pong and update tracking
   });
@@ -78,8 +83,22 @@ export function configure(router: Router) {
 
   const r = router as WsRouter;
 
+  const clients = new Set<WsWrapper>();
+
+  setInterval(() => {
+    const now = Date.now();
+    for (const ws of clients) {
+      if (now - ws.lastPing < timeout + network_margin) continue;
+      ws.client.terminate();
+      clients.delete(ws);
+    }
+  }, 5000);
+
   r.ws("/events", async (ws, req) => {
-    initLifeCycle(ws);
+    const self: WsWrapper = { client: ws, lastPing: Date.now() };
+    clients.add(self);
+
+    initLifeCycle(self);
 
     const listeners = Emitter.getCollector();
 
