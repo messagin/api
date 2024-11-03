@@ -36,9 +36,6 @@ app.use((req, res, next) => {
   if (request_size > 0x10000) { // 64 KiB
     return respond(res, 413, "PayloadTooLarge");
   }
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.locals.ip = req.headers["cf-connecting-ip"] ?? req.headers["x-real-ip"] ?? req.headers["x-forwarded-for"] ?? req.ip;
   if (!res.locals.ip) {
     log("red")("Error: IP address is undefined");

@@ -32,5 +32,14 @@ export async function respond<T extends StatusCode>(resp: Response, status: T, c
     res.set("X-RateLimit-Type", type);
   }
 
+  const origin = res.req.headers["origin"];
+  if (origin) {
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE");
+    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.set("Access-Control-Allow-Credentials", "true");
+  }
+
+
   res.status(status).json(response);
 }
