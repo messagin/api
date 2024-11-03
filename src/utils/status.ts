@@ -18,6 +18,7 @@ export const StatusCodes = {
   204: {
     Deleted: 20400,
     Updated: 20401,
+    NoContent: 20402,
   },
   400: {
     InvalidBody: 40000,
@@ -89,6 +90,7 @@ export const StatusMessages = Object.freeze({
   //#region 204 No Content
   20400: "",
   20401: "",
+  20402: "",
   //#endregion
   //#region 400 Bad Request
   40000: "The request body is invalid",

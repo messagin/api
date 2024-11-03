@@ -28,6 +28,10 @@ import db from "../utils/database";
 const router = Router();
 export default router;
 
+router.options("*", (_req, res) => {
+  respond(res, 204, "NoContent");
+});
+
 router.use(rateLimitByIp);
 
 router.use("/purge", authenticate);
@@ -39,9 +43,6 @@ router.use("/users/self", authenticate);
 // events
 websocketController.configure(router);
 
-router.options("*", (_req, res) => {
-  respond(res, 200, "Ok");
-});
 
 //! created_at is now deprecated. Exception: ratelimits
 
