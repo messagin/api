@@ -8,7 +8,6 @@ import { createServer } from "http";
 import expressWs from "express-ws";
 import router from "../routes/index";
 import { respond } from "../utils/respond";
-import cors from "cors";
 
 // import public_router from "./routes/public";
 
@@ -25,7 +24,20 @@ server.listen(process.env.PORT || 4000, () => process.send?.({
   action: InternalActions.Start
 }));
 
-app.use(cors());
+app.use((req, res, next) => {
+  const origin = req.headers["origin"];
+  if (origin) {
+    res.set("Access-Control-Allow-Origin", origin);
+    res.set("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE");
+    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.set("Access-Control-Allow-Credentials", "true");
+  }
+  next();
+})
+
+app.options("*", (_req, res) => {
+  res.status(204).end();
+});
 
 app.use(helmet({
   hidePoweredBy: true
