@@ -88,7 +88,7 @@ export class SpaceChat implements BaseSpaceChat {
   }
 
   async create() {
-    await db.execute("INSERT INTO space_chats (id,name,flags,space_id) VALUES (?,?,?,?,?)", [this.id, this.name, this.flags, this.space_id], { prepare: true });
+    await db.execute("INSERT INTO space_chats (id,name,flags,space_id) VALUES (?,?,?,?)", [this.id, this.name, this.flags, this.space_id], { prepare: true });
     return this;
   }
 

@@ -70,7 +70,7 @@ export class Space implements BaseSpace {
   }
 
   async create() {
-    await db.execute("INSERT INTO spaces (id, name, flags, owner_id)", [this.id, this.name, this.flags, this.owner_id], { prepare: true });
+    await db.execute("INSERT INTO spaces (id,name,flags,owner_id) VALUES (?,?,?,?)", [this.id, this.name, this.flags, this.owner_id], { prepare: true });
     return this;
   }
 
