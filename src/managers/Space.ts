@@ -21,7 +21,7 @@ export class SpaceManager {
       spaces.push(space);
     }
 
-    return spaces.map(space => new Space(space.id, space.created_at)
+    return spaces.map(space => new Space(space.id)
       .setFlags(space.flags)
       .setName(space.name)
       .setOwner(space.owner_id)

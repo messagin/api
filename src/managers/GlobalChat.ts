@@ -21,7 +21,7 @@ export class GlobalChatManager {
       chats.push(chat);
     }
 
-    return chats.map(chat => new UserChat(chat.id, chat.created_at)
+    return chats.map(chat => new UserChat(chat.id)
       .setName(chat.name)
     ).filter(chat => !chat.hasFlag("Deleted"));
   }

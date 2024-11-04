@@ -123,7 +123,9 @@ router.delete("/purge", async (_req, res) => {
     respond(res, 403, "Forbidden");
     return;
   }
-  console.log("PURGING DATABASE ON ADMIN REQUEST...");
+  console.log("==========================================")
+  console.log("== PURGING DATABASE ON ADMIN REQUEST... ==");
+  console.log("==========================================")
   // delete everything from the databases
   const chats = await db.execute("SELECT * FROM chats");
   const users = await db.execute("SELECT * FROM users");
@@ -150,7 +152,7 @@ router.delete("/purge", async (_req, res) => {
   for (const signup of signups) await db.execute("DELETE FROM signups WHERE id = ?", [signup.id], { prepare: true });
   for (const invite of invites) await db.execute("DELETE FROM invites WHERE id = ?", [invite.id], { prepare: true });
   for (const session of sessions) await db.execute("DELETE FROM sessions WHERE id = ?", [session.id], { prepare: true });
-  for (const message of messages) await db.execute("DELETE FROM messages WHERE id = ?", [message.id], { prepare: true });
+  for (const message of messages) await db.execute("DELETE FROM messages WHERE chat_id = ?", [message.chat_id], { prepare: true });
   for (const relation of relations) await db.execute("DELETE FROM relations WHERE user_id0 = ? AND user_id1 = ?", [relation.user_id0, relation.user_id1], { prepare: true });
   for (const space_chat of space_chats) await db.execute("DELETE FROM space_chats WHERE id = ?", [space_chat.id], { prepare: true });
   for (const chat_member of chat_members) await db.execute("DELETE FROM chat_members WHERE chat_id = ?", [chat_member.chat_id], { prepare: true });
@@ -160,7 +162,7 @@ router.delete("/purge", async (_req, res) => {
   for (const password_reset of password_resets) await db.execute("DELETE FROM password_resets WHERE id = ?", [password_reset.id], { prepare: true });
   for (const email_validation of email_validations) await db.execute("DELETE FROM email_validations WHERE id = ?", [email_validation.id], { prepare: true });
 
-  // execute user deletion last in case something goes wrong
+  // execute user deletion last in case something else goes wrong
   for (const user of users) await db.execute("DELETE FROM users WHERE id = ?", [user.id], { prepare: true });
 
   respond(res, 204, "Deleted");

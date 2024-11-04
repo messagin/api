@@ -15,7 +15,7 @@ export class ChatManager {
   async list(): Promise<SpaceChat[]> {
     const chats = (await db.execute("SELECT * FROM space_chats WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
 
-    return chats.map(chat => new SpaceChat(chat.id, chat.created_at)
+    return chats.map(chat => new SpaceChat(chat.id)
       .setSpace(chat.space_id)
       .setFlags(chat.flags)
       .setName(chat.name)

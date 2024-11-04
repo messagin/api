@@ -14,14 +14,13 @@ interface BaseSpaceChat {
   name: string;
   flags: number;
   space_id: string;
-  created_at: string;
+  position: number;
 };
 
 interface BaseUserChat {
   id: string;
   name: string;
   flags: number;
-  created_at: string;
 };
 
 export class SpaceChat implements BaseSpaceChat {
@@ -29,14 +28,14 @@ export class SpaceChat implements BaseSpaceChat {
   name: string;
   flags: number;
   space_id: string;
-  created_at: string;
+  position: number;
 
-  constructor(id?: string, time?: string) {
+  constructor(id?: string) {
     this.id = id ?? generateIDv2();
     this.name = "";
     this.flags = 0;
+    this.position = 0;
     this.space_id = "";
-    this.created_at = time ?? new Date().toISOString();
   }
 
   setSpace(id: string) {
@@ -68,10 +67,16 @@ export class SpaceChat implements BaseSpaceChat {
     return this;
   }
 
+  setPosition(position: number) {
+    this.position = position;
+    return this;
+  }
+
   static async getById(id: string): Promise<SpaceChat | undefined> {
     const chat = (await db.execute("SELECT * FROM space_chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!chat) return;
-    return new SpaceChat(chat.id, chat.created_at)
+    return new SpaceChat(chat.id)
+      .setPosition(chat.position)
       .setSpace(chat.space_id)
       .setName(chat.name)
       .setFlags(chat.flags);
@@ -83,7 +88,7 @@ export class SpaceChat implements BaseSpaceChat {
   }
 
   async create() {
-    await db.execute("INSERT INTO space_chats (id,name,flags,space_id,created_at) VALUES (?,?,?,?,?)", [this.id, this.name, this.flags, this.space_id, this.created_at], { prepare: true });
+    await db.execute("INSERT INTO space_chats (id,name,flags,space_id) VALUES (?,?,?,?,?)", [this.id, this.name, this.flags, this.space_id], { prepare: true });
     return this;
   }
 
@@ -108,13 +113,11 @@ export class UserChat implements BaseUserChat {
   id: string;
   name: string;
   flags: number;
-  created_at: string;
 
-  constructor(id?: string, time?: string) {
+  constructor(id?: string) {
     this.id = id ?? generateIDv2();
     this.name = "";
     this.flags = 0;
-    this.created_at = time ?? new Date().toISOString();
   }
 
   setName(name: string) {
@@ -146,14 +149,14 @@ export class UserChat implements BaseUserChat {
   }
 
   async create() {
-    await db.execute("INSERT INTO chats (id,name,flags,created_at) VALUES (?,?,?,?)", [this.id, this.name, this.flags, this.created_at], { prepare: true });
+    await db.execute("INSERT INTO chats (id,name,flags) VALUES (?,?,?)", [this.id, this.name, this.flags], { prepare: true });
     return this;
   }
 
   static async getById(id: string): Promise<UserChat | undefined> {
     const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!chat) return;
-    return new UserChat(chat.id, chat.created_at)
+    return new UserChat(chat.id)
       .setName(chat.name)
       .setFlags(chat.flags);
   }

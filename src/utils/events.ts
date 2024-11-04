@@ -26,7 +26,6 @@ interface SpaceEvent {
   id: string;
   name: string;
   owner_id: string;
-  created_at: string;
 };
 
 interface ChatEvent {
@@ -34,7 +33,6 @@ interface ChatEvent {
   flags: number;
   id: string;
   name: string;
-  created_at: string;
 };
 
 interface MessageEvent {

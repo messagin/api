@@ -16,7 +16,6 @@ interface BaseSpace {
   name: string;
   flags: number;
   owner_id: string;
-  created_at: string;
 };
 
 export class Space implements BaseSpace {
@@ -24,14 +23,12 @@ export class Space implements BaseSpace {
   name: string;
   flags: number;
   owner_id: string;
-  created_at: string;
 
-  constructor(id?: string, time?: string) {
+  constructor(id?: string) {
     this.id = id ?? generateIDv2();
     this.name = "";
     this.flags = 0;
     this.owner_id = "";
-    this.created_at = time ?? new Date().toISOString();
   }
 
   setName(name: string) {
@@ -67,16 +64,13 @@ export class Space implements BaseSpace {
   static async getById(id: string): Promise<Space | null> {
     const space = (await db.execute("SELECT * FROM spaces WHERE id = ?", [id], { prepare: true })).rows[0];
     if (!space) return null;
-    return new Space(space.id, space.created_at)
+    return new Space(space.id)
       .setName(space.name)
       .setOwner(space.owner_id);
   }
 
   async create() {
-    const query = `INSERT INTO spaces (id, name, flags, owner_id, created_at)
-      VALUES ('${this.id}', '${this.name}', ${this.flags}, '${this.owner_id}', '${this.created_at}')`;
-    console.log(query);
-    await db.execute(query);
+    await db.execute("INSERT INTO spaces (id, name, flags, owner_id)", [this.id, this.name, this.flags, this.owner_id], { prepare: true });
     return this;
   }
 

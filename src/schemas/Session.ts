@@ -122,7 +122,7 @@ export class Session implements BaseSession {
       .setOS(result.os.name ?? null)
       .setUA(result.ua)
       .setFlags(0)
-      .setIP(req.ip ?? null);
+      .setIP(req.res?.locals.ip ?? null);
 
     this.token = generateToken(this.id);
 
