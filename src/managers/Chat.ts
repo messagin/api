@@ -1,4 +1,4 @@
-import { SpaceChat } from "../schemas/Chat";
+import { Chat } from "../schemas/Chat";
 import db from "../utils/database";
 
 export class ChatManager {
@@ -8,14 +8,14 @@ export class ChatManager {
     this.space_id = space_id;
   }
 
-  init(name: string): SpaceChat {
-    return new SpaceChat().setSpace(this.space_id).setName(name);
+  init(name: string): Chat {
+    return new Chat().setSpace(this.space_id).setName(name);
   }
 
-  async list(): Promise<SpaceChat[]> {
-    const chats = (await db.execute("SELECT * FROM space_chats WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
+  async list(): Promise<Chat[]> {
+    const chats = (await db.execute("SELECT * FROM chats WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
 
-    return chats.map(chat => new SpaceChat(chat.id)
+    return chats.map(chat => new Chat(chat.id)
       .setSpace(chat.space_id)
       .setFlags(chat.flags)
       .setName(chat.name)

@@ -128,7 +128,6 @@ router.delete("/purge", async (_req, res) => {
   console.log("==========================================")
   // delete everything from the databases
   const chats = await db.execute("SELECT * FROM chats");
-  const users = await db.execute("SELECT * FROM users");
   const roles = await db.execute("SELECT * FROM roles");
   const spaces = await db.execute("SELECT * FROM spaces");
   const members = await db.execute("SELECT * FROM members");
@@ -137,13 +136,14 @@ router.delete("/purge", async (_req, res) => {
   const sessions = await db.execute("SELECT * FROM sessions");
   const messages = await db.execute("SELECT * FROM messages");
   const relations = await db.execute("SELECT * FROM relations");
-  const space_chats = await db.execute("SELECT * FROM space_chats");
   const chat_members = await db.execute("SELECT * FROM chat_members");
   const member_roles = await db.execute("SELECT * FROM member_roles");
+  const x3dh_messages = await db.execute("SELECT * FROM x3dh_messages");
   const ip_rate_limits = await db.execute("SELECT * FROM ip_rate_limits");
   const id_rate_limits = await db.execute("SELECT * FROM id_rate_limits");
   const password_resets = await db.execute("SELECT * FROM password_resets");
   const email_validations = await db.execute("SELECT * FROM email_validations");
+
 
   for (const chat of chats) await db.execute("DELETE FROM chats WHERE id = ?", [chat.id], { prepare: true });
   for (const role of roles) await db.execute("DELETE FROM roles WHERE id = ?", [role.id], { prepare: true });
@@ -154,16 +154,13 @@ router.delete("/purge", async (_req, res) => {
   for (const session of sessions) await db.execute("DELETE FROM sessions WHERE id = ?", [session.id], { prepare: true });
   for (const message of messages) await db.execute("DELETE FROM messages WHERE chat_id = ?", [message.chat_id], { prepare: true });
   for (const relation of relations) await db.execute("DELETE FROM relations WHERE user_id0 = ? AND user_id1 = ?", [relation.user_id0, relation.user_id1], { prepare: true });
-  for (const space_chat of space_chats) await db.execute("DELETE FROM space_chats WHERE id = ?", [space_chat.id], { prepare: true });
   for (const chat_member of chat_members) await db.execute("DELETE FROM chat_members WHERE chat_id = ?", [chat_member.chat_id], { prepare: true });
   for (const member_role of member_roles) await db.execute("DELETE FROM member_roles WHERE space_id = ?", [member_role.space_id], { prepare: true });
+  for (const x3dh_message of x3dh_messages) await db.execute("DELETE FROM x3dh_messages WHERE id = ?", [x3dh_message.id], { prepare: true });
   for (const ip_rate_limit of ip_rate_limits) await db.execute("DELETE FROM ip_rate_limits WHERE ip = ?", [ip_rate_limit.ip], { prepare: true });
   for (const id_rate_limit of id_rate_limits) await db.execute("DELETE FROM id_rate_limits WHERE id = ?", [id_rate_limit.ip], { prepare: true });
   for (const password_reset of password_resets) await db.execute("DELETE FROM password_resets WHERE id = ?", [password_reset.id], { prepare: true });
   for (const email_validation of email_validations) await db.execute("DELETE FROM email_validations WHERE id = ?", [email_validation.id], { prepare: true });
-
-  // execute user deletion last in case something else goes wrong
-  for (const user of users) await db.execute("DELETE FROM users WHERE id = ?", [user.id], { prepare: true });
 
   respond(res, 204, "Deleted");
   return;

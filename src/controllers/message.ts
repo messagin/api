@@ -2,14 +2,14 @@ import { Request, Response } from "express";
 import { respond } from "../utils/respond";
 import { log } from "../utils/log";
 import { Emitter } from "../utils/events";
-import { SpaceChat } from "../schemas/Chat";
+import { Chat } from "../schemas/Chat";
 import { Member } from "../schemas/Member";
 import { Message } from "../schemas/Message";
 import { Space } from "../schemas/Space";
 
 export async function create(req: Request, res: Response) {
   try {
-    const chat = await SpaceChat.getById(req.params.chat_id);
+    const chat = await Chat.getById(req.params.chat_id);
     if (!chat) {
       return respond(res, 404, "NotFound");
     }
@@ -31,7 +31,7 @@ export async function create(req: Request, res: Response) {
 
 export async function get(req: Request, res: Response) {
   try {
-    const chat = await SpaceChat.getById(req.params.chat_id);
+    const chat = await Chat.getById(req.params.chat_id);
     if (!chat) {
       return respond(res, 404, "NotFound");
     }
@@ -94,7 +94,7 @@ export async function update(req: Request, res: Response) {
 
 export async function search(req: Request, res: Response) {
   try {
-    const chat = await SpaceChat.getById(req.params.chat_id);
+    const chat = await Chat.getById(req.params.chat_id);
     if (!chat) {
       return respond(res, 404, "NotFound");
     }
@@ -122,7 +122,7 @@ export async function search(req: Request, res: Response) {
 
 export async function getById(req: Request, res: Response) {
   try {
-    const chat = new SpaceChat(req.params.chat_id);
+    const chat = new Chat(req.params.chat_id);
     if (!chat) {
       return respond(res, 404, "NotFound");
     }

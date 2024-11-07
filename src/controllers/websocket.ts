@@ -8,7 +8,7 @@ import { Emitter, EventName, Events } from "../utils/events";
 import { WebSocket, RawData } from "ws";
 import { log } from "../utils/log";
 import { Space } from "../schemas/Space";
-import { SpaceChat } from "../schemas/Chat";
+import { Chat } from "../schemas/Chat";
 import { Session } from "../schemas/Session";
 // import { log } from "../utils/log";
 
@@ -206,7 +206,7 @@ export function configure(router: Router) {
 
     // todo perform checks on messages
     events.on("MessageCreate", async message => {
-      const chat = await SpaceChat.getById(message.chat_id);
+      const chat = await Chat.getById(message.chat_id);
       if (!chat) {
         return;
       }
@@ -218,7 +218,7 @@ export function configure(router: Router) {
     }, listeners);
 
     events.on("MessageUpdate", async message => {
-      const chat = await SpaceChat.getById(message.chat_id);
+      const chat = await Chat.getById(message.chat_id);
       if (!chat) {
         return;
       }
@@ -230,7 +230,7 @@ export function configure(router: Router) {
     }, listeners);
 
     events.on("MessageDelete", async message => {
-      const chat = await SpaceChat.getById(message.chat_id);
+      const chat = await Chat.getById(message.chat_id);
       if (!chat) {
         return;
       }

@@ -13,6 +13,8 @@ const UserFlags = {
   UnverifiedEmail: 1 << 4,
 } as const;
 
+const PublicFlagsBitfield = 0x000b;
+
 type UserFlag = keyof typeof UserFlags;
 
 interface BaseUser {
@@ -28,7 +30,7 @@ interface BaseUser {
 }
 
 type CleanUser = Omit<BaseUser, "password" | "mfa">;
-type PublicUser = Omit<CleanUser, "phone" | "email">;
+type PublicUser = Omit<CleanUser, "phone" | "name" | "email">;
 
 export class User implements BaseUser {
   id: string;
@@ -68,9 +70,9 @@ export class User implements BaseUser {
     // for (const entry of this.updatedEntries || []) {
     //   (updated[entry] as BaseUser[keyof BaseUser]) = this[entry] as BaseUser[keyof BaseUser];
     // }
+    // return this;
 
     throw new Error("user update not implemented");
-    return this;
   }
 
   async updatePassword() {
@@ -172,12 +174,15 @@ export class User implements BaseUser {
     };
   }
 
+  get publicFlags() {
+    return this.flags & PublicFlagsBitfield;
+  }
+
   public(): PublicUser {
     return {
       id: this.id,
-      flags: this.flags,
+      flags: this.publicFlags,
       username: this.username,
-      name: this.name,
       created_at: this.created_at
     };
   }

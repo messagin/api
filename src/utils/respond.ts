@@ -22,7 +22,6 @@ export async function respond<T extends StatusCode>(resp: Response, status: T, c
     // rate limit the application (by ID)
     // if too many 429 requests, reset the application token
   }
-  // if (stat)
 
   if (res.locals.rateLimit) {
     const { limit, remaining, reset, type } = res.locals.rateLimit;

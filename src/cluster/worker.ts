@@ -97,5 +97,5 @@ if (process.stdin.isTTY) {
   });
 }
 else {
-  log("white")("Running in a non-interactive environment, skipping raw mode setup.");
+  log("white")("Running in a non-interactive environment");
 }
