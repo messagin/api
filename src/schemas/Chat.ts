@@ -1,4 +1,3 @@
-import { ChatMemberManager } from "../managers/ChatMember";
 import { MessageManager } from "../managers/Message";
 import { generateIDv2 } from "../utils/auth";
 import db from "../utils/database";
