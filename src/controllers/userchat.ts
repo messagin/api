@@ -2,14 +2,15 @@ import { Request, Response } from "express";
 import { respond } from "../utils/respond";
 import { log } from "../utils/log";
 import { Emitter } from "../utils/events";
-import { UserChat } from "../schemas/Chat";
+import { Chat } from "../schemas/Chat";
 import db from "../utils/database";
 import { User } from "../schemas/User";
 
 export async function create(req: Request, res: Response) {
   try {
-    const chat = await new UserChat()
+    const chat = await new Chat()
       .setName(req.body.name)
+      .setType("DM")
       .create();
 
     await db.execute("INSERT INTO messagin.chat_members (chat_id,user_id,flags,created_at) VALUES (?,?,?,?)", [chat.id, res.locals.user.id, 0, Date.now()])
@@ -25,7 +26,7 @@ export async function create(req: Request, res: Response) {
 
 export async function destroy(req: Request, res: Response) {
   try {
-    const chat = await UserChat.getById(req.params.chat_id);
+    const chat = await Chat.getById(req.params.chat_id);
     if (!chat) {
       return respond(res, 404, "NotFound");
     }
@@ -69,7 +70,7 @@ export async function destroy(req: Request, res: Response) {
 
 export async function getById(req: Request, res: Response) {
   try {
-    const chat = await UserChat.getById(req.params.chat_id);
+    const chat = await Chat.getById(req.params.chat_id);
     return respond(res, 200, "Ok", chat);
   }
   catch (err) {

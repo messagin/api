@@ -1,3 +1,4 @@
+import { MemberManager } from "../managers/Member";
 import { MessageManager } from "../managers/Message";
 import { generateIDv2 } from "../utils/auth";
 import db from "../utils/database";
@@ -13,6 +14,7 @@ const ChatTypes = {
   DM_2RP: 3
 }
 
+type ChatType = keyof typeof ChatTypes;
 type ChatFlag = keyof typeof ChatFlags;
 
 interface BaseChat {
@@ -75,8 +77,8 @@ export class Chat implements BaseChat {
     return this;
   }
 
-  setType(type: number) {
-    this.type = type;
+  setType(type: ChatType) {
+    this.type = ChatTypes[type];
     return this;
   }
 
@@ -102,6 +104,11 @@ export class Chat implements BaseChat {
 
   get messages() {
     return new MessageManager(this.id);
+  }
+
+  get members() {
+    if (this.type == ChatTypes.TEXT) throw new Error("Cannot access members of a space chat");
+    return new MemberManager(this.id);
   }
 
   async delete() {
