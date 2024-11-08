@@ -8,17 +8,26 @@ const ChatFlags = {
   Deleted: 1 << 0,
 } as const;
 
-const ChatTypes = {
-  TEXT: 0,
-  DM: 1,
-  DM_SEC: 2,
-  DM_AXOLOTL: 3
-} as const;
+enum ChatTypes {
+  TEXT,
+  DM,
+  DM_SEC,
+  DM_AXOLOTL,
+};
 
-type ChatType = keyof typeof ChatTypes;
+export type ChatType = keyof typeof ChatTypes;
 type ChatFlag = keyof typeof ChatFlags;
 
-interface BaseChat {
+interface BaseChat<T extends ChatType> {
+  id: string;
+  name: string;
+  type: T;
+  flags: number;
+  space_id: string;
+  position: number;
+};
+
+interface CleanTextChat {
   id: string;
   name: string;
   type: number;
@@ -27,19 +36,30 @@ interface BaseChat {
   position: number;
 };
 
-export class Chat implements BaseChat {
+interface CleanDMChat {
   id: string;
   name: string;
   type: number;
   flags: number;
+};
+
+type CleanChat<T extends ChatType> = T extends "DM"
+  ? CleanDMChat
+  : CleanTextChat;
+
+export class Chat<T extends ChatType> implements BaseChat<T> {
+  id: string;
+  name: string;
+  type: T;
+  flags: number;
   space_id: string;
   position: number;
 
-  constructor(id?: string) {
+  constructor(type: T, id?: string) {
     this.id = id ?? generateIDv2();
     this.name = "";
     this.flags = 0;
-    this.type = ChatTypes.TEXT;
+    this.type = type;
     this.position = 0;
     this.space_id = "";
   }
@@ -78,15 +98,31 @@ export class Chat implements BaseChat {
     return this;
   }
 
-  setType(type: ChatType) {
-    this.type = ChatTypes[type];
-    return this;
+  clean(): CleanChat<T> {
+    switch (this.type) {
+      case "DM":
+        return {
+          id: this.id,
+          flags: this.flags,
+          name: this.name,
+          type: ChatTypes[this.type]
+        } as CleanChat<T>;
+      default:
+        return {
+          id: this.id,
+          flags: this.flags,
+          name: this.name,
+          type: ChatTypes[this.type],
+          space_id: this.space_id,
+          position: this.position
+        } as CleanChat<T>;
+    }
   }
 
-  static async getById(id: string): Promise<Chat | null> {
+  static async getById<T extends ChatType>(id: string): Promise<Chat<T> | null> {
     const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!chat) return null;
-    return new Chat(chat.id)
+    return new Chat(ChatTypes[chat.type as number] as T, chat.id)
       .setPosition(chat.position)
       .setSpace(chat.space_id)
       .setName(chat.name)
@@ -104,11 +140,11 @@ export class Chat implements BaseChat {
   }
 
   get messages() {
-    return this.type == ChatTypes.DM_AXOLOTL ? new AxolotlMessageManager(this.id) : new MessageManager(this.id);
+    return this.type == "DM_AXOLOTL" ? new AxolotlMessageManager(this.id) : new MessageManager(this.id);
   }
 
   get members() {
-    if (this.type == ChatTypes.TEXT) throw new Error("Cannot access members of a space chat");
+    if (this.type == "TEXT") throw new Error("Cannot access members of a space chat");
     return new ChatMemberManager(this.id);
   }
 

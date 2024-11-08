@@ -9,7 +9,7 @@ export class GlobalChatManager {
   }
 
   init(name: string) {
-    return new Chat().setName(name);
+    return new Chat("DM").setName(name);
   }
 
   async list() {

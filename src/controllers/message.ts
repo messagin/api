@@ -122,7 +122,7 @@ export async function search(req: Request, res: Response) {
 
 export async function getById(req: Request, res: Response) {
   try {
-    const chat = new Chat(req.params.chat_id);
+    const chat = await Chat.getById(req.params.chat_id);
     if (!chat) {
       return respond(res, 404, "NotFound");
     }

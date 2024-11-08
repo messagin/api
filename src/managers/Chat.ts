@@ -8,11 +8,11 @@ export class ChatManager {
     this.space_id = space_id;
   }
 
-  init(name: string): Chat {
-    return new Chat().setSpace(this.space_id).setName(name);
+  init(name: string): Chat<"TEXT"> {
+    return new Chat("TEXT").setSpace(this.space_id).setName(name);
   }
 
-  async list(): Promise<Chat[]> {
+  async list(): Promise<Chat<"TEXT">[]> {
     const chats = (await db.execute("SELECT * FROM chats WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
 
     return chats.map(chat => new Chat(chat.id)

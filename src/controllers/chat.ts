@@ -7,7 +7,7 @@ import { Space } from "../schemas/Space";
 
 export async function create(req: Request, res: Response) {
   try {
-    const chat = await new Chat()
+    const chat = await new Chat("TEXT")
       .setName(req.body.name)
       .setSpace(req.params.space_id)
       .create();

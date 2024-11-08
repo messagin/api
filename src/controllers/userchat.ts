@@ -7,9 +7,8 @@ import { User } from "../schemas/User";
 
 export async function create(req: Request, res: Response) {
   try {
-    const chat = await new Chat()
+    const chat = await new Chat("DM")
       .setName(req.body.name)
-      .setType("DM")
       .create();
     Emitter.getInstance().emit("ChatCreate", chat);
     await chat.members.init(res.locals.user.id).create();
@@ -69,7 +68,7 @@ export async function destroy(req: Request, res: Response) {
 export async function getById(req: Request, res: Response) {
   try {
     const chat = await Chat.getById(req.params.chat_id);
-    return respond(res, 200, "Ok", chat);
+    return respond(res, 200, "Ok", chat?.clean());
   }
   catch (err) {
     log("red")((err as Error).message);
