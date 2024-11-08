@@ -16,13 +16,11 @@ export class GlobalChatManager {
     const chats = [];
     const member_entries = (await db.execute("SELECT chat_id FROM chat_members WHERE user_id = ?", [this.user_id], { prepare: true })).rows;
     for (const member_entry of member_entries) {
-      const chat = (await db.execute("SELECT * FROM chats WHERE id = ?", [member_entry.chat_id], { prepare: true })).rows[0];
+      const chat = await Chat.getById(member_entry.chat_id);
       if (!chat) continue;
-      chats.push(chat);
+      if (chat.hasFlag("Deleted")) continue;
+      chats.push(chat.clean());
     }
-
-    return chats.map(chat => new Chat(chat.id)
-      .setName(chat.name)
-    ).filter(chat => !chat.hasFlag("Deleted"));
+    return chats;
   }
 }

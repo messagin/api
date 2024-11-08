@@ -10,10 +10,10 @@ export async function create(req: Request, res: Response) {
     const chat = await new Chat("DM")
       .setName(req.body.name)
       .create();
-    Emitter.getInstance().emit("ChatCreate", chat);
+    Emitter.getInstance().emit("ChatCreate", chat.clean());
     await chat.members.init(res.locals.user.id).create();
 
-    return respond(res, 201, "ChatCreated", chat);
+    return respond(res, 201, "ChatCreated", chat.clean());
   }
   catch (err) {
     log("red")((err as Error).message);
@@ -68,7 +68,11 @@ export async function destroy(req: Request, res: Response) {
 export async function getById(req: Request, res: Response) {
   try {
     const chat = await Chat.getById(req.params.chat_id);
-    return respond(res, 200, "Ok", chat?.clean());
+    if (!chat) {
+      return respond(res, 404, "NotFound");
+    }
+    console.log(chat);
+    return respond(res, 200, "Ok", chat.clean());
   }
   catch (err) {
     log("red")((err as Error).message);
