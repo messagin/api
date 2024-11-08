@@ -3,7 +3,6 @@ import { respond } from "../utils/respond";
 import { log } from "../utils/log";
 import { Emitter } from "../utils/events";
 import { Chat } from "../schemas/Chat";
-import db from "../utils/database";
 import { User } from "../schemas/User";
 
 export async function create(req: Request, res: Response) {
@@ -12,10 +11,9 @@ export async function create(req: Request, res: Response) {
       .setName(req.body.name)
       .setType("DM")
       .create();
-
-    await db.execute("INSERT INTO messagin.chat_members (chat_id,user_id,flags,created_at) VALUES (?,?,?,?)", [chat.id, res.locals.user.id, 0, Date.now()])
-
     Emitter.getInstance().emit("ChatCreate", chat);
+    await chat.members.init(res.locals.user.id).create();
+
     return respond(res, 201, "ChatCreated", chat);
   }
   catch (err) {

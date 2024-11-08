@@ -40,8 +40,10 @@ interface MessageEvent {
   user_id: string;
   chat_id: string;
   content: string;
-  flags: number;
+  flags?: number;
   created_at: string;
+  message_number?: number;
+  public_key?: string;
 };
 
 interface RoleEvent {
@@ -75,28 +77,28 @@ interface ReadyEvent {
 };
 
 export interface Events {
-  Ready: [ReadyEvent];
-  SessionCreate: [SessionCreateEvent];
-  SessionUpdate: [SessionUpdateEvent];
-  SessionDelete: [SessionDeleteEvent];
-  SpaceCreate: [SpaceEvent];
-  SpaceUpdate: [SpaceEvent];
-  SpaceDelete: [SpaceEvent];
-  ChatCreate: [ChatEvent];
-  ChatUpdate: [ChatEvent];
-  ChatDelete: [ChatEvent];
-  MessageCreate: [MessageEvent];
-  MessageUpdate: [MessageEvent];
-  MessageDelete: [MessageEvent];
-  RoleCreate: [RoleEvent];
-  RoleUpdate: [RoleEvent];
-  RoleDelete: [RoleEvent];
-  MemberCreate: [MemberEvent];
-  MemberUpdate: [MemberEvent];
-  MemberDelete: [MemberEvent];
-  InviteCreate: [InviteEvent];
-  InviteUpdate: [InviteEvent];
-  InviteDelete: [InviteEvent];
+  Ready: ReadyEvent;
+  SessionCreate: SessionCreateEvent;
+  SessionUpdate: SessionUpdateEvent;
+  SessionDelete: SessionDeleteEvent;
+  SpaceCreate: SpaceEvent;
+  SpaceUpdate: SpaceEvent;
+  SpaceDelete: SpaceEvent;
+  ChatCreate: ChatEvent;
+  ChatUpdate: ChatEvent;
+  ChatDelete: ChatEvent;
+  MessageCreate: MessageEvent;
+  MessageUpdate: MessageEvent;
+  MessageDelete: MessageEvent;
+  RoleCreate: RoleEvent;
+  RoleUpdate: RoleEvent;
+  RoleDelete: RoleEvent;
+  MemberCreate: MemberEvent;
+  MemberUpdate: MemberEvent;
+  MemberDelete: MemberEvent;
+  InviteCreate: InviteEvent;
+  InviteUpdate: InviteEvent;
+  InviteDelete: InviteEvent;
 };
 
 export type EventName = keyof Events;
@@ -104,11 +106,11 @@ export type EventName = keyof Events;
 export class Emitter {
   private static instance: Emitter | null;
 
-  private listeners: { [K in EventName]?: Map<number, (...args: Events[K]) => void> };
+  private listeners: { [K in EventName]?: Map<number, (data: Events[K]) => void> };
   private freeIds: { [K in EventName]?: number[] };
 
   constructor() {
-    this.listeners = {} as { [K in EventName]?: Map<number, (...args: Events[K]) => void> };
+    this.listeners = {} as { [K in EventName]?: Map<number, (data: Events[K]) => void> };
     this.freeIds = {} as { [K in EventName]?: number[] };
 
     process.on("message", <K extends EventName>(msg: { type: Types, name: K, data: Events[K] }) => {
@@ -133,7 +135,7 @@ export class Emitter {
     const listeners = this.listeners[eventName];
     if (!listeners) return;
     for (const [, listener] of listeners) {
-      listener?.(...data);
+      listener?.(data);
     }
   }
 
@@ -158,7 +160,7 @@ export class Emitter {
     }
   }
 
-  emit<K extends EventName>(eventName: K, ...data: Events[K]) {
+  emit<K extends EventName>(eventName: K, data: Events[K]) {
     process.send?.({
       type: Types.Event,
       name: eventName,
@@ -167,7 +169,7 @@ export class Emitter {
     return this;
   }
 
-  on<K extends EventName = EventName>(eventName: K, callback: (...data: Events[K]) => void, collector: Map<EventName, number>) {
+  on<K extends EventName = EventName>(eventName: K, callback: (data: Events[K]) => void, collector: Map<EventName, number>) {
     if (!this.listeners[eventName]) {
       this.listeners[eventName] = new Map();
     }

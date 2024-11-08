@@ -6,6 +6,10 @@ interface SearchOptions {
   limit: number;
 };
 
+interface MessageBody {
+  content: string;
+}
+
 export class MessageManager {
   private chat_id: string;
 
@@ -13,11 +17,11 @@ export class MessageManager {
     this.chat_id = chat_id;
   }
 
-  create(user_id: string, content: string) {
+  create(user_id: string, msg: MessageBody) {
     return new Message()
       .setChat(this.chat_id)
       .setUser(user_id)
-      .setContent(content)
+      .setContent(msg.content)
       .create();
   }
 
@@ -30,6 +34,7 @@ export class MessageManager {
       .setFlags(message.flags)
       .setUser(message.user_id)
       .setUpdatedAt(message.created_at)
+      .clean()
     );
   }
 
@@ -48,6 +53,7 @@ export class MessageManager {
       .setFlags(message.flags)
       .setUser(message.user_id)
       .setUpdatedAt(message.updated_at)
+      .clean()
     );
   }
 }

@@ -1,4 +1,5 @@
-import { MemberManager } from "../managers/Member";
+import { AxolotlMessageManager } from "../managers/AxolotlMessage";
+import { ChatMemberManager } from "../managers/ChatMember";
 import { MessageManager } from "../managers/Message";
 import { generateIDv2 } from "../utils/auth";
 import db from "../utils/database";
@@ -11,8 +12,8 @@ const ChatTypes = {
   TEXT: 0,
   DM: 1,
   DM_SEC: 2,
-  DM_2RP: 3
-}
+  DM_AXOLOTL: 3
+} as const;
 
 type ChatType = keyof typeof ChatTypes;
 type ChatFlag = keyof typeof ChatFlags;
@@ -103,12 +104,12 @@ export class Chat implements BaseChat {
   }
 
   get messages() {
-    return new MessageManager(this.id);
+    return this.type == ChatTypes.DM_AXOLOTL ? new AxolotlMessageManager(this.id) : new MessageManager(this.id);
   }
 
   get members() {
     if (this.type == ChatTypes.TEXT) throw new Error("Cannot access members of a space chat");
-    return new MemberManager(this.id);
+    return new ChatMemberManager(this.id);
   }
 
   async delete() {

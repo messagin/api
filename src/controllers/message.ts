@@ -18,7 +18,7 @@ export async function create(req: Request, res: Response) {
       return respond(res, 403, "Forbidden");
     }
 
-    const message = (await chat.messages.create(res.locals.user.id, req.body.content)).clean();
+    const message = (await chat.messages.create(res.locals.user.id, req.body)).clean();
     Emitter.getInstance().emit("MessageCreate", message);
 
     return respond(res, 201, "MessageCreated", message);
@@ -37,7 +37,7 @@ export async function get(req: Request, res: Response) {
     }
 
     const messages = await chat.messages.list();
-    return respond(res, 200, "Ok", messages.map(m => m.clean()));
+    return respond(res, 200, "Ok", messages);
   }
   catch (err) {
     log("red")((err as Error).message);
