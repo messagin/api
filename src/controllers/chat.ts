@@ -69,7 +69,10 @@ export async function update(req: Request, res: Response) {
 export async function getById(req: Request, res: Response) {
   try {
     const chat = await Chat.getById(req.params.chat_id);
-    return respond(res, 200, "Ok", chat);
+    if (!chat) {
+      return respond(res, 404, "NotFound");
+    }
+    return respond(res, 200, "Ok", chat.clean());
   }
   catch (err) {
     log("red")((err as Error).message);

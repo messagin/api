@@ -12,13 +12,15 @@ export class ChatManager {
     return new Chat("TEXT").setSpace(this.space_id).setName(name);
   }
 
-  async list(): Promise<Chat<"TEXT">[]> {
+  async list() {
     const chats = (await db.execute("SELECT * FROM chats WHERE space_id = ?", [this.space_id], { prepare: true })).rows;
 
-    return chats.map(chat => new Chat(chat.id)
+    return chats.map(chat => new Chat("TEXT", chat.id)
+      .setPosition(chat.position)
       .setSpace(chat.space_id)
       .setFlags(chat.flags)
       .setName(chat.name)
+      .clean()
     );
   }
 }
