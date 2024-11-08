@@ -24,7 +24,7 @@ enum OpCodes {
   PingRecv = 11,
 }
 
-type WsDispatchEvent<K extends EventName> = { op: OpCodes.Dispatch; t: K; d: Events[K][0] };
+type WsDispatchEvent<K extends EventName> = { op: OpCodes.Dispatch; t: K; d: Events[K] };
 type WsLifeCycleEvent = { op: OpCodes.LifeCycle; };
 type WsAuthEvent = { op: OpCodes.Authenticate; d?: { auth: string } };
 type WsHelloEvent = { op: OpCodes.Hello, d: { interval: number } };
