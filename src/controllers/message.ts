@@ -107,18 +107,17 @@ export async function search(req: Request, res: Response) {
 
     const search_options = {
       query: req.query.q as string,
-      limit: Number(req.query.limit) || 0 // was validated
+      limit: Number(req.query.limit) || 10 // was validated
     };
 
-    await chat.messages.search(search_options);
-    return respond(res, 200, "Ok", null);
+    const messages = await chat.messages.search(search_options);
+    return respond(res, 200, "Ok", messages);
   }
   catch (err) {
     log("red")((err as Error).message);
     return respond(res, 500, "InternalError");
   }
 }
-
 
 export async function getById(req: Request, res: Response) {
   try {

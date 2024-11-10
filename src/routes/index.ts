@@ -123,10 +123,10 @@ router.delete("/purge", async (_req, res) => {
     respond(res, 403, "Forbidden");
     return;
   }
-  console.log("==========================================")
+  console.log("==========================================");
   console.log("== PURGING DATABASE ON ADMIN REQUEST... ==");
-  console.log("==========================================")
-  // delete everything from the databases
+  console.log("==========================================");
+
   const chats = await db.execute("SELECT * FROM chats");
   const roles = await db.execute("SELECT * FROM roles");
   const spaces = await db.execute("SELECT * FROM spaces");

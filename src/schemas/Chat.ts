@@ -43,9 +43,9 @@ interface CleanDMChat {
   flags: number;
 };
 
-type CleanChat<T extends ChatType> = T extends "DM"
-  ? CleanDMChat
-  : CleanTextChat;
+type CleanChat<T extends ChatType> = T extends "TEXT"
+  ? CleanTextChat
+  : CleanDMChat;
 
 export class Chat<T extends ChatType> implements BaseChat<T> {
   id: string;
