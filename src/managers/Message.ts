@@ -26,7 +26,7 @@ export class MessageManager {
   }
 
   async search(options: SearchOptions) {
-    const messages = (await db.execute("SELECT * FROM messages WHERE chat_id = ? AND content ILIKE ? ORDER BY id DESC LIMIT ?", [this.chat_id, `%${options.query}%`, options.limit], { prepare: true })).rows;
+    const messages = (await db.execute("SELECT * FROM messages WHERE chat_id = ? AND LOWER(content) LIKE ? ORDER BY id DESC LIMIT ?", [this.chat_id, `%${options.query?.toLowerCase()}%`, options.limit], { prepare: true })).rows;
 
     return messages.map(message => new Message(message.id, message.created_at)
       .setChat(message.chat_id)
