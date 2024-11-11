@@ -1,5 +1,6 @@
 import { generateIDv2 } from "../utils/auth";
 import db from "../utils/database";
+import { PartialUser } from "./User";
 
 const MessageFlags = {
   System: 1 << 0,
@@ -17,7 +18,15 @@ interface BaseMessage {
   created_at: string;
 }
 
-type CleanMessage = Omit<BaseMessage, "">;
+interface CleanMessage {
+  id: string;
+  chat_id: string;
+  user: PartialUser;
+  content: string;
+  flags: number;
+  updated_at?: string;
+  created_at: string;
+};
 
 export class Message implements BaseMessage {
   id: string;
@@ -27,6 +36,7 @@ export class Message implements BaseMessage {
   flags: number;
   updated_at?: string;
   created_at: string;
+  user: PartialUser;
 
   constructor(id?: string, time?: string) {
     this.id = id ?? generateIDv2();
@@ -35,6 +45,10 @@ export class Message implements BaseMessage {
     this.content = "";
     this.flags = 0;
     this.created_at = time ?? new Date().toISOString();
+    this.user = {
+      id: "",
+      username: ""
+    }
   }
 
   setChat(id: string) {
@@ -67,6 +81,16 @@ export class Message implements BaseMessage {
     return this;
   }
 
+  async getUserData(): Promise<PartialUser> {
+    const raw_user = (await db.execute("SELECT (id,username) FROM users WHERE", [], { prepare: true })).rows[0];
+    const user: PartialUser = {
+      id: raw_user.id,
+      username: raw_user.username
+    };
+    this.user = user;
+    return user;
+  }
+
   static async getById(id: string): Promise<Message | null> {
     const message = (await db.execute("SELECT * FROM messages WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!message) return null;
@@ -87,7 +111,10 @@ export class Message implements BaseMessage {
     return {
       id: this.id,
       chat_id: this.chat_id,
-      user_id: this.user_id,
+      user: {
+        id: this.user.id,
+        username: this.user.username
+      },
       content: this.content,
       flags: this.flags,
       updated_at: this.updated_at,

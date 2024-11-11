@@ -1,5 +1,6 @@
 import { generateIDv2 } from "../utils/auth";
 import db from "../utils/database";
+import { PartialUser } from "./User";
 
 interface BaseAxolotlMessage {
   id: string;
@@ -17,7 +18,15 @@ export interface AxolotlMessageBody {
   message_number: number;
 };
 
-type CleanAxolotlMessage = Omit<BaseAxolotlMessage, "">
+interface CleanAxolotlMessage {
+  id: string;
+  chat_id: string;
+  user: PartialUser;
+  content: string;
+  created_at: string;
+  public_key: string;
+  message_number: number;
+}
 
 export class AxolotlMessage implements BaseAxolotlMessage {
   id: string;
@@ -27,6 +36,7 @@ export class AxolotlMessage implements BaseAxolotlMessage {
   created_at: string;
   public_key: string;
   message_number: number;
+  user: PartialUser;
 
   constructor(id?: string, time?: string) {
     this.id = id ?? generateIDv2();
@@ -36,6 +46,7 @@ export class AxolotlMessage implements BaseAxolotlMessage {
     this.created_at = time ?? new Date().toISOString();
     this.public_key = "";
     this.message_number = 0;
+    this.user = { id: "", username: "" };
   }
 
   setChat(id: string) {
@@ -63,6 +74,16 @@ export class AxolotlMessage implements BaseAxolotlMessage {
     return this;
   }
 
+  async getUserData(): Promise<PartialUser> {
+    const raw_user = (await db.execute("SELECT (id,username) FROM users WHERE", [], { prepare: true })).rows[0];
+    const user: PartialUser = {
+      id: raw_user.id,
+      username: raw_user.username
+    };
+    this.user = user;
+    return user;
+  }
+
   static async getById(id: string): Promise<AxolotlMessage | null> {
     const message = (await db.execute("SELECT * FROM axolotl_messages WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!message) return null;
@@ -83,7 +104,10 @@ export class AxolotlMessage implements BaseAxolotlMessage {
     return {
       id: this.id,
       chat_id: this.chat_id,
-      user_id: this.user_id,
+      user: {
+        id: this.user.id,
+        username: this.user.username
+      },
       content: this.content,
       created_at: this.created_at,
       message_number: this.message_number,

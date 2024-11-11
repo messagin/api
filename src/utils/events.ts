@@ -1,3 +1,4 @@
+import { PartialUser } from "../schemas/User";
 import { Types } from "./actions";
 
 interface SessionEvent {
@@ -37,7 +38,7 @@ interface ChatEvent {
 
 interface MessageEvent {
   id: string;
-  user_id: string;
+  user: PartialUser;
   chat_id: string;
   content: string;
   flags?: number;

@@ -29,6 +29,13 @@ interface BaseUser {
   created_at: string;
 }
 
+export interface PartialUser {
+  id: string;
+  username: string;
+  // flags: number;
+  // avatar: string;
+};
+
 type CleanUser = Omit<BaseUser, "password" | "mfa">;
 type PublicUser = Omit<CleanUser, "phone" | "name" | "email">;
 

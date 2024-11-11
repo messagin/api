@@ -26,14 +26,19 @@ export class MessageManager {
   }
 
   async search(options: SearchOptions) {
-    const messages = (await db.execute("SELECT * FROM messages WHERE chat_id = ? AND content LIKE ? ORDER BY id DESC LIMIT ? ALLOW FILTERING", [this.chat_id, `%${options.query?.toLowerCase()}%`, options.limit], { prepare: true })).rows;
+    const messages = (await db.execute(
+      "SELECT * FROM messages WHERE chat_id = ? AND content LIKE ? ORDER BY id DESC LIMIT ? ALLOW FILTERING", [
+      this.chat_id,
+      `%${options.query?.toLowerCase()}%`,
+      options.limit
+    ], { prepare: true })).rows;
 
     return messages.map(message => new Message(message.id, message.created_at)
       .setChat(message.chat_id)
       .setContent(message.content)
       .setFlags(message.flags)
       .setUser(message.user_id)
-      .setUpdatedAt(message.created_at)
+      .setUpdatedAt(message.updated_at)
       .clean()
     );
   }
