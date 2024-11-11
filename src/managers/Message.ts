@@ -1,4 +1,6 @@
+import { types } from "cassandra-driver";
 import { Message } from "../schemas/Message";
+import { PartialUser } from "../schemas/User";
 import db from "../utils/database";
 
 interface SearchOptions {
@@ -25,6 +27,24 @@ export class MessageManager {
       .create();
   }
 
+  private async toCleanList(raw: types.Row[]) {
+    const cachedUsers = new Map<string, PartialUser>();
+    const messages = [];
+
+    for (const message of raw) {
+      const msg = new Message(message.id, message.created_at)
+        .setFlags(message.flags)
+        .setChat(message.chat_id)
+        .setUser(message.user_id)
+        .setContent(message.content)
+        .setUpdatedAt(message.updated_at);
+      const userData = cachedUsers.get(message.user_id) ?? await msg.getUserData();
+      cachedUsers.set(userData.id, userData);
+      messages.push(msg.setUserData(userData).clean());
+    }
+    return messages;
+  }
+
   async search(options: SearchOptions) {
     const messages = (await db.execute(
       "SELECT * FROM messages WHERE chat_id = ? AND content LIKE ? ORDER BY id DESC LIMIT ? ALLOW FILTERING", [
@@ -33,14 +53,7 @@ export class MessageManager {
       options.limit
     ], { prepare: true })).rows;
 
-    return messages.map(message => new Message(message.id, message.created_at)
-      .setChat(message.chat_id)
-      .setContent(message.content)
-      .setFlags(message.flags)
-      .setUser(message.user_id)
-      .setUpdatedAt(message.updated_at)
-      .clean()
-    );
+    return this.toCleanList(messages);
   }
 
   async list(options?: { limit?: number }) {
@@ -49,16 +62,10 @@ export class MessageManager {
     if (limit > 100) {
       limit = 100;
     }
+    const messages = (await db.execute("SELECT * FROM messages WHERE chat_id = ? ORDER BY id DESC", [
+      this.chat_id
+    ], { prepare: true })).rows;
 
-    const messages = (await db.execute("SELECT * FROM messages WHERE chat_id = ? ORDER BY id DESC", [this.chat_id], { prepare: true })).rows;
-
-    return messages.map(message => new Message(message.id, message.created_at)
-      .setChat(message.chat_id)
-      .setContent(message.content)
-      .setFlags(message.flags)
-      .setUser(message.user_id)
-      .setUpdatedAt(message.updated_at)
-      .clean()
-    );
+    return this.toCleanList(messages);
   }
 }

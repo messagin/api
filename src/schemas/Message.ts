@@ -8,7 +8,7 @@ const MessageFlags = {
 
 type MessageFlag = keyof typeof MessageFlags;
 
-interface BaseMessage {
+export interface BaseMessage {
   id: string;
   chat_id: string;
   user_id: string;
@@ -78,6 +78,11 @@ export class Message implements BaseMessage {
 
   setFlags(flags: number) {
     this.flags = flags;
+    return this;
+  }
+
+  setUserData(user: PartialUser) {
+    this.user = user;
     return this;
   }
 

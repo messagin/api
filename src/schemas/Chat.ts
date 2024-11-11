@@ -44,8 +44,11 @@ interface CleanDMChat {
 };
 
 type CleanChat<T extends ChatType> = T extends "TEXT"
-  ? CleanTextChat
-  : CleanDMChat;
+  ? CleanTextChat : CleanDMChat;
+
+type SelectMessageManager<T extends ChatType> = T extends "TEXT"
+  ? MessageManager : T extends "DM_AXOLOTL"
+  ? AxolotlMessageManager : MessageManager;
 
 export class Chat<T extends ChatType> implements BaseChat<T> {
   id: string;
@@ -119,6 +122,14 @@ export class Chat<T extends ChatType> implements BaseChat<T> {
     }
   }
 
+  isTextChat(): this is Chat<"TEXT"> {
+    return this.type === "TEXT";
+  }
+
+  isAxolotlChat(): this is Chat<"DM_AXOLOTL"> {
+    return this.type === "DM_AXOLOTL";
+  }
+
   static async getById<T extends ChatType>(id: string): Promise<Chat<T> | null> {
     const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!chat) return null;
@@ -139,8 +150,11 @@ export class Chat<T extends ChatType> implements BaseChat<T> {
     return this;
   }
 
-  get messages() {
-    return this.type == "DM_AXOLOTL" ? new AxolotlMessageManager(this.id) : new MessageManager(this.id);
+  get messages(): SelectMessageManager<T> {
+    if (this.isAxolotlChat()) {
+      return new AxolotlMessageManager(this.id) as SelectMessageManager<T>;
+    }
+    return new MessageManager(this.id) as SelectMessageManager<T>;
   }
 
   get members() {
@@ -148,9 +162,18 @@ export class Chat<T extends ChatType> implements BaseChat<T> {
     return new ChatMemberManager(this.id);
   }
 
+  private async deleteMessages() {
+    if (this.isAxolotlChat()) {
+      await db.execute("DELETE FROM axolotl_messages WHERE chat_id = ?", [this.id], { prepare: true });
+      return;
+    }
+    await db.execute("DELETE FROM messages WHERE chat_id = ?", [this.id], { prepare: true });
+    return;
+  }
+
   async delete() {
     // deleting a chat also deletes its messages
-    await db.execute("DELETE FROM messages WHERE chat_id = ?", [this.id], { prepare: true });
+    await this.deleteMessages();
     await db.execute("DELETE FROM chats WHERE id = ?", [this.id], { prepare: true });
     return this;
   }

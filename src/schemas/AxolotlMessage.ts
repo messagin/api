@@ -74,14 +74,17 @@ export class AxolotlMessage implements BaseAxolotlMessage {
     return this;
   }
 
+  setUserData(user: PartialUser) {
+    this.user = user;
+    return this;
+  }
+
   async getUserData(): Promise<PartialUser> {
     const raw_user = (await db.execute("SELECT (id,username) FROM users WHERE", [], { prepare: true })).rows[0];
-    const user: PartialUser = {
+    return {
       id: raw_user.id,
       username: raw_user.username
     };
-    this.user = user;
-    return user;
   }
 
   static async getById(id: string): Promise<AxolotlMessage | null> {
