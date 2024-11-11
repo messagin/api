@@ -87,7 +87,7 @@ export class Message implements BaseMessage {
   }
 
   async getUserData(): Promise<PartialUser> {
-    const raw_user = (await db.execute("SELECT (id,username) FROM users WHERE", [], { prepare: true })).rows[0];
+    const raw_user = (await db.execute("SELECT id, username FROM users WHERE id = ?", [this.user_id], { prepare: true })).rows[0];
     const user: PartialUser = {
       id: raw_user.id,
       username: raw_user.username
