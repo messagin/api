@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { User } from "../schemas/User";
 import { respond } from "../utils/respond";
 import { generateHash, generateHmac } from "../utils/auth";
@@ -37,7 +37,7 @@ export async function create(req: user.CreateRequest, res: Response) {
   }
 }
 
-export async function destroy(_req: user.DestroyRequest, res: Response) {
+export async function destroy(_req: Request, res: Response) {
   // todo allow the user to think twice, so delete after some delay and warn him by email
 
   respond(res, 202, "UserDeletionPending");
@@ -81,6 +81,7 @@ export async function login(req: user.LoginRequest, res: Response) {
     user = await User.getByEmail(req.body.email);
   }
   catch (err) {
+    console.log((err as Error).message);
     return respond(res, 500, "InternalError");
   }
 
@@ -125,7 +126,7 @@ export async function createTrial(req: user.CreateTrialRequest, res: Response) {
   }
 }
 
-export async function getSelf(_req: user.GetSelfRequest, res: Response) {
+export async function getSelf(_req: Request, res: Response) {
   try {
     const user = await User.getById(res.locals.user.id);
     return respond(res, 200, "Ok", user!.clean());
@@ -154,11 +155,11 @@ export async function getById(req: user.GetByIdRequest, res: Response) {
   return respond(res, 200, "Ok", user.public());
 }
 
-export async function validateMfa(req: user.ValidateMfaRequest, res: Response) {
-  // todo finish implementing
-  req; res;
-  return null;
-}
+// export async function validateMfa(req: user.ValidateMfaRequest, res: Response) {
+//   // todo finish implementing
+//   req; res;
+//   return null;
+// }
 
 export async function updatePassword(req: user.UpdatePasswordRequest, res: Response) {
   const { old_password, new_password } = req.body;

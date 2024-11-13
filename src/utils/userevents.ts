@@ -1,10 +1,17 @@
-interface ReadyEvent {
-
+export enum UserEvents {
+  Subscribe,
+  Unsubscribe
 };
 
-export interface UserEvents {
-  Ready: ReadyEvent;
+interface SubscribeEvent {
+  chat_id: string;
 };
 
+interface UnsubscribeEvent {
+  chat_id: string;
+};
 
-export type UserEventName = keyof UserEvents;
+export interface UserEvent extends Record<UserEvents, unknown> {
+  [UserEvents.Subscribe]: SubscribeEvent;
+  [UserEvents.Unsubscribe]: UnsubscribeEvent;
+};

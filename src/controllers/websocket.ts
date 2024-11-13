@@ -1,10 +1,9 @@
 import expressWs, { Application, Router as WsRouter } from "express-ws";
 import { Router } from "express";
 import { authenticateWebSocket } from "../middlewares/authenticateWs";
-// import db from "../utils/database";
-// import { Session } from "../models/Session";
 import { User } from "../schemas/User";
 import { Emitter, Events, Event } from "../utils/events";
+import { UserEvent, UserEvents } from "../utils/userevents";
 import { WebSocket, RawData } from "ws";
 import { log } from "../utils/log";
 import { Space } from "../schemas/Space";
@@ -31,7 +30,7 @@ enum OpCodes {
   Dispatch = 10,
   DispatchACK = 11,
   UserDispatch = 12,
-}
+};
 
 type WsHelloEvent = { op: OpCodes.Hello; d: { interval: number } };
 type WsPingEvent = { op: OpCodes.Ping };
@@ -45,8 +44,8 @@ type WsRateLimitEvent = { op: OpCodes.RateLimit; d: unknown };
 type WsConnectionClosedEvent = { op: OpCodes.ConnectionClosed; d: { code: number; reason: string } };
 
 type WsDispatchEvent<K extends Events> = { op: OpCodes.Dispatch; t: K; d: Event[K] };
-type WsDispatchACKEvent<K extends Events> = { op: OpCodes.DispatchACK; t: K; d: Event[K] };
-type WsUserDispatchEvent<K extends Events> = { op: OpCodes.UserDispatch; t: K; d: Event[K] };
+type WsDispatchACKEvent<K extends UserEvents> = { op: OpCodes.DispatchACK; t: K; d: UserEvent[K] };
+type WsUserDispatchEvent<K extends UserEvents> = { op: OpCodes.UserDispatch; t: K; d: UserEvent[K] };
 
 type WsEvent =
   WsHelloEvent
@@ -60,8 +59,8 @@ type WsEvent =
   | WsRateLimitEvent
   | WsConnectionClosedEvent
   | WsDispatchEvent<Events>
-  | WsDispatchACKEvent<Events>
-  | WsUserDispatchEvent<Events>;
+  | WsDispatchACKEvent<UserEvents>
+  | WsUserDispatchEvent<UserEvents>;
 
 function send(ws: WebSocket, data: WsEvent) {
   try {
@@ -127,9 +126,15 @@ export function configure(router: Router) {
         case OpCodes.AuthenticateResponse: // todo reject if already authenticated
           break;
         case OpCodes.UserDispatch:
-          // todo received client opcode, handle
+          switch (event.t) {
+            case UserEvents.Subscribe:
+              self.chats.add(event.d.chat_id);
+              break;
+            case UserEvents.Unsubscribe:
+              self.chats.delete(event.d.chat_id);
+              break;
+          }
           break;
-
         case OpCodes.Pong:
         case OpCodes.AuthenticateRequest:
         case OpCodes.Ready:

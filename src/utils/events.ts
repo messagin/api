@@ -45,8 +45,7 @@ interface SessionUpdateEvent extends SessionEvent {
   created_at: string;
 };
 
-// tslint:disable-next-line:no-empty-interface
-interface SessionDeleteEvent extends SessionEvent { };
+// interface SessionDeleteEvent extends SessionEvent { };
 
 interface SpaceEvent {
   id: string;
@@ -101,7 +100,7 @@ interface InviteEvent {
 export interface Event extends Record<Events, unknown> {
   [Events.SessionCreate]: SessionCreateEvent;
   [Events.SessionUpdate]: SessionUpdateEvent;
-  [Events.SessionDelete]: SessionDeleteEvent;
+  [Events.SessionDelete]: SessionEvent;
   [Events.SpaceCreate]: SpaceEvent;
   [Events.SpaceUpdate]: SpaceEvent;
   [Events.SpaceDelete]: SpaceEvent;

@@ -39,7 +39,6 @@ router.use("/chats", authenticate);
 router.use("/spaces", authenticate);
 router.use("/invites", authenticate);
 router.use("/users/self", authenticate);
-router.use("/attachments", authenticate);
 
 // events
 websocketController.configure(router);
@@ -52,14 +51,10 @@ websocketController.configure(router);
 //? the ID will be cached, and detected by the server.
 //? ensure the ID is protected from abuse by external atteckers
 
-//#region attachments
-router.post("/attachments", messageController.attach);
-//#endregion
-
-//#region users
+// #region users
 router.get("/users/self", userController.getSelf);
 router.put("/users/self/password", userValidator.updatePassword, userController.updatePassword);
-router.post("/users/self/mfa/validate", userController.validateMfa);
+// router.post("/users/self/mfa/validate", userController.validateMfa);
 router.delete("/users/self", userController.destroy);
 
 router.post("/users/try", userValidator.createTrial, userController.createTrial);
@@ -119,6 +114,12 @@ router.get("/users/self/relations", relationController.get); // list relations
 router.put("/users/self/relations/:user_id", relationValidator.create, relationController.create); // add friend
 router.get("/users/self/relations/:user_id", relationValidator.getById, relationController.getById); // get friend
 router.delete("/users/self/relations/:user_id", relationValidator.destroy, relationController.destroy); // remove friend
+//#endregion
+
+//#region attachments
+// todo implement
+router.post("/messages/:id/attachments");
+router.get("/messages/:id/attachments/:filename");
 //#endregion
 
 router.delete("/purge", async (_req, res) => {
