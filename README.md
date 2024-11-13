@@ -13,17 +13,7 @@
 ---
 ## Getting Started
 
-To run Messagin', you need to have [Node.js v20](https://nodejs.org/download/release/v20.3.1/)  installed on your system. You can run Messagin' with the following commands:
-
-```sh
-git clone https://github.com/messagin/api.git
-cd api
-npm install -g yarn # skip if you have yarn installed
-yarn install
-yarn dev
-```
-
-The API should become up and running on [localhost:4000](http://localhost:4000). You will just need a configured Messagin' client to connect.
+Unfortunately, this repository is the production build of Messagin'. A configured system is required in order to run it. Please follow our [installation instructions](INSTALLATION.md) for more details.
 
 ## Contributing
 

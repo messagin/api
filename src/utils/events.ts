@@ -1,6 +1,31 @@
 import { PartialUser } from "../schemas/User";
 import { Types } from "./actions";
 
+export enum Events {
+  SessionCreate,
+  SessionUpdate,
+  SessionDelete,
+  SpaceCreate,
+  SpaceUpdate,
+  SpaceDelete,
+  ChatCreate,
+  ChatUpdate,
+  ChatDelete,
+  MessageCreate,
+  MessageUpdate,
+  MessageDelete,
+  RoleCreate,
+  RoleUpdate,
+  RoleDelete,
+  MemberCreate,
+  MemberUpdate,
+  MemberDelete,
+  InviteCreate,
+  InviteUpdate,
+  InviteDelete,
+  Ready,
+};
+
 interface SessionEvent {
   id: string;
   user_id: string;
@@ -73,48 +98,43 @@ interface InviteEvent {
   created_at: string;
 };
 
-interface ReadyEvent {
-
+export interface Event extends Record<Events, unknown> {
+  [Events.SessionCreate]: SessionCreateEvent;
+  [Events.SessionUpdate]: SessionUpdateEvent;
+  [Events.SessionDelete]: SessionDeleteEvent;
+  [Events.SpaceCreate]: SpaceEvent;
+  [Events.SpaceUpdate]: SpaceEvent;
+  [Events.SpaceDelete]: SpaceEvent;
+  [Events.ChatCreate]: ChatEvent;
+  [Events.ChatUpdate]: ChatEvent;
+  [Events.ChatDelete]: ChatEvent;
+  [Events.MessageCreate]: MessageEvent;
+  [Events.MessageUpdate]: MessageEvent;
+  [Events.MessageDelete]: MessageEvent;
+  [Events.RoleCreate]: RoleEvent;
+  [Events.RoleUpdate]: RoleEvent;
+  [Events.RoleDelete]: RoleEvent;
+  [Events.MemberCreate]: MemberEvent;
+  [Events.MemberUpdate]: MemberEvent;
+  [Events.MemberDelete]: MemberEvent;
+  [Events.InviteCreate]: InviteEvent;
+  [Events.InviteUpdate]: InviteEvent;
+  [Events.InviteDelete]: InviteEvent;
 };
 
-export interface Events {
-  Ready: ReadyEvent;
-  SessionCreate: SessionCreateEvent;
-  SessionUpdate: SessionUpdateEvent;
-  SessionDelete: SessionDeleteEvent;
-  SpaceCreate: SpaceEvent;
-  SpaceUpdate: SpaceEvent;
-  SpaceDelete: SpaceEvent;
-  ChatCreate: ChatEvent;
-  ChatUpdate: ChatEvent;
-  ChatDelete: ChatEvent;
-  MessageCreate: MessageEvent;
-  MessageUpdate: MessageEvent;
-  MessageDelete: MessageEvent;
-  RoleCreate: RoleEvent;
-  RoleUpdate: RoleEvent;
-  RoleDelete: RoleEvent;
-  MemberCreate: MemberEvent;
-  MemberUpdate: MemberEvent;
-  MemberDelete: MemberEvent;
-  InviteCreate: InviteEvent;
-  InviteUpdate: InviteEvent;
-  InviteDelete: InviteEvent;
-};
-
-export type EventName = keyof Events;
+// Ensure that the Events interface has keys from EventCodes only, with the correct types
 
 export class Emitter {
   private static instance: Emitter | null;
 
-  private listeners: { [K in EventName]?: Map<number, (data: Events[K]) => void> };
-  private freeIds: { [K in EventName]?: number[] };
+  private listeners: { [K in Events]?: Map<number, (data: Event[K]) => void> };
+  private freeIds: { [K in Events]?: number[] };
 
   constructor() {
-    this.listeners = {} as { [K in EventName]?: Map<number, (data: Events[K]) => void> };
-    this.freeIds = {} as { [K in EventName]?: number[] };
+    this.listeners = {} as { [K in Events]?: Map<number, (data: Event[K]) => void> };
+    this.freeIds = {} as { [K in Events]?: number[] };
 
-    process.on("message", <K extends EventName>(msg: { type: Types, name: K, data: Events[K] }) => {
+    process.on("message", <K extends Events>(msg: { type: Types, code: K, data: Event[K] }) => {
       this.onMessage(msg);
     });
   }
@@ -126,13 +146,13 @@ export class Emitter {
     return Emitter.instance;
   }
 
-  private onMessage<K extends EventName>(msg: { type: Types, name: K, data: Events[K] }) {
+  private onMessage<K extends Events>(msg: { type: Types, code: K, data: Event[K] }) {
     if (msg.type === Types.Event) {
-      this.internalEmit(msg.name, msg.data);
+      this.internalEmit(msg.code, msg.data);
     }
   }
 
-  private internalEmit<K extends EventName>(eventName: K, data: Events[K]) {
+  private internalEmit<K extends Events>(eventName: K, data: Event[K]) {
     const listeners = this.listeners[eventName];
     if (!listeners) return;
     for (const [, listener] of listeners) {
@@ -140,51 +160,51 @@ export class Emitter {
     }
   }
 
-  private getId(eventName: EventName): number {
-    return this.freeIds[eventName]?.shift() ?? this.listeners[eventName]?.size ?? 0;
+  private getId(eventCode: Events): number {
+    return this.freeIds[eventCode]?.shift() ?? this.listeners[eventCode]?.size ?? 0;
   }
 
-  private reuseId(eventName: EventName, id: number): void {
-    if (!this.freeIds[eventName]) {
-      this.freeIds[eventName] = [];
+  private reuseId(eventCode: Events, id: number): void {
+    if (!this.freeIds[eventCode]) {
+      this.freeIds[eventCode] = [];
     }
-    this.freeIds[eventName]?.push(id);
+    this.freeIds[eventCode]?.push(id);
   }
 
-  static getCollector(): Map<EventName, number> {
+  static getCollector(): Map<Events, number> {
     return new Map();
   }
 
-  disposeCollector(collector: Map<EventName, number>) {
+  disposeCollector(collector: Map<Events, number>) {
     for (const [eventName, id] of collector) {
       this.off(eventName, id);
     }
   }
 
-  emit<K extends EventName>(eventName: K, data: Events[K]) {
+  emit<K extends Events>(eventName: K, data: Event[K]) {
     process.send?.({
       type: Types.Event,
-      name: eventName,
+      code: Events[eventName],
       data
     });
     return this;
   }
 
-  on<K extends EventName = EventName>(eventName: K, callback: (data: Events[K]) => void, collector: Map<EventName, number>) {
-    if (!this.listeners[eventName]) {
-      this.listeners[eventName] = new Map();
+  on<K extends Events>(eventCode: K, callback: (data: Event[K]) => void, collector: Map<Events, number>) {
+    if (!this.listeners[eventCode]) {
+      this.listeners[eventCode] = new Map();
     }
-    const id = this.getId(eventName);
-    this.listeners[eventName]?.set(id, callback);
+    const id = this.getId(eventCode);
+    this.listeners[eventCode]?.set(id, callback);
     if (collector) {
-      collector.set(eventName, id);
+      collector.set(eventCode, id);
     }
     return this;
   };
 
-  off<K extends EventName>(eventName: K, id: number): void {
-    if (!this.listeners[eventName]) return;
-    this.listeners[eventName]?.delete(id);
-    this.reuseId(eventName, id);
+  off<K extends Events>(eventCode: K, id: number): void {
+    if (!this.listeners[eventCode]) return;
+    this.listeners[eventCode]?.delete(id);
+    this.reuseId(eventCode, id);
   }
 }

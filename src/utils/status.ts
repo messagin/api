@@ -26,6 +26,8 @@ export const StatusCodes = {
     MalformedId: 40002,
     WrongPassword: 40003,
     TempUser: 40004,
+    InvalidContentType: 40005,
+    BoundaryNotFound: 40006
   },
   401: {
     MissingToken: 40100,
@@ -97,6 +99,9 @@ export const StatusMessages = Object.freeze({
   40001: "The provided token type is unknown",
   40002: "The provided ID is malformed",
   40003: "Invalid password provided",
+  40004: "Temp User",
+  40005: "Invalid Content-Type header",
+  40006: "Boundary not found",
   //#endregion
   //#region 401 Unauthorized
   40100: "Authentication token is missing",

@@ -4,7 +4,7 @@ import { authenticateWebSocket } from "../middlewares/authenticateWs";
 // import db from "../utils/database";
 // import { Session } from "../models/Session";
 import { User } from "../schemas/User";
-import { Emitter, EventName, Events } from "../utils/events";
+import { Emitter, Events, Event } from "../utils/events";
 import { WebSocket, RawData } from "ws";
 import { log } from "../utils/log";
 import { Space } from "../schemas/Space";
@@ -17,64 +17,65 @@ const timeout = 30000;
 const network_margin = 5000;
 
 enum OpCodes {
-  Dispatch,
-  LifeCycle,
-  Authenticate,
-  Hello = 10,
-  PingRecv = 11,
+  Hello = 0,
+  Ping = 1,
+  Pong = 2,
+  AuthenticateRequest = 3,
+  AuthenticateResponse = 4,
+  Ready = 5,
+  Error = 6,
+  Reconnect = 7,
+  RateLimit = 8,
+  ConnectionClosed = 9,
+
+  Dispatch = 10,
+  DispatchACK = 11,
+  UserDispatch = 12,
 }
 
-type WsDispatchEvent<K extends EventName> = { op: OpCodes.Dispatch; t: K; d: Events[K] };
-type WsLifeCycleEvent = { op: OpCodes.LifeCycle; };
-type WsAuthEvent = { op: OpCodes.Authenticate; d?: { auth: string } };
-type WsHelloEvent = { op: OpCodes.Hello, d: { interval: number } };
-type WsPingRecvEvent = { op: OpCodes.PingRecv };
+type WsHelloEvent = { op: OpCodes.Hello; d: { interval: number } };
+type WsPingEvent = { op: OpCodes.Ping };
+type WsPongEvent = { op: OpCodes.Pong };
+type WsAuthenticateRequestEvent = { op: OpCodes.AuthenticateRequest };
+type WsAuthenticateResponseEvent = { op: OpCodes.AuthenticateResponse; d: { auth: string } };
+type WsReadyEvent = { op: OpCodes.Ready }; // todo implement
+type WsErrorEvent = { op: OpCodes.Error; d: { code: number; message: string } };
+type WsReconnectEvent = { op: OpCodes.Reconnect; d: { delay: number } };
+type WsRateLimitEvent = { op: OpCodes.RateLimit; d: unknown };
+type WsConnectionClosedEvent = { op: OpCodes.ConnectionClosed; d: { code: number; reason: string } };
 
-type WsWrapper = { client: WebSocket, lastPing: number };
+type WsDispatchEvent<K extends Events> = { op: OpCodes.Dispatch; t: K; d: Event[K] };
+type WsDispatchACKEvent<K extends Events> = { op: OpCodes.DispatchACK; t: K; d: Event[K] };
+type WsUserDispatchEvent<K extends Events> = { op: OpCodes.UserDispatch; t: K; d: Event[K] };
 
-function dispatch(ws: WebSocket, data: Partial<WsDispatchEvent<EventName>>) {
+type WsEvent =
+  WsHelloEvent
+  | WsPingEvent
+  | WsPongEvent
+  | WsAuthenticateRequestEvent
+  | WsAuthenticateResponseEvent
+  | WsReadyEvent
+  | WsErrorEvent
+  | WsReconnectEvent
+  | WsRateLimitEvent
+  | WsConnectionClosedEvent
+  | WsDispatchEvent<Events>
+  | WsDispatchACKEvent<Events>
+  | WsUserDispatchEvent<Events>;
+
+function send(ws: WebSocket, data: WsEvent) {
   try {
-    ws.send(JSON.stringify({ op: OpCodes.Dispatch, ...data }));
+    ws.send(JSON.stringify(data));
   } catch (err) {
     log("red")((err as Error).message);
   }
 }
 
-async function initLifeCycle(ws: WsWrapper) {
-  // todo manage PING / PONG
-  // ! disconnect client on timeout
-
-  ws.client.send(
-    JSON.stringify({
-      op: OpCodes.Hello,
-      d: {
-        interval: timeout
-      }
-    } as WsHelloEvent)
-  );
-
-  ws.client.on("close", () => { })
-
-  ws.client.on("message", (message) => {
-    const event: WsLifeCycleEvent = JSON.parse(message.toString());
-    if (event.op !== OpCodes.LifeCycle) return;
-
-    ws.lastPing = Date.now();
-    ws.client.send(
-      JSON.stringify({
-        op: OpCodes.PingRecv
-      } as WsPingRecvEvent)
-    )
-    // we received a ping
-    // reply with pong and update tracking
-  });
-}
-
 function requestAuthentication(ws: WebSocket) {
   return new Promise<Session>(resolve => {
     const listener = async (data: RawData) => {
-      const event = JSON.parse(data.toString()) as WsAuthEvent;
-      if (event.op === OpCodes.Authenticate) {
+      const event = JSON.parse(data.toString()) as WsAuthenticateResponseEvent;
+      if (event.op === OpCodes.AuthenticateResponse) {
         const response = await authenticateWebSocket(event.d?.auth);
         ws.off("message", listener);
         if (response.code === 0) {
@@ -83,9 +84,11 @@ function requestAuthentication(ws: WebSocket) {
       }
     };
     ws.on("message", listener);
-    ws.send(JSON.stringify({ op: OpCodes.Authenticate } as WsAuthEvent));
+    ws.send(JSON.stringify({ op: OpCodes.AuthenticateRequest } as WsAuthenticateRequestEvent));
   });
 }
+
+type WsWrapper = { client: WebSocket, lastPing: number, chats: Set<string> };
 
 export function configure(router: Router) {
   expressWs(router as Application);
@@ -104,10 +107,42 @@ export function configure(router: Router) {
   }, 5000);
 
   r.ws("/events", async (ws, req) => {
-    const self: WsWrapper = { client: ws, lastPing: Date.now() };
+    const self: WsWrapper = { client: ws, lastPing: Date.now(), chats: new Set() };
     clients.add(self);
 
-    initLifeCycle(self);
+    send(ws, { op: OpCodes.Hello, d: { interval: timeout } });
+
+    ws.on("message", message => {
+      const event: WsEvent = JSON.parse(message.toString());
+
+      switch (event.op) {
+        case OpCodes.Ping:
+          self.lastPing = Date.now();
+          self.client.send(
+            JSON.stringify({
+              op: OpCodes.Pong
+            } as WsPongEvent)
+          );
+          break;
+        case OpCodes.AuthenticateResponse: // todo reject if already authenticated
+          break;
+        case OpCodes.UserDispatch:
+          // todo received client opcode, handle
+          break;
+
+        case OpCodes.Pong:
+        case OpCodes.AuthenticateRequest:
+        case OpCodes.Ready:
+        case OpCodes.Error:
+        case OpCodes.Dispatch:
+        case OpCodes.DispatchACK:
+        case OpCodes.Reconnect:
+        case OpCodes.RateLimit:
+        case OpCodes.ConnectionClosed:
+          // todo received server-side opcode, terminate connection
+          break;
+      }
+    });
 
     const listeners = Emitter.getCollector();
 
@@ -130,82 +165,85 @@ export function configure(router: Router) {
     // get current user state
     const state = await getUserState(user);
 
-    dispatch(ws, { t: "Ready", d: state });
+    send(ws, { op: OpCodes.Dispatch, t: Events.Ready, d: state });
 
-    events.on("SessionCreate", session_ => {
+    events.on(Events.SessionCreate, session_ => {
       if (session_.user_id !== user.id) {
         return;
       }
-      dispatch(ws, { t: "SessionCreate", d: session_ });
+      send(ws, { op: OpCodes.Dispatch, t: Events.SessionCreate, d: session_ });
     }, listeners);
 
-    events.on("SessionUpdate", session_ => {
+    events.on(Events.SessionUpdate, session_ => {
       if (session_.user_id !== user.id) {
         return;
       }
-      dispatch(ws, { t: "SessionUpdate", d: session_ });
+      send(ws, { op: OpCodes.Dispatch, t: Events.SessionUpdate, d: session_ });
     }, listeners);
 
-    events.on("SessionDelete", session_ => {
+    events.on(Events.SessionDelete, session_ => {
       if (session_.user_id !== user.id) {
         return;
       }
-      dispatch(ws, { t: "SessionDelete", d: session_ });
+      send(ws, { op: OpCodes.Dispatch, t: Events.SessionDelete, d: session_ });
       if (session_.id === session.id) {
         ws.close(1000);
       }
     }, listeners);
 
-    events.on("SpaceCreate", space => {
+    events.on(Events.SpaceCreate, space => {
       if (space.owner_id !== user.id) {
         return;
       }
-      dispatch(ws, { t: "SpaceCreate", d: space });
+      send(ws, { op: OpCodes.Dispatch, t: Events.SpaceCreate, d: space });
     }, listeners);
 
-    events.on("SpaceUpdate", async space => {
+    events.on(Events.SpaceUpdate, async space => {
       const is_member = await new Space(space.id).members.has(user.id);
       if (!is_member) {
         return;
       }
-      dispatch(ws, { t: "SpaceUpdate", d: space });
+      send(ws, { op: OpCodes.Dispatch, t: Events.SpaceUpdate, d: space });
     }, listeners);
 
-    events.on("SpaceDelete", async space => {
+    events.on(Events.SpaceDelete, async space => {
       const is_member = await new Space(space.id).members.has(user.id);
       if (!is_member) {
         return;
       }
-      dispatch(ws, { t: "SpaceDelete", d: space });
+      send(ws, { op: OpCodes.Dispatch, t: Events.SpaceDelete, d: space });
     }, listeners);
 
     // todo perform permission checks on chats
-    events.on("ChatCreate", async chat => {
+    events.on(Events.ChatCreate, async chat => {
       const is_member = await new Space(chat.space_id!).members.has(user.id);
       if (!is_member) {
         return;
       }
-      dispatch(ws, { t: "ChatCreate", d: chat });
+      send(ws, { op: OpCodes.Dispatch, t: Events.ChatCreate, d: chat });
     }, listeners);
 
-    events.on("ChatUpdate", async chat => {
+    events.on(Events.ChatUpdate, async chat => {
       const is_member = await new Space(chat.space_id!).members.has(user.id);
       if (!is_member) {
         return;
       }
-      dispatch(ws, { t: "ChatUpdate", d: chat });
+      send(ws, { op: OpCodes.Dispatch, t: Events.ChatUpdate, d: chat });
     }, listeners);
 
-    events.on("ChatDelete", async chat => {
+    events.on(Events.ChatDelete, async chat => {
       const is_member = await new Space(chat.space_id!).members.has(user.id);
       if (!is_member) {
         return;
       }
-      dispatch(ws, { t: "ChatDelete", d: chat });
+      send(ws, { op: OpCodes.Dispatch, t: Events.ChatDelete, d: chat });
     }, listeners);
 
     // todo perform checks on messages
-    events.on("MessageCreate", async message => {
+    events.on(Events.MessageCreate, async message => {
+      if (!self.chats.has(message.chat_id)) {
+        return; // user is not subscribed to chat
+      }
       const chat = await Chat.getById(message.chat_id);
       if (!chat) {
         return;
@@ -214,10 +252,13 @@ export function configure(router: Router) {
       if (!is_member) {
         return;
       }
-      dispatch(ws, { t: "MessageCreate", d: message });
+      send(ws, { op: OpCodes.Dispatch, t: Events.MessageCreate, d: message });
     }, listeners);
 
-    events.on("MessageUpdate", async message => {
+    events.on(Events.MessageUpdate, async message => {
+      if (!self.chats.has(message.chat_id)) {
+        return; // user is not subscribed to chat
+      }
       const chat = await Chat.getById(message.chat_id);
       if (!chat) {
         return;
@@ -226,10 +267,13 @@ export function configure(router: Router) {
       if (!is_member) {
         return;
       }
-      dispatch(ws, { t: "MessageUpdate", d: message });
+      send(ws, { op: OpCodes.Dispatch, t: Events.MessageUpdate, d: message });
     }, listeners);
 
-    events.on("MessageDelete", async message => {
+    events.on(Events.MessageDelete, async message => {
+      if (!self.chats.has(message.chat_id)) {
+        return; // user is not subscribed to chat
+      }
       const chat = await Chat.getById(message.chat_id);
       if (!chat) {
         return;
@@ -238,58 +282,58 @@ export function configure(router: Router) {
       if (!is_member) {
         return;
       }
-      dispatch(ws, { t: "MessageDelete", d: message });
+      send(ws, { op: OpCodes.Dispatch, t: Events.MessageDelete, d: message });
     }, listeners);
 
-    events.on("RoleCreate", async role => {
+    events.on(Events.RoleCreate, async role => {
       const is_member = await new Space(role.space_id).members.has(user.id);
       if (!is_member) {
         return;
       }
-      dispatch(ws, { t: "RoleCreate", d: role });
+      send(ws, { op: OpCodes.Dispatch, t: Events.RoleCreate, d: role });
     }, listeners);
 
-    events.on("RoleUpdate", async role => {
+    events.on(Events.RoleUpdate, async role => {
       const is_member = await new Space(role.space_id).members.has(user.id);
       if (!is_member) {
         return;
       }
-      dispatch(ws, { t: "RoleUpdate", d: role });
+      send(ws, { op: OpCodes.Dispatch, t: Events.RoleUpdate, d: role });
     }, listeners);
 
-    events.on("RoleDelete", async role => {
+    events.on(Events.RoleDelete, async role => {
       const is_member = await new Space(role.space_id).members.has(user.id);
       if (!is_member) {
         return;
       }
-      dispatch(ws, { t: "RoleDelete", d: role });
+      send(ws, { op: OpCodes.Dispatch, t: Events.RoleDelete, d: role });
     }, listeners);
 
-    events.on("MemberCreate", async member => {
+    events.on(Events.MemberCreate, async member => {
       const is_self = member.user_id === user.id;
       const is_member = await new Space(member.space_id).members.has(user.id);
       if (!(is_self || is_member)) {
         return;
       }
-      dispatch(ws, { t: "MemberCreate", d: member });
+      send(ws, { op: OpCodes.Dispatch, t: Events.MemberCreate, d: member });
     }, listeners);
 
-    events.on("MemberDelete", async member => {
+    events.on(Events.MemberDelete, async member => {
       const is_self = member.user_id === user.id;
       const is_member = await new Space(member.space_id).members.has(user.id);
       if (!(is_self || is_member)) {
         return;
       }
-      dispatch(ws, { t: "MemberDelete", d: member });
+      send(ws, { op: OpCodes.Dispatch, t: Events.MemberDelete, d: member });
     }, listeners);
 
-    events.on("MemberUpdate", async member => {
+    events.on(Events.MemberUpdate, async member => {
       const is_self = member.user_id === user.id;
       const is_member = await new Space(member.space_id).members.has(user.id);
       if (!(is_self || is_member)) {
         return;
       }
-      dispatch(ws, { t: "MemberUpdate", d: member });
+      send(ws, { op: OpCodes.Dispatch, t: Events.MemberUpdate, d: member });
     }, listeners);
 
     ws.on("close", (_code, reason) => {
@@ -299,19 +343,6 @@ export function configure(router: Router) {
     });
   });
 }
-
-// const chatCreate = ({ user, ws }) => async chat => {
-//   const member = await db("members")
-//     .select("permissions", "color")
-//     .where({ chat_id: chat.id, user_id: user.id })
-//     .first()
-//     .catch(log("red", "WS /api/v1/events/chatCreate"));
-
-//   if (!member) {
-//     return;
-//   }
-//   ws.send(JSON.stringify({ name: "chatCreate", data: chat }));
-// };
 
 async function getUserState(user: User) {
   const sessions = await user.sessions.list();

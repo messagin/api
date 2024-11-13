@@ -39,10 +39,10 @@ router.use("/chats", authenticate);
 router.use("/spaces", authenticate);
 router.use("/invites", authenticate);
 router.use("/users/self", authenticate);
+router.use("/attachments", authenticate);
 
 // events
 websocketController.configure(router);
-
 
 //! created_at is now deprecated. Exception: ratelimits
 
@@ -51,6 +51,10 @@ websocketController.configure(router);
 // router.get("/id"); //? request a server-generated ID
 //? the ID will be cached, and detected by the server.
 //? ensure the ID is protected from abuse by external atteckers
+
+//#region attachments
+router.post("/attachments", messageController.attach);
+//#endregion
 
 //#region users
 router.get("/users/self", userController.getSelf);

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { respond } from "../utils/respond";
 import { Invite } from "../schemas/Invite";
 import { Space } from "../schemas/Space";
-import { Emitter } from "../utils/events";
+import { Emitter, Events } from "../utils/events";
 import { log } from "../utils/log";
 
 export async function create(req: Request, res: Response) {
@@ -13,7 +13,7 @@ export async function create(req: Request, res: Response) {
 
     await invite.create();
 
-    Emitter.getInstance().emit("InviteCreate", invite);
+    Emitter.getInstance().emit(Events.InviteCreate, invite);
     return respond(res, 201, "InviteCreated", invite);
   }
   catch (err) {
@@ -67,8 +67,8 @@ export async function accept(req: Request, res: Response) {
     const member = await space.members.init(res.locals.user.id);
     await invite.update();
 
-    Emitter.getInstance().emit("MemberCreate", member);
-    // emitter.emit("InviteUpdate", invite);
+    Emitter.getInstance().emit(Events.MemberCreate, member);
+    // emitter.emit(Events.InviteUpdate, invite);
 
     return respond(res, 201, "MemberCreated");
   }
@@ -87,7 +87,7 @@ export async function destroy(req: Request, res: Response) {
 
     await invite.destroy();
 
-    Emitter.getInstance().emit("InviteDelete", invite);
+    Emitter.getInstance().emit(Events.InviteDelete, invite);
     return respond(res, 204, "Deleted", invite);
   }
   catch (err) {

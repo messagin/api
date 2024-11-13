@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 import { respond } from "../utils/respond";
 import { log } from "../utils/log";
-import { Emitter } from "../utils/events";
+import { Emitter, Events } from "../utils/events";
 import { Chat } from "../schemas/Chat";
 import { Member } from "../schemas/Member";
 import { Message } from "../schemas/Message";
 import { Space } from "../schemas/Space";
 import { ResLocals } from "../utils/locals";
+import { createWriteStream } from "fs";
 
 export async function create(req: Request, res: Response<unknown, ResLocals>) {
   try {
@@ -25,7 +26,7 @@ export async function create(req: Request, res: Response<unknown, ResLocals>) {
     const message = (await chat.messages.create(res.locals.user.id, req.body))
       .setUserData({ id: res.locals.user.id, username: res.locals.user.username })
       .clean();
-    Emitter.getInstance().emit("MessageCreate", message);
+    Emitter.getInstance().emit(Events.MessageCreate, message);
 
     return respond(res, 201, "MessageCreated", message);
   }
@@ -65,7 +66,7 @@ export async function destroy(req: Request, res: Response) {
 
     await message.delete();
     const emitter = new Emitter();
-    emitter.emit("MessageDelete", message.clean());
+    emitter.emit(Events.MessageDelete, message.clean());
 
     return respond(res, 204, "Deleted");
   }
@@ -89,7 +90,7 @@ export async function update(req: Request, res: Response<unknown, ResLocals>) {
       .setUserData({ id: res.locals.user.id, username: res.locals.user.username })
       .update();
     const emitter = Emitter.getInstance();
-    emitter.emit("MessageUpdate", message.clean());
+    emitter.emit(Events.MessageUpdate, message.clean());
 
     return respond(res, 204, "Updated");
   }
@@ -146,4 +147,65 @@ export async function getById(req: Request, res: Response) {
     log("red")((err as Error).message);
     return respond(res, 500, "InternalError");
   }
+}
+
+export async function attach(req: Request, res: Response) {
+  const contentType = req.headers["content-type"];
+  if (!contentType || !contentType.startsWith("multipart/form-data")) {
+    return respond(res, 400, "InvalidContentType");
+  }
+
+  const boundaryMatch = contentType.match(/boundary=(.+)$/);
+  if (!boundaryMatch) {
+    return respond(res, 400, "BoundaryNotFound");
+  }
+  const boundary = `--${boundaryMatch[1]}`;
+
+  let currentFilename = '';
+  let writeStream: ReturnType<typeof createWriteStream> | null = null;
+
+  req.on("data", (chunk: Buffer) => {
+    const lines = chunk.toString("binary").split("\r\n");
+
+    for (const line of lines) {
+      if (line.startsWith(boundary)) {
+        if (writeStream) {
+          writeStream.end();
+          writeStream = null;
+        }
+        continue;
+      }
+
+      if (line.startsWith("Content-Disposition")) {
+        const filenameMatch = line.match(/filename="(.+?)"/);
+
+        currentFilename = filenameMatch?.[1] || '';
+
+        if (currentFilename) {
+          writeStream = createWriteStream(`/messagin-data/${currentFilename}`);
+        }
+
+        continue;
+      }
+
+      if (writeStream) {
+        writeStream.write(line + '\n');
+      }
+    }
+  });
+
+  req.on("end", () => {
+    if (writeStream) {
+      writeStream.end();
+    }
+    res.status(201).json({ message: "File uploaded successfully" });
+  });
+
+  req.on("error", (err) => {
+    if (writeStream) {
+      writeStream.end();
+    }
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  });
 }

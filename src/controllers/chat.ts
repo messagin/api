@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { respond } from "../utils/respond";
 import { log } from "../utils/log";
-import { Emitter } from "../utils/events";
+import { Emitter, Events } from "../utils/events";
 import { Chat } from "../schemas/Chat";
 import { Space } from "../schemas/Space";
 
@@ -12,7 +12,7 @@ export async function create(req: Request, res: Response) {
       .setSpace(req.params.space_id)
       .create();
 
-    Emitter.getInstance().emit("ChatCreate", chat);
+    Emitter.getInstance().emit(Events.ChatCreate, chat);
     return respond(res, 201, "ChatCreated", chat);
   }
   catch (err) {
@@ -34,7 +34,7 @@ export async function destroy(req: Request, res: Response) {
     }
 
     const emitter = Emitter.getInstance();
-    emitter.emit("ChatDelete", chat);
+    emitter.emit(Events.ChatDelete, chat);
 
     await chat.delete();
 
@@ -55,7 +55,7 @@ export async function update(req: Request, res: Response) {
     await chat.setName(req.body.name).update();
 
     const emitter = Emitter.getInstance();
-    emitter.emit("ChatUpdate", chat);
+    emitter.emit(Events.ChatUpdate, chat);
 
     return respond(res, 204, "Updated");
 

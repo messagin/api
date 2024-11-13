@@ -3,7 +3,7 @@ import { respond } from "../utils/respond";
 import { log } from "../utils/log";
 import { Space } from "../schemas/Space";
 import { User } from "../schemas/User";
-import { Emitter } from "../utils/events";
+import { Emitter, Events } from "../utils/events";
 
 export async function getById(req: Request, res: Response) {
   try {
@@ -52,7 +52,7 @@ export async function destroy(req: Request, res: Response) {
 
     const emitter = Emitter.getInstance();
 
-    emitter.emit("SpaceDelete", space);
+    emitter.emit(Events.SpaceDelete, space);
 
     // no await to run in background
     await space.delete();
@@ -78,9 +78,9 @@ export async function create(req: Request, res: Response) {
     await chat.create();
 
     const emitter = Emitter.getInstance();
-    emitter.emit("SpaceCreate", space)
-      .emit("MemberCreate", member.clean())
-      .emit("ChatCreate", chat);
+    emitter.emit(Events.SpaceCreate, space)
+      .emit(Events.MemberCreate, member.clean())
+      .emit(Events.ChatCreate, chat);
 
     return respond(res, 201, "SpaceCreated", space);
   }
