@@ -257,7 +257,7 @@ export async function getAttachment(req: Request, res: Response) {
     const file = message.id.slice(4) + req.params.filename;
     const path = `/messagin-data/${dir}/${file}`;
 
-    res.header("Cache-Control", "private");
+    res.header("Cache-Control", "public");
 
     const exists = existsSync(path);
     if (!exists) {
