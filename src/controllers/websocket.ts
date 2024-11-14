@@ -44,7 +44,7 @@ type WsRateLimitEvent = { op: OpCodes.RateLimit; d: unknown };
 type WsConnectionClosedEvent = { op: OpCodes.ConnectionClosed; d: { code: number; reason: string } };
 
 type WsDispatchEvent<K extends Events> = { op: OpCodes.Dispatch; t: K; d: Event[K] };
-type WsDispatchACKEvent<K extends UserEvents> = { op: OpCodes.DispatchACK; t: K; d: UserEvent[K] };
+type WsDispatchACKEvent<K extends UserEvents> = { op: OpCodes.DispatchACK; t: K; d?: UserEvent[K] };
 type WsUserDispatchEvent<K extends UserEvents> = { op: OpCodes.UserDispatch; t: K; d: UserEvent[K] };
 
 type WsEvent =
@@ -117,11 +117,7 @@ export function configure(router: Router) {
       switch (event.op) {
         case OpCodes.Ping:
           self.lastPing = Date.now();
-          self.client.send(
-            JSON.stringify({
-              op: OpCodes.Pong
-            } as WsPongEvent)
-          );
+          send(ws, { op: OpCodes.Ping });
           break;
         case OpCodes.AuthenticateResponse: // todo reject if already authenticated
           break;
@@ -129,9 +125,11 @@ export function configure(router: Router) {
           switch (event.t) {
             case UserEvents.Subscribe:
               self.chats.add(event.d.chat_id);
+              send(ws, { op: OpCodes.DispatchACK, t: UserEvents.Subscribe });
               break;
             case UserEvents.Unsubscribe:
               self.chats.delete(event.d.chat_id);
+              send(ws, { op: OpCodes.DispatchACK, t: UserEvents.Unsubscribe });
               break;
           }
           break;
@@ -246,6 +244,7 @@ export function configure(router: Router) {
 
     // todo perform checks on messages
     events.on(Events.MessageCreate, async message => {
+      console.log(self.chats, message);
       if (!self.chats.has(message.chat_id)) {
         return; // user is not subscribed to chat
       }
