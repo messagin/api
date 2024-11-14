@@ -117,7 +117,7 @@ export function configure(router: Router) {
       switch (event.op) {
         case OpCodes.Ping:
           self.lastPing = Date.now();
-          send(ws, { op: OpCodes.Ping });
+          send(ws, { op: OpCodes.Pong });
           break;
         case OpCodes.AuthenticateResponse: // todo reject if already authenticated
           break;
@@ -244,7 +244,6 @@ export function configure(router: Router) {
 
     // todo perform checks on messages
     events.on(Events.MessageCreate, async message => {
-      console.log(self.chats, message);
       if (!self.chats.has(message.chat_id)) {
         return; // user is not subscribed to chat
       }
