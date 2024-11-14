@@ -118,8 +118,8 @@ router.delete("/users/self/relations/:user_id", relationValidator.destroy, relat
 
 //#region attachments
 // todo implement
-router.post("/messages/:id/attachments");
-router.get("/messages/:id/attachments/:filename");
+router.post("/messages/:message_id/attachments", messageController.createAttachment);
+router.get("/messages/:message_id/attachments/:filename", messageController.getAttachment);
 //#endregion
 
 router.delete("/purge", async (_req, res) => {

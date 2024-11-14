@@ -7,7 +7,25 @@ import { Member } from "../schemas/Member";
 import { Message } from "../schemas/Message";
 import { Space } from "../schemas/Space";
 import { ResLocals } from "../utils/locals";
-import { createWriteStream } from "fs";
+import multer from "multer";
+import { existsSync, mkdirSync, unlinkSync } from "fs";
+
+const storage = multer.diskStorage({
+  destination: async (req, _file, cb) => {
+    const dir = `./data/${req.params.message_id.slice(0, 4)}`;
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const name = req.params.message_id.slice(4) + file.originalname;
+    cb(null, name);
+  }
+});
+
+const upload = multer({ storage });
+
 
 export async function create(req: Request, res: Response<unknown, ResLocals>) {
   try {
@@ -152,63 +170,101 @@ export async function getById(req: Request, res: Response) {
   }
 }
 
-export async function attach(req: Request, res: Response) {
-  const contentType = req.headers["content-type"];
-  if (!contentType || !contentType.startsWith("multipart/form-data")) {
-    return respond(res, 400, "InvalidContentType");
+function parsePlaceholders(content: string) {
+  const regex = /\[f:([^\]]+)\]/g;
+  let match;
+  const placeholders = [];
+  while ((match = regex.exec(content)) !== null) {
+    placeholders.push(match[1]);
+  }
+  return placeholders;
+}
+
+export async function createAttachment(req: Request, res: Response) {
+  const message = await Message.getById(req.params.message_id);
+  if (!message) {
+    return respond(res, 404, "NotFound");
   }
 
-  const boundaryMatch = contentType.match(/boundary=(.+)$/);
-  if (!boundaryMatch) {
-    return respond(res, 400, "BoundaryNotFound");
+  const totalSize = Number(req.headers['content-length']);
+
+  if (!totalSize) {
+    return respond(res, 400, "InvalidBody");
   }
-  const boundary = `--${boundaryMatch[1]}`;
 
-  let currentFilename = '';
-  let writeStream: ReturnType<typeof createWriteStream> | null = null;
+  const placeholders = parsePlaceholders(message.content);
+  const uploadHandler = upload.single('attachment');
 
-  req.on("data", (chunk: Buffer) => {
-    const lines = chunk.toString("binary").split("\r\n");
+  let uploadedSize = 0;
+  let responded = false;
+  let lastProgress = 0;
 
-    for (const line of lines) {
-      if (line.startsWith(boundary)) {
-        if (writeStream) {
-          writeStream.end();
-          writeStream = null;
-        }
-        continue;
-      }
+  // Handle upload
+  uploadHandler(req, res, err => {
+    if (responded) return;
 
-      if (line.startsWith("Content-Disposition")) {
-        const filenameMatch = line.match(/filename="(.+?)"/);
-
-        currentFilename = filenameMatch?.[1] || '';
-
-        if (currentFilename) {
-          writeStream = createWriteStream(`/messagin-data/${currentFilename}`);
-        }
-
-        continue;
-      }
-
-      if (writeStream) {
-        writeStream.write(line + '\n');
-      }
+    if (err) {
+      console.log(err);
+      responded = true;
+      res.status(400).end('Error uploading file');
+      return;
     }
+
+    const file = req.file;
+    if (!file) {
+      responded = true;
+      return respond(res, 400, "InvalidBody");
+    }
+
+    // Check for duplicate filename
+    if (!placeholders.includes(file.originalname)) {
+      responded = true;
+      unlinkSync(file.path);
+      return respond(res, 400, "InvalidBody");
+    }
+
+    return respond(res, 200, "Ok", { message: "Upload completed" });
   });
 
-  req.on("end", () => {
-    if (writeStream) {
-      writeStream.end();
-    }
-    res.status(201).json({ message: "File uploaded successfully" });
-  });
+  req.on('data', chunk => {
+    if (responded) return;
+    uploadedSize += chunk.length;
+    const progress = ((uploadedSize / totalSize) * 100);
 
-  req.on("error", (err) => {
-    if (writeStream) {
-      writeStream.end();
-    }
-    console.error(err);
-    res.status(500).json({ message: "Internal server error" });
+    if (!res.writable) return;
+    if (progress - lastProgress < 5 && progress !== 100) return;
+    lastProgress = progress;
+
+    // Send progress updates
+    if (res.writable) res.write(`${progress.toFixed()}\n`);
   });
+}
+
+
+const filenameRegex = /^(?!.*[/\\])[^<>:"|?*\r\n]+$/;
+
+export async function getAttachment(req: Request, res: Response) {
+  try {
+    const message = await Message.getById(req.params.message_id);
+    if (!message) {
+      return respond(res, 404, "NotFound");
+    }
+    if (!filenameRegex.test(req.params.filename)) {
+      return respond(res, 400, "InvalidBody");
+    }
+
+    const dir = message.id.slice(0, 4);
+    const file = message.id.slice(4) + req.params.filename;
+    const path = `/messagin-data/${dir}/${file}`;
+
+    const exists = existsSync(path);
+    if (!exists) {
+      res.status(404).end("File not found");
+      return;
+    }
+    res.sendFile(path);
+  } catch (err) {
+    log("red")((err as Error).message);
+    return respond(res, 500, "InternalError");
+  }
 }
