@@ -159,6 +159,7 @@ export function configure(router: Router) {
       } catch (err) {
         log("red")((err as Error).message);
         send(ws, { op: OpCodes.ConnectionClosed, d: { code: 0, reason: "Invalid JSON" } });
+        ws.terminate();
       }
     });
 
