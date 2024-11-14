@@ -130,10 +130,11 @@ export class Emitter {
   private freeIds: { [K in Events]?: number[] };
 
   constructor() {
-    this.listeners = {} as { [K in Events]?: Map<number, (data: Event[K]) => void> };
-    this.freeIds = {} as { [K in Events]?: number[] };
+    this.listeners = {};
+    this.freeIds = {};
 
     process.on("message", <K extends Events>(msg: { type: Types, code: K, data: Event[K] }) => {
+      console.log("IPC message:", msg);
       this.onMessage(msg);
     });
   }
