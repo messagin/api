@@ -12,7 +12,7 @@ import { existsSync, mkdirSync, unlinkSync } from "fs";
 
 const storage = multer.diskStorage({
   destination: async (req, _file, cb) => {
-    const dir = `./data/${req.params.message_id.slice(0, 4)}`;
+    const dir = `/messagin-data/${req.params.message_id.slice(0, 4)}`;
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
