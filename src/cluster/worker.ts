@@ -46,7 +46,7 @@ app.use(helmet({
 app.use((req, res, next) => {
   const request_size = Number(req.headers["content-length"] ?? 0);
   const content_type = req.headers["content-type"];
-  if (request_size > 0x10000 && content_type !== "multipart/form-data") { // 64 KiB
+  if (request_size > 0x10000 && !content_type?.startsWith("multipart/form-data")) { // 64 KiB
     return respond(res, 413, "PayloadTooLarge");
   }
   res.locals.ip = req.headers["cf-connecting-ip"] ?? req.headers["x-real-ip"] ?? req.headers["x-forwarded-for"] ?? req.ip;
