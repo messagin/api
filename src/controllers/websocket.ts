@@ -154,11 +154,13 @@ export function configure(router: Router) {
           case OpCodes.RateLimit:
           case OpCodes.ConnectionClosed:
             // todo received server-side opcode, terminate connection
+            send(ws, { op: OpCodes.ConnectionClosed, d: { code: 0, reason: "Invalid OpCode" } });
+            ws.terminate();
             break;
         }
       } catch (err) {
         log("red")((err as Error).message);
-        send(ws, { op: OpCodes.ConnectionClosed, d: { code: 0, reason: "Invalid JSON" } });
+        send(ws, { op: OpCodes.ConnectionClosed, d: { code: 1, reason: "Invalid JSON" } });
         ws.terminate();
       }
     });

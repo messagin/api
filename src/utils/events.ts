@@ -70,6 +70,11 @@ interface MessageEvent {
   public_key?: string;
 };
 
+interface MessageDeleteEvent {
+  id: string;
+  chat_id: string;
+};
+
 interface RoleEvent {
   id: string;
   space_id: string;
@@ -108,7 +113,7 @@ export interface Event extends Record<Events, unknown> {
   [Events.ChatDelete]: ChatEvent;
   [Events.MessageCreate]: MessageEvent;
   [Events.MessageUpdate]: MessageEvent;
-  [Events.MessageDelete]: MessageEvent;
+  [Events.MessageDelete]: MessageDeleteEvent;
   [Events.RoleCreate]: RoleEvent;
   [Events.RoleUpdate]: RoleEvent;
   [Events.RoleDelete]: RoleEvent;

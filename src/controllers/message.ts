@@ -66,7 +66,10 @@ export async function destroy(req: Request, res: Response) {
 
     await message.delete();
     const emitter = new Emitter();
-    emitter.emit(Events.MessageDelete, message.clean());
+    emitter.emit(Events.MessageDelete, {
+      id: message.id,
+      chat_id: message.chat_id
+    });
 
     return respond(res, 204, "Deleted");
   }
