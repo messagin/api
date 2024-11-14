@@ -23,12 +23,12 @@ export async function respond<T extends StatusCode>(resp: Response, status: T, c
     // if too many 429 requests, reset the application token
   }
 
-  if (res.locals.rateLimit) {
+  if (res.locals.rateLimit && !res.headersSent) {
     const { limit, remaining, reset, type } = res.locals.rateLimit;
-    res.set("X-RateLimit-Limit", limit.toString());
-    res.set("X-RateLimit-Remaining", remaining.toString());
-    res.set("X-RateLimit-Reset", reset.toString());
-    res.set("X-RateLimit-Type", type);
+    res.header("X-RateLimit-Limit", limit.toString());
+    res.header("X-RateLimit-Remaining", remaining.toString());
+    res.header("X-RateLimit-Reset", reset.toString());
+    res.header("X-RateLimit-Type", type);
   }
 
   res.status(status).json(response);

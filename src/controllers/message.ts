@@ -23,9 +23,7 @@ const storage = multer.diskStorage({
     cb(null, name);
   }
 });
-
 const upload = multer({ storage });
-
 
 export async function create(req: Request, res: Response<unknown, ResLocals>) {
   try {
@@ -181,6 +179,12 @@ function parsePlaceholders(content: string) {
 }
 
 export async function createAttachment(req: Request, res: Response) {
+  res.header('Content-Type', 'text/plain');
+  res.header('Transfer-Encoding', 'chunked');
+  res.header('Cache-Control', 'no-cache');
+
+  res.status(200).flushHeaders();
+
   const message = await Message.getById(req.params.message_id);
   if (!message) {
     return respond(res, 404, "NotFound");
@@ -196,38 +200,34 @@ export async function createAttachment(req: Request, res: Response) {
   const uploadHandler = upload.single('attachment');
 
   let uploadedSize = 0;
-  let responded = false;
   let lastProgress = 0;
 
   // Handle upload
   uploadHandler(req, res, err => {
-    if (responded) return;
-
     if (err) {
       console.log(err);
-      responded = true;
-      res.status(400).end('Error uploading file');
+      res.end('Error uploading file');
       return;
     }
 
     const file = req.file;
     if (!file) {
-      responded = true;
-      return respond(res, 400, "InvalidBody");
+      res.end("InvalidBody");
+      return;
     }
 
     // Check for duplicate filename
     if (!placeholders.includes(file.originalname)) {
-      responded = true;
       unlinkSync(file.path);
-      return respond(res, 400, "InvalidBody");
+      res.end("InvalidBody");
+      return;
     }
 
-    return respond(res, 200, "Ok", { message: "Upload completed" });
+    res.end("Upload completed");
+    return;
   });
 
   req.on('data', chunk => {
-    if (responded) return;
     uploadedSize += chunk.length;
     const progress = ((uploadedSize / totalSize) * 100);
 
