@@ -134,7 +134,6 @@ export class Emitter {
     this.freeIds = {};
 
     process.on("message", <K extends Events>(msg: { type: Types, code: K, data: Event[K] }) => {
-      console.log("IPC message:", msg);
       this.onMessage(msg);
     });
   }
@@ -181,10 +180,10 @@ export class Emitter {
     }
   }
 
-  emit<K extends Events>(eventName: K, data: Event[K]) {
+  emit<K extends Events>(eventCode: K, data: Event[K]) {
     process.send?.({
       type: Types.Event,
-      code: Events[eventName],
+      code: eventCode,
       data
     });
     return this;
