@@ -43,7 +43,7 @@ type WsPingEvent = { op: OpCodes.Ping };
 type WsPongEvent = { op: OpCodes.Pong };
 type WsAuthenticateRequestEvent = { op: OpCodes.AuthenticateRequest };
 type WsAuthenticateResponseEvent = { op: OpCodes.AuthenticateResponse; d: { auth: string } };
-type WsReadyEvent = { op: OpCodes.Ready, d?: ReadyEvent }; // todo implement
+type WsReadyEvent = { op: OpCodes.Ready, d?: ReadyEvent };
 type WsErrorEvent = { op: OpCodes.Error; d: { code: number; message: string } };
 type WsReconnectEvent = { op: OpCodes.Reconnect; d: { delay: number } };
 type WsRateLimitEvent = { op: OpCodes.RateLimit; d: unknown };
@@ -79,17 +79,21 @@ function send(ws: WebSocket, data: WsEvent) {
 function requestAuthentication(ws: WebSocket) {
   return new Promise<Session>(resolve => {
     const listener = async (data: RawData) => {
-      const event = JSON.parse(data.toString()) as WsAuthenticateResponseEvent;
-      if (event.op === OpCodes.AuthenticateResponse) {
-        const response = await authenticateWebSocket(event.d?.auth);
-        ws.off("message", listener);
-        if (response.code === 0) {
-          return resolve(response.session);
+      try {
+        const event = JSON.parse(data.toString()) as WsAuthenticateResponseEvent;
+        if (event.op === OpCodes.AuthenticateResponse) {
+          const response = await authenticateWebSocket(event.d?.auth);
+          ws.off("message", listener);
+          if (response.code === 0) {
+            return resolve(response.session);
+          }
         }
+      } catch (err) {
+        log("red")((err as Error).message);
       }
     };
     ws.on("message", listener);
-    ws.send(JSON.stringify({ op: OpCodes.AuthenticateRequest } as WsAuthenticateRequestEvent));
+    send(ws, { op: OpCodes.AuthenticateRequest });
   });
 }
 
@@ -118,38 +122,43 @@ export function configure(router: Router) {
     send(ws, { op: OpCodes.Hello, d: { interval: timeout } });
 
     ws.on("message", message => {
-      const event: WsEvent = JSON.parse(message.toString());
+      try {
+        const event: WsEvent = JSON.parse(message.toString());
 
-      switch (event.op) {
-        case OpCodes.Ping:
-          self.lastPing = Date.now();
-          send(ws, { op: OpCodes.Pong });
-          break;
-        case OpCodes.AuthenticateResponse: // todo reject if already authenticated
-          break;
-        case OpCodes.UserDispatch:
-          switch (event.t) {
-            case UserEvents.Subscribe:
-              self.chats.add(event.d.chat_id);
-              send(ws, { op: OpCodes.DispatchACK, t: UserEvents.Subscribe });
-              break;
-            case UserEvents.Unsubscribe:
-              self.chats.delete(event.d.chat_id);
-              send(ws, { op: OpCodes.DispatchACK, t: UserEvents.Unsubscribe });
-              break;
-          }
-          break;
-        case OpCodes.Pong:
-        case OpCodes.AuthenticateRequest:
-        case OpCodes.Ready:
-        case OpCodes.Error:
-        case OpCodes.Dispatch:
-        case OpCodes.DispatchACK:
-        case OpCodes.Reconnect:
-        case OpCodes.RateLimit:
-        case OpCodes.ConnectionClosed:
-          // todo received server-side opcode, terminate connection
-          break;
+        switch (event.op) {
+          case OpCodes.Ping:
+            self.lastPing = Date.now();
+            send(ws, { op: OpCodes.Pong });
+            break;
+          case OpCodes.AuthenticateResponse: // todo reject if already authenticated
+            break;
+          case OpCodes.UserDispatch:
+            switch (event.t) {
+              case UserEvents.Subscribe:
+                self.chats.add(event.d.chat_id);
+                send(ws, { op: OpCodes.DispatchACK, t: UserEvents.Subscribe });
+                break;
+              case UserEvents.Unsubscribe:
+                self.chats.delete(event.d.chat_id);
+                send(ws, { op: OpCodes.DispatchACK, t: UserEvents.Unsubscribe });
+                break;
+            }
+            break;
+          case OpCodes.Pong:
+          case OpCodes.AuthenticateRequest:
+          case OpCodes.Ready:
+          case OpCodes.Error:
+          case OpCodes.Dispatch:
+          case OpCodes.DispatchACK:
+          case OpCodes.Reconnect:
+          case OpCodes.RateLimit:
+          case OpCodes.ConnectionClosed:
+            // todo received server-side opcode, terminate connection
+            break;
+        }
+      } catch (err) {
+        log("red")((err as Error).message);
+        send(ws, { op: OpCodes.ConnectionClosed, d: { code: 0, reason: "Invalid JSON" } });
       }
     });
 
