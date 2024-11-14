@@ -36,7 +36,7 @@ export interface PartialUser {
   // avatar: string;
 };
 
-type CleanUser = Omit<BaseUser, "password" | "mfa">;
+export type CleanUser = Omit<BaseUser, "password" | "mfa">;
 type PublicUser = Omit<CleanUser, "phone" | "name" | "email">;
 
 export class User implements BaseUser {

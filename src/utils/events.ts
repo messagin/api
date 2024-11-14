@@ -23,7 +23,6 @@ export enum Events {
   InviteCreate,
   InviteUpdate,
   InviteDelete,
-  Ready,
 };
 
 interface SessionEvent {

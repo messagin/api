@@ -22,7 +22,7 @@ interface BaseSession {
   created_at: string;
 };
 
-type CleanSession = Omit<BaseSession, "token" | "user_id">;
+export type CleanSession = Omit<BaseSession, "token" | "user_id">;
 
 export class Session implements BaseSession {
   id: string;

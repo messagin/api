@@ -1,14 +1,14 @@
 import expressWs, { Application, Router as WsRouter } from "express-ws";
 import { Router } from "express";
 import { authenticateWebSocket } from "../middlewares/authenticateWs";
-import { User } from "../schemas/User";
+import { User, CleanUser } from "../schemas/User";
 import { Emitter, Events, Event } from "../utils/events";
 import { UserEvent, UserEvents } from "../utils/userevents";
 import { WebSocket, RawData } from "ws";
 import { log } from "../utils/log";
 import { Space } from "../schemas/Space";
 import { Chat } from "../schemas/Chat";
-import { Session } from "../schemas/Session";
+import { Session, CleanSession } from "../schemas/Session";
 // import { log } from "../utils/log";
 
 const events = Emitter.getInstance();
@@ -32,12 +32,18 @@ enum OpCodes {
   UserDispatch = 12,
 };
 
+export interface ReadyEvent {
+  spaces: Space[];
+  sessions: CleanSession[];
+  user: CleanUser;
+};
+
 type WsHelloEvent = { op: OpCodes.Hello; d: { interval: number } };
 type WsPingEvent = { op: OpCodes.Ping };
 type WsPongEvent = { op: OpCodes.Pong };
 type WsAuthenticateRequestEvent = { op: OpCodes.AuthenticateRequest };
 type WsAuthenticateResponseEvent = { op: OpCodes.AuthenticateResponse; d: { auth: string } };
-type WsReadyEvent = { op: OpCodes.Ready }; // todo implement
+type WsReadyEvent = { op: OpCodes.Ready, d?: ReadyEvent }; // todo implement
 type WsErrorEvent = { op: OpCodes.Error; d: { code: number; message: string } };
 type WsReconnectEvent = { op: OpCodes.Reconnect; d: { delay: number } };
 type WsRateLimitEvent = { op: OpCodes.RateLimit; d: unknown };
@@ -168,7 +174,7 @@ export function configure(router: Router) {
     // get current user state
     const state = await getUserState(user);
 
-    send(ws, { op: OpCodes.Dispatch, t: Events.Ready, d: state });
+    send(ws, { op: OpCodes.Ready, d: state });
 
     events.on(Events.SessionCreate, session_ => {
       if (session_.user_id !== user.id) {
