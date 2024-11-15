@@ -23,6 +23,8 @@ const storage = multer.diskStorage({
     cb(null, name);
   }
 });
+
+const filenameRegex = /^(?!.*[/\\])[^<>:"|?*\r\n]+$/;
 const upload = multer({ storage });
 
 export async function create(req: Request, res: Response<unknown, ResLocals>) {
@@ -211,7 +213,7 @@ export async function createAttachment(req: Request, res: Response) {
     }
 
     const file = req.file;
-    if (!file) {
+    if (!file || !filenameRegex.test(file.path)) {
       res.end("InvalidBody");
       return;
     }
@@ -241,7 +243,6 @@ export async function createAttachment(req: Request, res: Response) {
 }
 
 
-const filenameRegex = /^(?!.*[/\\])[^<>:"|?*\r\n]+$/;
 
 export async function getAttachment(req: Request, res: Response) {
   try {
@@ -257,7 +258,7 @@ export async function getAttachment(req: Request, res: Response) {
     const file = message.id.slice(4) + req.params.filename;
     const path = `/messagin-data/${dir}/${file}`;
 
-    res.header("Cache-Control", "public");
+    res.header("Cache-Control", "public, max-age=31536000");
 
     const exists = existsSync(path);
     if (!exists) {

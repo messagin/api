@@ -46,6 +46,9 @@ export async function destroy(_req: Request, res: Response) {
 export async function login(req: user.LoginRequest, res: Response) {
   if (req.body.token) {
     const xtoken = req.body.token;
+    if (typeof req.body.token !== "string") {
+      return respond(res, 401, "InvalidToken");
+    }
     const id = Buffer.from(xtoken.slice(0, 22), "base64url").toString("utf8");
     const token = generateHash(xtoken);
 
