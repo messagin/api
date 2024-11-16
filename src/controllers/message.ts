@@ -268,7 +268,7 @@ export async function createAttachment(req: Request, res: Response) {
 
   busboy.on('finish', () => {
     res.write(`100.00\n`);
-    res.write("UPLOAD SUCCESS");
+    res.end("UPLOAD SUCCESS");
   });
 
   req.pipe(busboy);
