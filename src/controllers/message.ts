@@ -7,8 +7,8 @@ import { Member } from "../schemas/Member";
 import { Message } from "../schemas/Message";
 import { Space } from "../schemas/Space";
 import { ResLocals } from "../utils/locals";
-import { existsSync } from "fs";
-import { MultipartParser } from "../utils/multipart";
+import { createWriteStream, existsSync, mkdirSync } from "fs";
+import Busboy from "busboy";
 
 const filenameRegex = /^(?!.*[/\\])[^<>:"|?*\r\n]+$/;
 
@@ -165,61 +165,6 @@ function parsePlaceholders(content: string) {
   return placeholders;
 }
 
-export async function createAttachment(req: Request, res: Response) {
-  if (!req.is('multipart/form-data')) {
-    return respond(res, 400, "InvalidContentType");
-  }
-
-  const message = await Message.getById(req.params.message_id);
-  if (!message) {
-    return respond(res, 404, "NotFound");
-  }
-
-  const totalSize = Number(req.headers['content-length']);
-
-  if (!totalSize) {
-    return respond(res, 400, "InvalidBody");
-  }
-
-  res.header('Content-Type', 'text/plain');
-  res.header('Transfer-Encoding', 'chunked');
-  res.header('Cache-Control', 'no-cache');
-
-  res.status(200).flushHeaders();
-
-  const placeholders = parsePlaceholders(message.content);
-
-  const parser = new MultipartParser(
-    req.headers,
-    { dir: `./data/${message.id.slice(0, 4)}`, prefix: message.id.slice(4) },
-    { "attachment": { filenames: placeholders } },
-  );
-
-  let lastProgress = 0;
-
-  parser.onUpdate(progress => {
-    console.log(progress);
-    if ((progress - lastProgress <= 5) && progress !== 100) return;
-    lastProgress = progress;
-    res.write(`${progress.toFixed(2)}\n`);
-    console.log(`${progress.toFixed(2)}`);
-  });
-
-  parser.onUpload(() => {
-    res.end('Upload complete');
-  });
-
-  parser.onError((err) => {
-    console.error('Upload error:', err);
-    res.end('Upload failed');
-    res.destroy();
-  });
-
-  req.pipe(parser);
-}
-
-
-
 export async function getAttachment(req: Request, res: Response) {
   try {
     const message = await Message.getById(req.params.message_id);
@@ -246,4 +191,85 @@ export async function getAttachment(req: Request, res: Response) {
     log("red")((err as Error).message);
     return respond(res, 500, "InternalError");
   }
+}
+
+export async function createAttachment(req: Request, res: Response) {
+  if (!req.is('multipart/form-data')) {
+    return respond(res, 400, "InvalidContentType");
+  }
+
+  const message = await Message.getById(req.params.message_id);
+  if (!message) {
+    return respond(res, 404, "NotFound");
+  }
+
+  const totalSize = Number(req.headers['content-length']);
+
+  if (!totalSize) {
+    return respond(res, 400, "InvalidBody");
+  }
+
+  res.header('Content-Type', 'text/plain');
+  res.header('Transfer-Encoding', 'chunked');
+  res.header('Cache-Control', 'no-cache');
+
+  res.status(200).flushHeaders();
+
+  const placeholders = parsePlaceholders(message.content);
+
+  const busboy = Busboy({ headers: req.headers });
+  const dir = `/messagin-data/${message.id.slice(0, 4)}/`;
+  const prefix = message.id.slice(4);
+
+  let uploadSize = 0;
+  let lastProgress = 0;
+
+  busboy.on('file', (fieldname, stream, info) => {
+    if (fieldname !== "attachment") {
+      const error = `UPLOAD ERROR: Invalide field ${fieldname}`;
+      console.error(error);
+      stream.destroy();
+      res.end(error);
+      res.destroy();
+      return;
+    }
+
+    if (!placeholders.includes(info.filename)) {
+      const error = `UPLOAD ERROR: Invalid filename ${info.filename}`;
+      console.error(error);
+      stream.destroy();
+      res.end(error);
+      res.destroy();
+      return;
+    }
+
+    mkdirSync(dir, { recursive: true });
+    const writeStream = createWriteStream(`${dir}/${prefix}${info.filename}`);
+
+    stream.on('data', chunk => {
+      uploadSize += chunk.length;
+      writeStream?.write(chunk);
+      const progress = 100 * uploadSize / totalSize;
+      if ((progress - lastProgress <= 5) && progress !== 100) return;
+      lastProgress = progress;
+      res.write(`${progress.toFixed(2)}\n`);
+    });
+
+    stream.on('end', () => {
+      writeStream?.close();
+    });
+  });
+
+  busboy.on('error', (error) => {
+    if (!res.writable) return;
+    res.end(error);
+    res.destroy();
+  });
+
+  busboy.on('finish', () => {
+    res.write(`100.00\n`);
+    res.write("UPLOAD SUCCESS");
+  });
+
+  req.pipe(busboy);
 }
