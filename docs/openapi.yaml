@@ -3,7 +3,7 @@ openapi: 3.0.0
 info:
   title: Messagin' API
   version: 1.0.0
-  description: "Messagin' API is a simple API for messaging and chatting. It allows users to create spaces, invite members, and chat with each other."
+  description: No API description (WIP)
   contact:
     email: contact@webd3vs.xyz
     name: webd3vs
@@ -11,18 +11,22 @@ info:
 externalDocs:
   url: https://docs.webd3vs.xyz
 servers:
-  - url: http://localhost:4000
-    description: Local server
+  - url: https://api.webd3vs.xyz
+    description: Official Server
 tags:
   - name: users
   - name: spaces
-security:
-  - BearerAuth: []
-
+  - name: invites
+  - name: chats
+  - name: messages
+  - name: members
+  - name: relations
 paths:
   /users/self:
     get:
-      description: "temp description"
+      description: "Get the current user. All fields included."
+      security:
+        - Auth: []
       tags:
         - users
       summary: Get current user
@@ -37,18 +41,19 @@ paths:
               example:
                 id: 067YH1EPTW000000
                 flags: 0
-                username: webd3vs
-                name: webd3vs
-                email: contact@webd3vs.xyz
-                phone: "+1234567890"
-                created_at: 1704067200
+                username: john.doe
+                name: null
+                email: john.doe@example.com
+                phone: null
+                created_at: "2000-01-01T00:00:00.000Z"
         "401":
           $ref: "#/components/responses/401"
-        "429":
-          $ref: "#/components/responses/429"
         "500":
           $ref: "#/components/responses/500"
     put:
+      description: "Update the current user's settings"
+      security:
+        - Auth: []
       tags:
         - users
       summary: Update user
@@ -58,8 +63,6 @@ paths:
       responses:
         "204":
           description: Successful response
-          content:
-            null: {}
         "400":
           description: Bad request
         "401":
@@ -67,6 +70,9 @@ paths:
         "500":
           $ref: "#/components/responses/500"
     delete:
+      description: "Delete the current user. Note that a deletion request may take up to one week. An account will also be able to be restored, but some settings and past messages will be lost"
+      security:
+        - Auth: []
       tags:
         - users
       summary: Delete user
@@ -76,6 +82,9 @@ paths:
           description: Successful response
   /users/self/password:
     put:
+      description: "Update the current user's password"
+      security:
+        - Auth: []
       tags:
         - users
       summary: Update user password
@@ -85,6 +94,7 @@ paths:
           description: Successful response
   /users/self/mfa/validate:
     post:
+      description: "Validates MFA. Not implemented yet."
       tags:
         - users
       summary: Validate MFA
@@ -94,6 +104,7 @@ paths:
           description: Successful response
   /users/try:
     post:
+      description: "Create a temporary user with no email address. Usable for up to one week. Limited service access"
       tags:
         - users
       summary: Create trial user
@@ -103,6 +114,7 @@ paths:
           description: Successful response
   /users/signup:
     post:
+      description: "Creates a new user. Requires an email address, a username and a password"
       tags:
         - users
       summary: Sign up user
@@ -112,6 +124,7 @@ paths:
           description: Successful response
   /users/authenticate:
     post:
+      description: "Authenticates a user or a bot. Requires a username/email and password or a bot token."
       tags:
         - users
       summary: Authenticate user
@@ -121,6 +134,9 @@ paths:
           description: Successful response
   /users/{user_id}:
     get:
+      description: "Gets a user by his ID. Only public fields will be sent even if it's the current user."
+      security:
+        - Auth: []
       tags:
         - users
       summary: Get user by ID
@@ -136,8 +152,9 @@ paths:
           description: Successful response
   /spaces:
     get:
+      description: "Lists current user's spaces"
       security:
-        - BearerAuth: []
+        - Auth: []
       tags:
         - spaces
       summary: List user spaces
@@ -146,8 +163,9 @@ paths:
         "200":
           description: Successful response
     post:
+      description: "Create a new space. Note that a user can own up to 3 spaces."
       security:
-        - BearerAuth: []
+        - Auth: []
       tags:
         - spaces
       summary: Create new space
@@ -157,6 +175,11 @@ paths:
           description: Successful response
   /spaces/{space_id}:
     get:
+      description: "Get a user's space. Can also be used to access public spaces's information."
+      security:
+        - Auth: []
+      tags:
+        - spaces
       summary: Get space
       operationId: getSpace
       parameters:
@@ -164,11 +187,16 @@ paths:
           in: path
           required: true
           schema:
-            $ref: "#/components/schemas/ID"
+            type: string
       responses:
         "200":
           description: Successful response
     delete:
+      description: "Delete a space. Can only be used by the owner."
+      security:
+        - Auth: []
+      tags:
+        - spaces
       summary: Delete space
       operationId: deleteSpace
       parameters:
@@ -176,12 +204,17 @@ paths:
           in: path
           required: true
           schema:
-            $ref: "#/components/schemas/ID"
+            type: string
       responses:
         "200":
           description: Successful response
   /spaces/{space_id}/invites:
     get:
+      description: "List a space's invites."
+      security:
+        - Auth: []
+      tags:
+        - invites
       summary: Get invites
       operationId: getInvites
       parameters:
@@ -194,6 +227,11 @@ paths:
         "200":
           description: Successful response
     post:
+      description: "Create a new invite for the space."
+      security:
+        - Auth: []
+      tags:
+        - invites
       summary: Create invite
       operationId: createInvite
       parameters:
@@ -207,6 +245,11 @@ paths:
           description: Successful response
   /invites/{invite_id}:
     post:
+      description: "Accept an invite and join the space associated with it."
+      security:
+        - Auth: []
+      tags:
+        - invites
       summary: Accept invite
       operationId: acceptInvite
       parameters:
@@ -219,6 +262,11 @@ paths:
         "200":
           description: Successful response
     get:
+      description: "Get an invite's information"
+      security:
+        - Auth: []
+      tags:
+        - invites
       summary: Get invite
       operationId: getInvite
       parameters:
@@ -231,6 +279,11 @@ paths:
         "200":
           description: Successful response
     delete:
+      description: "Delete an invite"
+      security:
+        - Auth: []
+      tags:
+        - invites
       summary: Delete invite
       operationId: deleteInvite
       parameters:
@@ -244,6 +297,11 @@ paths:
           description: Successful response
   /spaces/{space_id}/members:
     get:
+      description: "List a space's members. Not implemented for big spaces yet."
+      security:
+        - Auth: []
+      tags:
+        - members
       summary: List members
       operationId: listMembers
       parameters:
@@ -257,6 +315,11 @@ paths:
           description: Successful response
   /spaces/{space_id}/members/{member_id}:
     get:
+      description: "Get a space member's info"
+      security:
+        - Auth: []
+      tags:
+        - members
       summary: Get member
       operationId: getMember
       parameters:
@@ -275,6 +338,11 @@ paths:
           description: Successful response
   /spaces/{space_id}/chats:
     get:
+      description: "Lists all chats in a space. Note that some chats may be excluded due to permissions"
+      security:
+        - Auth: []
+      tags:
+        - chats
       summary: List chats
       operationId: listChats
       parameters:
@@ -287,6 +355,11 @@ paths:
         "200":
           description: Successful response
     post:
+      description: "Create a new chat in a space. Only owners are allowed to use it at this point"
+      security:
+        - Auth: []
+      tags:
+        - chats
       summary: Create chat
       operationId: createChat
       parameters:
@@ -300,6 +373,11 @@ paths:
           description: Successful response
   /chats/{chat_id}:
     get:
+      description: "Get a chat, be it in a space or direct messages."
+      security:
+        - Auth: []
+      tags:
+        - chats
       summary: Get chat
       operationId: getChat
       parameters:
@@ -312,6 +390,11 @@ paths:
         "200":
           description: Successful response
     patch:
+      description: "Updates a chat. Requires permissions in a space or ownership of a group."
+      security:
+        - Auth: []
+      tags:
+        - chats
       summary: Update chat
       operationId: updateChat
       parameters:
@@ -324,6 +407,11 @@ paths:
         "200":
           description: Successful response
     delete:
+      description: "Delete a chat. Requires permissions in a space or ownership in a group. Can also be used to close a DM, messages will be kept."
+      security:
+        - Auth: []
+      tags:
+        - chats
       summary: Delete chat
       operationId: deleteChat
       parameters:
@@ -337,6 +425,11 @@ paths:
           description: Successful response
   /chats/{chat_id}/messages:
     get:
+      description: "List messages in a chat."
+      security:
+        - Auth: []
+      tags:
+        - messages
       summary: List messages
       operationId: listMessages
       parameters:
@@ -349,6 +442,11 @@ paths:
         "200":
           description: Successful response
     post:
+      description: "Create a new message."
+      security:
+        - Auth: []
+      tags:
+        - messages
       summary: Create message
       operationId: createMessage
       parameters:
@@ -362,6 +460,11 @@ paths:
           description: Successful response
   /chats/{chat_id}/messages/search:
     get:
+      description: "Search for messages. Query is case-sensitive and using exact matching. Cannot be used on encrypted chats"
+      security:
+        - Auth: []
+      tags:
+        - messages
       summary: Search for messages
       operationId: searchMessages
       parameters:
@@ -370,11 +473,45 @@ paths:
           required: true
           schema:
             type: string
+        - name: q
+          in: query
+          schema:
+            type: string
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+                example:
+                  - id: "069GS2P9F400A000"
+                    chat_id: "069FFR7SMR002001"
+                    user:
+                      id: "069ETGF468006000"
+                      username: "john.doe"
+                    content: "New message!"
+                    flags: 0
+                    updated_at: null
+                    created_at: "2024-11-08T16:10:42.425Z"
+                  - id: "069FFR9MK0002002"
+                    chat_id: "069FFR7SMR002001"
+                    user:
+                      id: "069ETGF468006000"
+                      username: "john.doe"
+                    content: "This is a message."
+                    flags: 0
+                    updated_at: null
+                    created_at: "2024-11-04T15:53:04.408Z"
   /chats/{chat_id}/messages/{message_id}:
     get:
+      description: "Get a message by ID. For a user, prefer listing messages instead."
+      security:
+        - Auth: []
+      tags:
+        - messages
       summary: Get message
       operationId: getMessage
       parameters:
@@ -391,7 +528,26 @@ paths:
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+              example:
+                id: "069FFR9MK0002002"
+                chat_id: "069FFR7SMR002001"
+                user:
+                  id: "069ETGF468006000"
+                  username: "john.doe"
+                content: "This is a message."
+                flags: 0
+                updated_at: null
+                created_at: "2024-11-04T15:53:04.408Z"
     patch:
+      description: "Update a message. Cannot be used on encrypted messages yet."
+      security:
+        - Auth: []
+      tags:
+        - messages
       summary: Update message
       operationId: updateMessage
       parameters:
@@ -409,6 +565,11 @@ paths:
         "200":
           description: Successful response
     delete:
+      description: "Delete a message. Only the message's sender can use this for now."
+      security:
+        - Auth: []
+      tags:
+        - messages
       summary: Delete message
       operationId: deleteMessage
       parameters:
@@ -427,12 +588,22 @@ paths:
           description: Successful response
   /users/self/relations:
     get:
+      description: "List user's relations. That includes friends, pending requests and blocked users"
+      security:
+        - Auth: []
+      tags:
+        - relations
       summary: List relations
       operationId: listRelations
       responses:
         "200":
           description: Successful response
     post:
+      description: "Add a new friend. Deprecated, use `PUT /users/self/relations/{user_id}/` instead."
+      security:
+        - Auth: []
+      tags:
+        - relations
       summary: Add friend
       operationId: addFriend
       responses:
@@ -441,6 +612,11 @@ paths:
 
   /users/self/relations/{user_id}:
     get:
+      description: "Gets your relationship with a user."
+      security:
+        - Auth: []
+      tags:
+        - relations
       summary: Get friend
       operationId: getFriend
       parameters:
@@ -453,6 +629,11 @@ paths:
         "200":
           description: Successful response
     delete:
+      description: "Delete your relationship with a user. Deprecated, use `PATCH /users/self/relations/{user_id}` instead."
+      security:
+        - Auth: []
+      tags:
+        - relations
       summary: Remove friend
       operationId: removeFriend
       parameters:
@@ -464,6 +645,7 @@ paths:
       responses:
         "200":
           description: Successful response
+
 components:
   responses:
     "401":
@@ -476,20 +658,7 @@ components:
               message:
                 type: string
             example:
-              message: Authentication token is invalid
-
-    "429":
-      description: Rate Limit Exceeded
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-            example:
-              message: You are being rate limited
-
+              message: Authentication token is malformed
     "500":
       description: Internal Server Error
       content:
@@ -500,10 +669,10 @@ components:
               message:
                 type: string
             example:
-              message: An internal error occurred
+              message: An internal error occurred. Please try again later
 
   securitySchemes:
-    BearerAuth:
+    Auth:
       type: apiKey
       in: header
       name: Authorization
@@ -528,7 +697,18 @@ components:
     ID:
       type: string
       pattern: "^[0-9A-HJKMNP-TV-Z]{16}$"
-
+    Username:
+      type: string
+      format: username
+      minLength: 2
+      maxLength: 32
+    Timestamp:
+      type: string
+      pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    TimestampOrNull:
+      nullable: true
+      type: string
+      pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
     User:
       type: object
       properties:
@@ -537,16 +717,39 @@ components:
         flags:
           type: number
         username:
-          type: string
-          format: username
-          minLength: 2
-          maxLength: 32
+          $ref: "#/components/schemas/Username"
         name:
           type: string
+          nullable: true
         email:
           type: string
           format: email
         phone:
           type: string
+          nullable: true
         created_at:
+          $ref: "#/components/schemas/Timestamp"
+    PartialUser:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/ID"
+        username:
+          $ref: "#/components/schemas/Username"
+    Message:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/ID"
+        chat_id:
+          $ref: "#/components/schemas/ID"
+        user:
+          $ref: "#/components/schemas/PartialUser"
+        content:
+          type: string
+        flags:
           type: number
+        updated_at:
+          $ref: "#/components/schemas/TimestampOrNull"
+        created_at:
+          $ref: "#/components/schemas/Timestamp"

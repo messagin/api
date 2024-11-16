@@ -7,25 +7,10 @@ import { Member } from "../schemas/Member";
 import { Message } from "../schemas/Message";
 import { Space } from "../schemas/Space";
 import { ResLocals } from "../utils/locals";
-import multer from "multer";
-import { existsSync, mkdirSync, unlinkSync } from "fs";
-
-const storage = multer.diskStorage({
-  destination: async (req, _file, cb) => {
-    const dir = `/messagin-data/${req.params.message_id.slice(0, 4)}`;
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const name = req.params.message_id.slice(4) + file.originalname;
-    cb(null, name);
-  }
-});
+import { existsSync } from "fs";
+import { MultipartParser } from "../utils/multipart";
 
 const filenameRegex = /^(?!.*[/\\])[^<>:"|?*\r\n]+$/;
-const upload = multer({ storage });
 
 export async function create(req: Request, res: Response<unknown, ResLocals>) {
   try {
@@ -171,7 +156,7 @@ export async function getById(req: Request, res: Response) {
 }
 
 function parsePlaceholders(content: string) {
-  const regex = /\[f:([^\]]+)\]/g;
+  const regex = /\[f:((?!.*[/\\])[^<>:"|?*\r\n]+)\]/g;
   let match;
   const placeholders = [];
   while ((match = regex.exec(content)) !== null) {
@@ -181,11 +166,9 @@ function parsePlaceholders(content: string) {
 }
 
 export async function createAttachment(req: Request, res: Response) {
-  res.header('Content-Type', 'text/plain');
-  res.header('Transfer-Encoding', 'chunked');
-  res.header('Cache-Control', 'no-cache');
-
-  res.status(200).flushHeaders();
+  if (!req.is('multipart/form-data')) {
+    return respond(res, 400, "InvalidContentType");
+  }
 
   const message = await Message.getById(req.params.message_id);
   if (!message) {
@@ -198,48 +181,41 @@ export async function createAttachment(req: Request, res: Response) {
     return respond(res, 400, "InvalidBody");
   }
 
-  const placeholders = parsePlaceholders(message.content);
-  const uploadHandler = upload.single('attachment');
+  res.header('Content-Type', 'text/plain');
+  res.header('Transfer-Encoding', 'chunked');
+  res.header('Cache-Control', 'no-cache');
 
-  let uploadedSize = 0;
+  res.status(200).flushHeaders();
+
+  const placeholders = parsePlaceholders(message.content);
+
+  const parser = new MultipartParser(
+    req.headers,
+    { dir: `./data/${message.id.slice(0, 4)}`, prefix: message.id.slice(4) },
+    { "attachment": { filenames: placeholders } },
+  );
+
   let lastProgress = 0;
 
-  // Handle upload
-  uploadHandler(req, res, err => {
-    if (err) {
-      console.log(err);
-      res.end('Error uploading file');
-      return;
-    }
-
-    const file = req.file;
-    if (!file || !filenameRegex.test(file.path)) {
-      res.end("InvalidBody");
-      return;
-    }
-
-    // Check for duplicate filename
-    if (!placeholders.includes(file.originalname)) {
-      unlinkSync(file.path);
-      res.end("InvalidBody");
-      return;
-    }
-
-    res.end("Upload completed");
-    return;
-  });
-
-  req.on('data', chunk => {
-    uploadedSize += chunk.length;
-    const progress = ((uploadedSize / totalSize) * 100);
-
-    if (!res.writable) return;
-    if (progress - lastProgress < 5 && progress !== 100) return;
+  parser.onUpdate(progress => {
+    console.log(progress);
+    if ((progress - lastProgress <= 5) && progress !== 100) return;
     lastProgress = progress;
-
-    // Send progress updates
-    if (res.writable) res.write(`${progress.toFixed()}\n`);
+    res.write(`${progress.toFixed(2)}\n`);
+    console.log(`${progress.toFixed(2)}`);
   });
+
+  parser.onUpload(() => {
+    res.end('Upload complete');
+  });
+
+  parser.onError((err) => {
+    console.error('Upload error:', err);
+    res.end('Upload failed');
+    res.destroy();
+  });
+
+  req.pipe(parser);
 }
 
 

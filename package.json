@@ -15,8 +15,10 @@
   "private": true,
   "dependencies": {
     "@types/better-sqlite3": "^7.6.11",
+    "@types/busboy": "^1.5.4",
     "@types/cors": "^2.8.17",
     "better-sqlite3": "^10.0.0",
+    "busboy": "^1.6.0",
     "cassandra-driver": "^4.7.2",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.4.5",
@@ -24,7 +26,6 @@
     "express-ws": "^5.0.2",
     "helmet": "^7.1.0",
     "knex": "^3.1.0",
-    "multer": "^1.4.5-lts.1",
     "ua-parser-js": "^1.0.37",
     "ws": "^8.17.1"
   },
