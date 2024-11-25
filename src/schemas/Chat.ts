@@ -8,17 +8,16 @@ const ChatFlags = {
   Deleted: 1 << 0,
 } as const;
 
-enum ChatTypes {
+export enum ChatTypes {
   TEXT,
   DM,
   DM_SEC,
   DM_AXOLOTL,
 };
 
-export type ChatType = keyof typeof ChatTypes;
 type ChatFlag = keyof typeof ChatFlags;
 
-interface BaseChat<T extends ChatType> {
+interface BaseChat<T extends ChatTypes> {
   id: string;
   name: string;
   type: T;
@@ -30,7 +29,7 @@ interface BaseChat<T extends ChatType> {
 interface CleanTextChat {
   id: string;
   name: string;
-  type: number;
+  type: ChatTypes.TEXT;
   flags: number;
   space_id: string;
   position: number;
@@ -39,18 +38,18 @@ interface CleanTextChat {
 interface CleanDMChat {
   id: string;
   name: string;
-  type: number;
+  type: ChatTypes;
   flags: number;
 };
 
-type CleanChat<T extends ChatType> = T extends "TEXT"
+type CleanChat<T extends ChatTypes> = T extends ChatTypes.TEXT
   ? CleanTextChat : CleanDMChat;
 
-type SelectMessageManager<T extends ChatType> = T extends "TEXT"
-  ? MessageManager : T extends "DM_AXOLOTL"
+type SelectMessageManager<T extends ChatTypes> = T extends ChatTypes.TEXT
+  ? MessageManager : T extends ChatTypes.DM_AXOLOTL
   ? AxolotlMessageManager : MessageManager;
 
-export class Chat<T extends ChatType> implements BaseChat<T> {
+export class Chat<T extends ChatTypes> implements BaseChat<T> {
   id: string;
   name: string;
   type: T;
@@ -103,37 +102,37 @@ export class Chat<T extends ChatType> implements BaseChat<T> {
 
   clean(): CleanChat<T> {
     switch (this.type) {
-      case "DM":
+      case ChatTypes.DM:
         return {
           id: this.id,
           flags: this.flags,
           name: this.name,
-          type: ChatTypes[this.type]
+          type: this.type
         } as CleanChat<T>;
       default:
         return {
           id: this.id,
           flags: this.flags,
           name: this.name,
-          type: ChatTypes[this.type],
+          type: this.type,
           space_id: this.space_id,
           position: this.position
         } as CleanChat<T>;
     }
   }
 
-  isTextChat(): this is Chat<"TEXT"> {
-    return this.type === "TEXT";
+  isTextChat(): this is Chat<ChatTypes.TEXT> {
+    return this.type === ChatTypes.TEXT;
   }
 
-  isAxolotlChat(): this is Chat<"DM_AXOLOTL"> {
-    return this.type === "DM_AXOLOTL";
+  isAxolotlChat(): this is Chat<ChatTypes.DM_AXOLOTL> {
+    return this.type === ChatTypes.DM_AXOLOTL;
   }
 
-  static async getById<T extends ChatType>(id: string): Promise<Chat<T> | null> {
+  static async getById<T extends ChatTypes>(id: string): Promise<Chat<T> | null> {
     const chat = (await db.execute("SELECT * FROM chats WHERE id = ? LIMIT 1", [id], { prepare: true })).rows[0];
     if (!chat) return null;
-    return new Chat(ChatTypes[chat.type as number] as T, chat.id)
+    return new Chat(chat.type, chat.id)
       .setPosition(chat.position)
       .setSpace(chat.space_id)
       .setName(chat.name)
@@ -158,7 +157,7 @@ export class Chat<T extends ChatType> implements BaseChat<T> {
   }
 
   get members() {
-    if (this.type == "TEXT") throw new Error("Cannot access members of a space chat");
+    if (this.type === ChatTypes.TEXT) throw new Error("Cannot access members of a space chat");
     return new ChatMemberManager(this.id);
   }
 

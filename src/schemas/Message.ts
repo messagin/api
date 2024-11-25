@@ -1,3 +1,4 @@
+import { AttachmentManager } from "../managers/Attachment";
 import { generateIDv2 } from "../utils/auth";
 import db from "../utils/database";
 import { PartialUser } from "./User";
@@ -86,6 +87,10 @@ export class Message implements BaseMessage {
     return this;
   }
 
+  get attachments() {
+    return new AttachmentManager(this.id);
+  }
+
   async getUserData(): Promise<PartialUser> {
     const raw_user = (await db.execute("SELECT id, username FROM users WHERE id = ?", [this.user_id], { prepare: true })).rows[0];
     const user: PartialUser = {
@@ -127,8 +132,27 @@ export class Message implements BaseMessage {
     }
   }
 
+  private parsePlaceholders(content: string) {
+    const regex = /\[f:((?!.*[/\\])[^<>:"|?*\r\n]+)\]/g;
+    let match;
+    const placeholders = [];
+    while ((match = regex.exec(content)) !== null) {
+      placeholders.push(match[1]);
+    }
+    return placeholders;
+  }
+
   async create() {
     await db.execute("INSERT INTO messages (chat_id,content,flags,id,user_id,updated_at,created_at) VALUES (?,?,?,?,?,?,?)", [this.chat_id, this.content, this.flags, this.id, this.user_id, this.updated_at, this.created_at], { prepare: true });
+    const attachments = this.parsePlaceholders(this.content);
+    for (const filename in attachments) {
+      await db.execute("INSERT INTO attachments (message_id,filename,flags,user_id) VALUES (?,?,?,?)", [
+        this.id,
+        filename,
+        0,
+        this.user_id
+      ], { prepare: true });
+    }
     return this;
   }
 

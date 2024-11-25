@@ -199,9 +199,7 @@ export class Emitter {
     }
     const id = this.getId(eventCode);
     this.listeners[eventCode]?.set(id, callback);
-    if (collector) {
-      collector.set(eventCode, id);
-    }
+    collector.set(eventCode, id);
     return this;
   };
 

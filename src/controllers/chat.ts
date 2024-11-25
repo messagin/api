@@ -2,12 +2,12 @@ import { Request, Response } from "express";
 import { respond } from "../utils/respond";
 import { log } from "../utils/log";
 import { Emitter, Events } from "../utils/events";
-import { Chat } from "../schemas/Chat";
+import { Chat, ChatTypes } from "../schemas/Chat";
 import { Space } from "../schemas/Space";
 
 export async function create(req: Request, res: Response) {
   try {
-    const chat = await new Chat("TEXT")
+    const chat = await new Chat(ChatTypes.TEXT)
       .setName(req.body.name)
       .setSpace(req.params.space_id)
       .create();

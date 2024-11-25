@@ -155,16 +155,6 @@ export async function getById(req: Request, res: Response) {
   }
 }
 
-function parsePlaceholders(content: string) {
-  const regex = /\[f:((?!.*[/\\])[^<>:"|?*\r\n]+)\]/g;
-  let match;
-  const placeholders = [];
-  while ((match = regex.exec(content)) !== null) {
-    placeholders.push(match[1]);
-  }
-  return placeholders;
-}
-
 export async function getAttachment(req: Request, res: Response) {
   try {
     const message = await Message.getById(req.params.message_id);
@@ -198,8 +188,9 @@ export async function createAttachment(req: Request, res: Response) {
     return respond(res, 400, "InvalidContentType");
   }
 
-  const message = await Message.getById(req.params.message_id);
-  if (!message) {
+  const message = new Message(req.params.message_id);
+  const attachments = await message.attachments.list();
+  if (!attachments.length) {
     return respond(res, 404, "NotFound");
   }
 
@@ -215,7 +206,7 @@ export async function createAttachment(req: Request, res: Response) {
 
   res.status(200).flushHeaders();
 
-  const placeholders = parsePlaceholders(message.content);
+  const filenames = attachments.map(x => x.filename);
 
   const busboy = Busboy({ headers: req.headers });
   const dir = `/messagin-data/${message.id.slice(0, 4)}/`;
@@ -224,9 +215,9 @@ export async function createAttachment(req: Request, res: Response) {
   let uploadSize = 0;
   let lastProgress = 0;
 
-  busboy.on('file', (fieldname, stream, info) => {
+  busboy.on('file', async (fieldname, stream, info) => {
     if (fieldname !== "attachment") {
-      const error = `UPLOAD ERROR: Invalide field ${fieldname}`;
+      const error = `ERROR: Invalid field "${fieldname}"`;
       console.error(error);
       stream.destroy();
       res.end(error);
@@ -234,33 +225,40 @@ export async function createAttachment(req: Request, res: Response) {
       return;
     }
 
-    if (!placeholders.includes(info.filename)) {
-      const error = `UPLOAD ERROR: Invalid filename ${info.filename}`;
+    if (!filenameRegex.test(info.filename) || !filenames.includes(info.filename)) {
+      const error = `ERROR: Invalid filename "${info.filename}"`;
       console.error(error);
       stream.destroy();
       res.end(error);
       res.destroy();
       return;
     }
+
+    await message.attachments.lock(info.filename);
 
     mkdirSync(dir, { recursive: true });
     const writeStream = createWriteStream(`${dir}/${prefix}${info.filename}`);
 
     stream.on('data', chunk => {
       uploadSize += chunk.length;
-      writeStream?.write(chunk);
+      writeStream.write(chunk);
       const progress = 100 * uploadSize / totalSize;
       if ((progress - lastProgress <= 5) && progress !== 100) return;
       lastProgress = progress;
       res.write(`${progress.toFixed(2)}\n`);
     });
 
+    stream.on("error", async () => {
+      await message.attachments.fail(info.filename);
+      writeStream.destroy();
+    });
+
     stream.on('end', () => {
-      writeStream?.close();
+      writeStream.close();
     });
   });
 
-  busboy.on('error', (error) => {
+  busboy.on('error', error => {
     if (!res.writable) return;
     res.end(error);
     res.destroy();
@@ -268,7 +266,7 @@ export async function createAttachment(req: Request, res: Response) {
 
   busboy.on('finish', () => {
     res.write(`100.00\n`);
-    res.end("UPLOAD SUCCESS");
+    res.end("SUCCESS");
   });
 
   req.pipe(busboy);

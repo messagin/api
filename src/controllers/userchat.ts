@@ -2,12 +2,12 @@ import { Request, Response } from "express";
 import { respond } from "../utils/respond";
 import { log } from "../utils/log";
 import { Emitter, Events } from "../utils/events";
-import { Chat } from "../schemas/Chat";
+import { Chat, ChatTypes } from "../schemas/Chat";
 import { User } from "../schemas/User";
 
 export async function create(req: Request, res: Response) {
   try {
-    const chat = await new Chat("DM")
+    const chat = await new Chat(ChatTypes.DM)
       .setName(req.body.name)
       .create();
     Emitter.getInstance().emit(Events.ChatCreate, chat.clean());

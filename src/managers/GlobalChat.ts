@@ -1,4 +1,4 @@
-import { Chat } from "../schemas/Chat";
+import { Chat, ChatTypes } from "../schemas/Chat";
 import db from "../utils/database";
 
 export class GlobalChatManager {
@@ -9,7 +9,7 @@ export class GlobalChatManager {
   }
 
   init(name: string) {
-    return new Chat("DM").setName(name);
+    return new Chat(ChatTypes.DM).setName(name);
   }
 
   async list() {
