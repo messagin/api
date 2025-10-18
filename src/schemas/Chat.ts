@@ -45,8 +45,7 @@ interface CleanDMChat {
 type CleanChat<T extends ChatTypes> = T extends ChatTypes.TEXT
   ? CleanTextChat : CleanDMChat;
 
-type SelectMessageManager<T extends ChatTypes> = T extends ChatTypes.TEXT
-  ? MessageManager : T extends ChatTypes.DM_AXOLOTL
+type SelectMessageManager<T extends ChatTypes> = T extends ChatTypes.DM_AXOLOTL
   ? AxolotlMessageManager : MessageManager;
 
 export class Chat<T extends ChatTypes> implements BaseChat<T> {

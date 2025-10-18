@@ -38,4 +38,4 @@ process.on("unhandledRejection", err => {
 });
 
 // enter the program
-main();
+void main();
